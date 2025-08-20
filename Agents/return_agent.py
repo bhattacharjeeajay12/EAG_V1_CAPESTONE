@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 
 import google.generativeai as genai
-from return_perception import extract_return_details
+from perceptions.return_perception import extract_return_details
 from memory import SessionMemory
 
 

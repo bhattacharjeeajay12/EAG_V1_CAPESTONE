@@ -2,7 +2,7 @@ import os, json, re
 from typing import List, Dict, Any, Optional, Tuple
 
 import google.generativeai as genai
-from buy_perception import extract_buy_details
+from perceptions.buy_perception import extract_buy_details
 from memory import SessionMemory
 
 

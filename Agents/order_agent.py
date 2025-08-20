@@ -1,9 +1,8 @@
-import os, json, re, uuid
+import os, json, re
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timezone
 
 import google.generativeai as genai
-from order_perception import extract_order_details, process_payment, generate_order_id, OrderDetails
+from perceptions.order_perception import extract_order_details, process_payment, generate_order_id, OrderDetails
 from memory import SessionMemory
 
 
@@ -309,13 +308,25 @@ class OrderAgent:
         # Reverse before saving to get oldest at the top (newest at the bottom) in memory files
         reversed_chat_history = list(reversed(self.chat_history))
 
-        self.memory.save(
-            chat_history=reversed_chat_history,  # Reverse to get oldest at top
-            perceptions_history=[],  # Order agent doesn't use perceptions_history
-            perceptions={},  # Order agent doesn't use perceptions
-            last_agent_state=self._last_state,
-            config={"model": self.model_name},
-        )
+        try:
+            # Ensure the Memory directory exists
+            memory_dir = "Memory"
+            os.makedirs(memory_dir, exist_ok=True)
+
+            # Ensure the agent-specific directory exists
+            agent_dir = os.path.join(memory_dir, "order")
+            os.makedirs(agent_dir, exist_ok=True)
+
+            self.memory.save(
+                chat_history=reversed_chat_history,  # Reverse to get oldest at top
+                perceptions_history=[],  # Order agent doesn't use perceptions_history
+                perceptions={},  # Order agent doesn't use perceptions
+                last_agent_state=self._last_state,
+                config={"model": self.model_name},
+            )
+            print(f"[OrderAgent] Saved memory to {agent_dir}")
+        except Exception as e:
+            print(f"[ERROR] Failed to save memory: {e}")
 
         # Return order status information to the Buy Agent
         result = {
