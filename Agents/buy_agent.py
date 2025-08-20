@@ -266,8 +266,8 @@ def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
 
 def interactive_loop(agent: BuyAgent) -> None:
     print("Enter your purchase queries. Type 'exit' to quit.")
-    # Start a new session for the interactive conversation
-    agent.new_session(label="interactive")
+    # Lazy-start a session only when the user actually sends a message
+    session_started = False
     while True:
         try:
             user_in = input("You: ").strip()
@@ -279,15 +279,19 @@ def interactive_loop(agent: BuyAgent) -> None:
             break
         if not user_in:
             continue
+        if not session_started:
+            agent.new_session(label="interactive")
+            session_started = True
         agent.handle(user_in)
-    # Save memory on exit
-    agent.memory.save(
-        chat_history=agent.chat_history,
-        perceptions_history=agent.perceptions_history,
-        perceptions=agent.perceptions,
-        last_agent_state=agent._last_state,
-        config={"model": agent.model_name},
-    )
+    # Save memory on exit only if a session was started (i.e., at least one user message was handled)
+    if session_started:
+        agent.memory.save(
+            chat_history=agent.chat_history,
+            perceptions_history=agent.perceptions_history,
+            perceptions=agent.perceptions,
+            last_agent_state=agent._last_state,
+            config={"model": agent.model_name},
+        )
 
 
 if __name__ == "__main__":
