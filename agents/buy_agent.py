@@ -105,7 +105,7 @@ class BuyAgent:
                 self.model = None
 
     # ---------- Session & Memory Management ----------
-    # Memory is handled by a shared SessionMemory class (see Agents/memory.py)
+    # Memory is handled by a shared SessionMemory class (see agents/memory.py)
     def new_session(self, label: Optional[str] = None):
         """Start a new conversation session and reset state using shared memory manager."""
         # Initialize chat_history and perceptions_history as empty lists

@@ -54,7 +54,7 @@ class SessionMemory:
         self.agent_name = agent_name
         if base_dir is None:
             # Default to a Memory directory at the project root
-            # Assume this file is in Agents/ subdirectory
+            # Assume this file is in agents/ subdirectory
             base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             base_dir = os.path.join(base, "Memory")
         self.base_dir = base_dir
