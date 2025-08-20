@@ -254,10 +254,12 @@ def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
             result = agent.handle(query)
             perception.append({"query": query, "result": result.model_dump()})
         # Ensure final memory save at scenario end
-        # Save with chat history in chronological order (oldest first)
+        # Reverse before saving to get oldest at the top (newest at the bottom)
+        reversed_chat_history = list(reversed(agent.chat_history))
+        reversed_perception_history = list(reversed(agent.perceptions_history))
         agent.memory.save(
-            chat_history=agent.chat_history,  # Already in chronological order
-            perceptions_history=agent.perceptions_history,  # Already in chronological order
+            chat_history=reversed_chat_history,  # Reverse to get oldest at top
+            perceptions_history=reversed_perception_history,  # Reverse to get oldest at top
             perceptions=agent.perceptions,
             last_agent_state=agent._last_state,
             config={"model": agent.model_name},
@@ -288,9 +290,12 @@ def interactive_loop(agent: BuyAgent) -> None:
         agent.handle(user_in)
     # Save memory on exit only if a session was started (i.e., at least one user message was handled)
     if session_started:
+        # Reverse before saving to get oldest at the top (newest at the bottom)
+        reversed_chat_history = list(reversed(agent.chat_history))
+        reversed_perception_history = list(reversed(agent.perceptions_history))
         agent.memory.save(
-            chat_history=agent.chat_history,  # Already in chronological order
-            perceptions_history=agent.perceptions_history,  # Already in chronological order
+            chat_history=reversed_chat_history,  # Reverse to get oldest at top
+            perceptions_history=reversed_perception_history,  # Reverse to get oldest at top
             perceptions=agent.perceptions,
             last_agent_state=agent._last_state,
             config={"model": agent.model_name},
