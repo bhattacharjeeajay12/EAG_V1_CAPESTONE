@@ -1,8 +1,9 @@
 import os, json, re
 from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime, timedelta
 
 import google.generativeai as genai
-from buy_perception import extract_buy_details
+from return_perception import extract_return_details
 from memory import SessionMemory
 
 
@@ -11,44 +12,34 @@ def _project_path(*parts: str) -> str:
     return os.path.normpath(os.path.join(base, "..", *parts))
 
 
-def _load_buy_agent_prompt() -> str:
-    path = _project_path("Prompts", "buy_prompt.txt")
+def _load_return_agent_prompt() -> str:
+    path = _project_path("Prompts", "return_prompt.txt")
     try:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
-        # Try to extract triple-quoted string assigned to BUY_AGENT_PROMPT
-        m = re.search(r'BUY_AGENT_PROMPT\s*=\s*"""(.*?)"""', content, re.S)
+        # Try to extract triple-quoted string assigned to RETURN_AGENT_PROMPT
+        m = re.search(r'RETURN_AGENT_PROMPT\s*=\s*"""(.*?)"""', content, re.S)
         if m:
             return m.group(1).strip()
         return content.strip()
     except Exception as e:
-        print(f"[WARN] Could not load buy agent prompt from {path}: {e}")
-        return "You are a helpful e-commerce buy agent. Respond conversationally and then output a JSON state as specified."
+        print(f"[WARN] Could not load return agent prompt from {path}: {e}")
+        return "You are a helpful e-commerce return agent. Respond conversationally and then output a JSON state as specified."
 
 
 def _merge_perceptions(base: Dict[str, Any], latest: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(base or {})
-    # Simple merge rules: last mention wins; merge specifications dict deeply
+    # Simple merge rules: last mention wins for most fields
     for k, v in latest.items():
-        if v in (None, "", {}):
+        if v is None or v == "" or v == {}:
             continue
-        if k == "specifications":
-            spec = dict(merged.get("specifications") or {})
-            spec.update(v or {})
-            merged["specifications"] = spec
-        else:
-            merged[k] = v
+        merged[k] = v
     return merged
 
 
-def _ready_check(state: Dict[str, Any]) -> bool:
-    if not state.get("product_name"):
-        return False
-    specs = state.get("specifications") or {}
-    has_specs = isinstance(specs, dict) and len(specs) >= 1
-    quantity = state.get("quantity", 1)
-    budget = state.get("budget")
-    return bool(quantity) and (has_specs or budget)
+def _ready_for_eligibility_check(state: Dict[str, Any]) -> bool:
+    # Check if we have enough information to check return eligibility
+    return (state.get("product_id") or state.get("product_name")) and state.get("purchase_date")
 
 
 def _extract_last_json(s: str) -> Optional[Tuple[str, Dict[str, Any]]]:
@@ -80,19 +71,23 @@ def _extract_last_json(s: str) -> Optional[Tuple[str, Dict[str, Any]]]:
         return None
 
 
-class BuyAgent:
+class ReturnAgent:
     def __init__(self):
         # Conversation state (store oldest-first for convenience internally)
         self.chat_history: List[Dict[str, str]] = []  # {role: 'user'|'agent', content: str}
         self.perceptions_history: List[Dict[str, Any]] = []  # list of {message, perception}
-        self.perceptions: Dict[str, Any] = {"specifications": {}, "quantity": 1}
+        self.perceptions: Dict[str, Any] = {
+            "has_packaging": True,
+            "has_receipt": False,
+            "image_provided": False
+        }
 
         # Shared session memory manager (reusable across agents)
-        self.memory = SessionMemory(agent_name="buy")
+        self.memory = SessionMemory(agent_name="return")
         self._last_state: Dict[str, Any] = {}
 
         # LLM setup
-        self.prompt_text: str = _load_buy_agent_prompt()
+        self.prompt_text: str = _load_return_agent_prompt()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         self.model = None
@@ -105,14 +100,17 @@ class BuyAgent:
                 self.model = None
 
     # ---------- Session & Memory Management ----------
-    # Memory is handled by a shared SessionMemory class (see Agents/memory.py)
     def new_session(self, label: Optional[str] = None):
         """Start a new conversation session and reset state using shared memory manager."""
         # Initialize chat_history and perceptions_history as empty lists
         # We'll insert new messages at position 0 to maintain newest-first internally
         self.chat_history = []
         self.perceptions_history = []
-        self.perceptions = {"specifications": {}, "quantity": 1}
+        self.perceptions = {
+            "has_packaging": True,
+            "has_receipt": False,
+            "image_provided": False
+        }
         self._last_state = {}
         # Initialize memory session and persist an initial shell
         self.memory.new_session(label=label, config={"model": self.model_name})
@@ -132,32 +130,44 @@ class BuyAgent:
     def _fallback_response(self, latest_message: str) -> Tuple[str, Dict[str, Any]]:
         # Craft a simple conversational reply based on what is missing
         missing = []
-        if not self.perceptions.get("product_name"):
-            missing.append("the product name")
-        specs = self.perceptions.get("specifications") or {}
-        if not specs:
-            missing.append("key specs like brand, color, or size")
-        if not self.perceptions.get("budget"):
-            missing.append("your budget or price range (optional)")
+        if not self.perceptions.get("product_name") and not self.perceptions.get("product_id"):
+            missing.append("the product you want to return")
+        if not self.perceptions.get("order_id"):
+            missing.append("your order ID")
+        if not self.perceptions.get("purchase_date"):
+            missing.append("when you purchased the item")
+        if not self.perceptions.get("return_reason"):
+            missing.append("why you want to return it")
+
         if missing:
             ask = "; ".join(missing)
             reply = (
-                f"Thanks! I captured your request. Could you share {ask}? "
-                f"This will help me find the best options."
+                f"I'd be happy to help with your return request. Could you please provide {ask}? "
+                f"This will help me check if your return is eligible."
             )
         else:
             reply = (
-                "Great! I have enough details to search for options. "
-                "Would you like me to pull up some matches now?"
+                "Thank you for providing the details. I'll check if your return is eligible. "
+                "Could you also send a photo of the product so we can verify its condition?"
             )
+
         state = {
+            "product_id": self.perceptions.get("product_id"),
             "product_name": self.perceptions.get("product_name"),
-            "specifications": self.perceptions.get("specifications") or {},
-            "quantity": self.perceptions.get("quantity", 1),
-            "budget": self.perceptions.get("budget"),
-            "category": self.perceptions.get("category"),
-            "ready_for_tool_call": _ready_check(self.perceptions),
-            "conversation_outcome": "undecided",
+            "order_id": self.perceptions.get("order_id"),
+            "purchase_date": self.perceptions.get("purchase_date"),
+            "return_reason": self.perceptions.get("return_reason"),
+            "condition": self.perceptions.get("condition"),
+            "has_packaging": self.perceptions.get("has_packaging", True),
+            "has_receipt": self.perceptions.get("has_receipt", False),
+            "image_provided": self.perceptions.get("image_provided", False),
+            "image_quality": self.perceptions.get("image_quality"),
+            "eligibility_checked": False,
+            "is_eligible": False,
+            "return_window_open": False,
+            "customer_exception_granted": False,
+            "image_verified": False,
+            "return_status": "pending"
         }
         return reply, state
 
@@ -188,17 +198,80 @@ class BuyAgent:
             print("[WARN] LLM generation failed:", e)
             return None
 
+    def _check_eligibility(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Checks return eligibility based on product information and purchase date.
+        This is a simplified example - in a real system, this would query your database.
+        """
+        # For demonstration purposes only - in a real system, you'd query your actual database
+        product_id = state.get("product_id", "unknown")
+        product_name = state.get("product_name", "unknown")
+        purchase_date_str = state.get("purchase_date", "")
+
+        # Parse purchase date - this is simplistic, real code would handle various formats
+        try:
+            # Try to parse date in format YYYY-MM-DD
+            purchase_date = datetime.strptime(purchase_date_str, "%Y-%m-%d")
+        except ValueError:
+            try:
+                # Try to parse date in format MM/DD/YYYY
+                purchase_date = datetime.strptime(purchase_date_str, "%m/%d/%Y")
+            except ValueError:
+                # Default to 20 days ago if we can't parse the date
+                purchase_date = datetime.now() - timedelta(days=20)
+
+        # Calculate days since purchase
+        days_since_purchase = (datetime.now() - purchase_date).days
+
+        # Mock product lookup - you'd replace this with database query
+        return_window = 15  # Default return window of 15 days
+
+        # In a real implementation, you would look up the actual return window from product data
+        # For example:
+        # product_data = database.get_product(product_id)
+        # return_window = product_data.return_window
+
+        result = {
+            "eligibility_checked": True,
+            "days_since_purchase": days_since_purchase,
+            "return_window": return_window
+        }
+
+        if days_since_purchase <= return_window:
+            # Return is within window
+            result["is_eligible"] = True
+            result["return_window_open"] = True
+        else:
+            # Return window has passed
+            result["is_eligible"] = False
+            result["return_window_open"] = False
+
+            # Mock customer history check - in a real system, this would query customer database
+            # For demonstration, we'll randomly grant exceptions based on product ID
+            # In reality, this would be based on customer purchase history, loyalty, etc.
+            exception_granted = hash(product_id) % 3 == 0  # Simple pseudo-random decision
+            result["customer_exception_granted"] = exception_granted
+            if exception_granted:
+                result["is_eligible"] = True
+
+        return result
+
     def handle(self, query: str):
-        print("[BuyAgent] Processing buy query...")
+        print("[ReturnAgent] Processing return query...")
         # Update chat with user message
         self.chat_history.append({"role": "user", "content": query})
 
         # Extract perceptions
-        result = extract_buy_details(query)
+        result = extract_return_details(query)
         latest_perception = result.model_dump()
         self.perceptions_history.append({"message": query, "perception": latest_perception})
         # Merge cumulative perceptions
         self.perceptions = _merge_perceptions(self.perceptions, latest_perception)
+
+        # Check if we have enough info to check eligibility
+        if _ready_for_eligibility_check(self.perceptions) and not self.perceptions.get("eligibility_checked"):
+            eligibility_result = self._check_eligibility(self.perceptions)
+            self.perceptions.update(eligibility_result)
 
         # Build payload for the agent prompt
         payload = self._build_input_payload(query, latest_perception)
@@ -212,7 +285,7 @@ class BuyAgent:
 
         # Print and record agent reply
         print(f"Agent: {reply_text}")
-        print("[BuyAgent] State:", state)
+        print("[ReturnAgent] State:", state)
         self.chat_history.append({"role": "agent", "content": reply_text})
         # Cache last state and persist session memory
         self._last_state = state
@@ -229,18 +302,19 @@ class BuyAgent:
         return result
 
 
-def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
+def run_examples(agent: ReturnAgent) -> List[Dict[str, Any]]:
     scenarios = [
-        # scenario 1
+        # scenario 1: Return within window
         [
-            "I need headphones.",
-            "I need wired earphone"
+            "I want to return my headphones that I bought last week.",
+            "They're not working properly. I have the original packaging."
         ],
-        # scenario 2
+
+        # scenario 2: Return outside window
         [
-            "I want shoes.",
-            "I want casual shoes"
-        ],
+            "I bought a laptop 3 months ago and it's starting to have issues.",
+            "The battery doesn't last more than an hour now. Can I return it?"
+        ]
     ]
 
     print("\n=== Running example scenarios ===")
@@ -268,8 +342,8 @@ def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
     return perception_list
 
 
-def interactive_loop(agent: BuyAgent) -> None:
-    print("Enter your purchase queries. Type 'exit' to quit.")
+def interactive_loop(agent: ReturnAgent) -> None:
+    print("Enter your return queries. Type 'exit' to quit.")
     # Lazy-start a session only when the user actually sends a message
     session_started = False
     while True:
@@ -299,9 +373,9 @@ def interactive_loop(agent: BuyAgent) -> None:
 
 
 if __name__ == "__main__":
-    agent = BuyAgent()
+    agent = ReturnAgent()
 
-    # 1) Run the two provided scenarios as examples
+    # 1) Run the provided scenarios as examples
     _ = run_examples(agent)
 
     # 2) Start interactive input loop

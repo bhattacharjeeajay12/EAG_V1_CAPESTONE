@@ -31,7 +31,154 @@ class SessionMemory:
         "config": Dict[str, Any]
       }
     """
+import os
+import json
+import uuid
+from datetime import datetime, timezone
+from typing import Dict, List, Any, Optional
 
+
+class SessionMemory:
+    """
+    Manages session-based memory storage for agents.
+    Creates and updates JSON files that store conversation state and other metadata.
+    """
+
+    def __init__(self, agent_name: str, base_dir: Optional[str] = None):
+        """
+        Initialize the session memory manager.
+
+        :param agent_name: Name of the agent (used for directory structure)
+        :param base_dir: Base directory for memory storage (default: "../Memory")
+        """
+        self.agent_name = agent_name
+        if base_dir is None:
+            # Default to a Memory directory at the project root
+            # Assume this file is in Agents/ subdirectory
+            base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            base_dir = os.path.join(base, "Memory")
+        self.base_dir = base_dir
+        self.agent_dir = os.path.join(self.base_dir, self.agent_name)
+        os.makedirs(self.agent_dir, exist_ok=True)
+        self.session_id = None
+        self.session_path = None
+
+    def new_session(self, label: Optional[str] = None, config: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Start a new session with a unique ID.
+
+        :param label: Optional human-readable label for the session
+        :param config: Optional configuration parameters to store
+        :return: The new session ID
+        """
+        # Generate a timestamp-based session ID
+        now = datetime.now(timezone.utc)
+        timestamp = now.strftime("%Y%m%dT%H%M%SZ")
+        uuid_part = uuid.uuid4().hex[:8]  # Use 8 chars from a UUID for uniqueness
+        self.session_id = f"{timestamp}_{uuid_part}"
+
+        # Create the session directory
+        self.session_path = os.path.join(self.agent_dir, self.session_id)
+        os.makedirs(self.session_path, exist_ok=True)
+
+        # Initialize the session with minimal metadata
+        session_data = {
+            "session_id": self.session_id,
+            "agent": self.agent_name,
+            "label": label,
+            "created_at": now.isoformat(),
+            "updated_at": now.isoformat(),
+            "config": config or {},
+        }
+
+        # Write the initial session file
+        with open(os.path.join(self.session_path, "session.json"), "w", encoding="utf-8") as f:
+            json.dump(session_data, indent=2, ensure_ascii=False, sort_keys=True, f=f)
+
+        return self.session_id
+
+    def save(self, 
+             chat_history: List[Dict[str, str]], 
+             perceptions_history: List[Dict[str, Any]], 
+             perceptions: Dict[str, Any],
+             last_agent_state: Dict[str, Any],
+             config: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Save the current state of the conversation.
+
+        :param chat_history: List of chat messages (oldest first)
+        :param perceptions_history: List of perception results (oldest first)
+        :param perceptions: Current merged perceptions state
+        :param last_agent_state: State from the last agent response
+        :param config: Optional configuration updates
+        :return: Path to the saved file
+        """
+        if self.session_id is None:
+            self.new_session(config=config)
+
+        # Update timestamp
+        now = datetime.now(timezone.utc)
+        timestamp = now.strftime("%Y%m%dT%H%M%SZ")
+
+        # Prepare the data to save
+        session_data = {
+            "session_id": self.session_id,
+            "agent": self.agent_name,
+            "created_at": None,  # Will be filled from existing file
+            "updated_at": now.isoformat(),
+            "chat_history": chat_history,  # Keep chronological order (oldest first)
+            "perceptions_history": perceptions_history,  # Keep chronological order (oldest first)
+            "perceptions": perceptions,
+            "last_agent_state": last_agent_state,
+            "config": config or {},
+        }
+
+        # Try to read existing file to preserve creation time
+        session_file = os.path.join(self.session_path, "session.json")
+        try:
+            if os.path.exists(session_file):
+                with open(session_file, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+                    session_data["created_at"] = existing.get("created_at")
+                    session_data["label"] = existing.get("label")
+        except Exception as e:
+            print(f"[WARN] Error reading existing session file: {e}")
+            session_data["created_at"] = now.isoformat()
+
+        # If still missing creation time, use current time
+        if not session_data["created_at"]:
+            session_data["created_at"] = now.isoformat()
+
+        # Write the updated session file
+        with open(session_file, "w", encoding="utf-8") as f:
+            json.dump(session_data, indent=2, ensure_ascii=False, sort_keys=True, f=f)
+
+        # Also create a timestamped snapshot for history
+        snapshot_file = os.path.join(self.session_path, f"{timestamp}.json")
+        with open(snapshot_file, "w", encoding="utf-8") as f:
+            json.dump(session_data, indent=2, ensure_ascii=False, sort_keys=True, f=f)
+
+        return snapshot_file
+
+    def load_latest(self) -> Optional[Dict[str, Any]]:
+        """
+        Load the latest state for the current session.
+
+        :return: Dictionary with the latest session state, or None if no session exists
+        """
+        if self.session_id is None:
+            return None
+
+        session_file = os.path.join(self.session_path, "session.json")
+        if not os.path.exists(session_file):
+            return None
+
+        try:
+            with open(session_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"[WARN] Error loading session file: {e}")
+            return None
     def __init__(self, agent_name: str, base_memory_dir: Optional[str] = None) -> None:
         self.agent_name = agent_name
         self.base_memory_dir = base_memory_dir or _project_path("DB", "memory")
