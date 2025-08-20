@@ -117,11 +117,10 @@ class ReturnAgent:
 
     # ---------- Payload for LLM ----------
     def _build_input_payload(self, latest_message: str, latest_perception: Dict[str, Any]) -> Dict[str, Any]:
-        # Reverse the chat_history and perceptions_history to get chronological order (oldest first)
-        # Since we're now inserting at position 0, we need to reverse for the LLM
+        # Chat history and perceptions history are already in chronological order (oldest first)
         return {
-            "chat_history": list(reversed(self.chat_history)),
-            "perceptions_history": list(reversed(self.perceptions_history)),
+            "chat_history": self.chat_history,
+            "perceptions_history": self.perceptions_history,
             "perceptions": self.perceptions,
             "latest_message": latest_message,
             "latest_perception": latest_perception,
@@ -331,8 +330,8 @@ def run_examples(agent: ReturnAgent) -> List[Dict[str, Any]]:
         # Ensure final memory save at scenario end
         # Save with chat history in chronological order (oldest first)
         agent.memory.save(
-            chat_history=list(reversed(agent.chat_history)),  # Reverse to get oldest first
-            perceptions_history=list(reversed(agent.perceptions_history)),  # Reverse to get oldest first
+            chat_history=agent.chat_history,  # Already in chronological order
+            perceptions_history=agent.perceptions_history,  # Already in chronological order
             perceptions=agent.perceptions,
             last_agent_state=agent._last_state,
             config={"model": agent.model_name},
@@ -364,8 +363,8 @@ def interactive_loop(agent: ReturnAgent) -> None:
     # Save memory on exit only if a session was started (i.e., at least one user message was handled)
     if session_started:
         agent.memory.save(
-            chat_history=list(reversed(agent.chat_history)),  # Reverse to get oldest first
-            perceptions_history=list(reversed(agent.perceptions_history)),  # Reverse to get oldest first
+            chat_history=agent.chat_history,  # Already in chronological order
+            perceptions_history=agent.perceptions_history,  # Already in chronological order
             perceptions=agent.perceptions,
             last_agent_state=agent._last_state,
             config={"model": agent.model_name},
