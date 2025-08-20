@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional, Tuple
 
 import google.generativeai as genai
 from buy_perception import extract_buy_details
+from memory import SessionMemory
 
 
 def _project_path(*parts: str) -> str:
@@ -86,19 +87,35 @@ class BuyAgent:
         self.perceptions_history: List[Dict[str, Any]] = []  # list of {message, perception}
         self.perceptions: Dict[str, Any] = {"specifications": {}, "quantity": 1}
 
+        # Shared session memory manager (reusable across agents)
+        self.memory = SessionMemory(agent_name="buy")
+        self._last_state: Dict[str, Any] = {}
+
         # LLM setup
         self.prompt_text: str = _load_buy_agent_prompt()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         self.model = None
         if self.gemini_api_key:
             try:
                 genai.configure(api_key=self.gemini_api_key)
-                self.model = genai.GenerativeModel(model_name)
+                self.model = genai.GenerativeModel(self.model_name)
             except Exception as e:
                 print("[WARN] Failed to initialize Gemini model:", e)
                 self.model = None
 
+    # ---------- Session & Memory Management ----------
+    # Memory is handled by a shared SessionMemory class (see Agents/memory.py)
+    def new_session(self, label: Optional[str] = None):
+        """Start a new conversation session and reset state using shared memory manager."""
+        self.chat_history = []
+        self.perceptions_history = []
+        self.perceptions = {"specifications": {}, "quantity": 1}
+        self._last_state = {}
+        # Initialize memory session and persist an initial shell
+        self.memory.new_session(label=label, config={"model": self.model_name})
+
+    # ---------- Payload for LLM ----------
     def _build_input_payload(self, latest_message: str, latest_perception: Dict[str, Any]) -> Dict[str, Any]:
         # chat_history and perceptions_history must be NEWEST-first per prompt
         newest_first_chat = list(reversed(self.chat_history))
@@ -196,6 +213,15 @@ class BuyAgent:
         print(f"Agent: {reply_text}")
         print("[BuyAgent] State:", state)
         self.chat_history.append({"role": "agent", "content": reply_text})
+        # Cache last state and persist session memory
+        self._last_state = state
+        self.memory.save(
+            chat_history=self.chat_history,
+            perceptions_history=self.perceptions_history,
+            perceptions=self.perceptions,
+            last_agent_state=self._last_state,
+            config={"model": self.model_name},
+        )
 
         return result
 
@@ -218,11 +244,21 @@ def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
     perception_list = []
     for i, scenario in enumerate(scenarios, start=1):
         print(f"\n--- Scenario {i} ---")
+        # Start a new session per scenario
+        agent.new_session(label=f"example-scenario-{i}")
         perception = []
         for query in scenario:
             print(f"User: {query}")
             result = agent.handle(query)
             perception.append({"query": query, "result": result.model_dump()})
+        # Ensure final memory save at scenario end
+        agent.memory.save(
+            chat_history=agent.chat_history,
+            perceptions_history=agent.perceptions_history,
+            perceptions=agent.perceptions,
+            last_agent_state=agent._last_state,
+            config={"model": agent.model_name},
+        )
         perception_list.append(perception)
     print("=== Examples complete ===\n")
     return perception_list
@@ -230,6 +266,8 @@ def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
 
 def interactive_loop(agent: BuyAgent) -> None:
     print("Enter your purchase queries. Type 'exit' to quit.")
+    # Start a new session for the interactive conversation
+    agent.new_session(label="interactive")
     while True:
         try:
             user_in = input("You: ").strip()
@@ -242,6 +280,14 @@ def interactive_loop(agent: BuyAgent) -> None:
         if not user_in:
             continue
         agent.handle(user_in)
+    # Save memory on exit
+    agent.memory.save(
+        chat_history=agent.chat_history,
+        perceptions_history=agent.perceptions_history,
+        perceptions=agent.perceptions,
+        last_agent_state=agent._last_state,
+        config={"model": agent.model_name},
+    )
 
 
 if __name__ == "__main__":

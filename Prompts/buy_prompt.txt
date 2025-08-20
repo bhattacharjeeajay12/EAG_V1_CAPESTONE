@@ -16,7 +16,7 @@ You will always receive structured input with the following keys:
     {"role": "user", "content": "..."},
     {"role": "agent", "content": "..."},
     ...
-  ],   // Ordered with NEWEST message first
+  ],   // Ordered with NEWEST message first (this same format is persisted to session memory)
 
   "perceptions_history": [
     {
@@ -24,7 +24,7 @@ You will always receive structured input with the following keys:
       "perception": { extracted entities }
     },
     ...
-  ],   // Ordered with NEWEST perception first
+  ],   // Ordered with NEWEST perception first (this same format is persisted to session memory)
 
   "perceptions": {
     "product_name": string or null,
