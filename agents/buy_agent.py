@@ -260,6 +260,7 @@ def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
         # # scenario 3
         [
             "I want to buy a laptop.",
+            "Actually I need three laptops."
         ]
     ]
 
