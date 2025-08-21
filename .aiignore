@@ -7,4 +7,4 @@
 # - If a command has been added to the Allowlist — Junie will not ask for confirmation, even if it accesses - files and folders listed in .aiignore.
 DB/*
 memory/*
-test.ipynb
+dev_docs/test.ipynb
