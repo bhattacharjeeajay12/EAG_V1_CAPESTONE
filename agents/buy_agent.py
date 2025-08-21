@@ -247,16 +247,20 @@ class BuyAgent:
 
 def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
     scenarios = [
-        # scenario 1
+        # # scenario 1
+        # [
+        #     "I need headphones.",
+        #     "I need wired earphone"
+        # ],
+        # # scenario 2
+        # [
+        #     "I want shoes.",
+        #     "I want casual shoes"
+        # ],
+        # # scenario 3
         [
-            "I need headphones.",
-            "I need wired earphone"
-        ],
-        # scenario 2
-        [
-            "I want shoes.",
-            "I want casual shoes"
-        ],
+            "I want to buy a laptop.",
+        ]
     ]
 
     print("\n=== Running example scenarios ===")

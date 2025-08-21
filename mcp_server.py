@@ -1,53 +1,45 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import json
-from typing import Tuple
+from mcp.server.fastmcp import FastMCP
+from mcp.types import TextContent
+from typing import Dict, Any, Optional, List
+import sys
+from pydantic import BaseModel, Field
 
-HOST = "127.0.0.1"
-PORT = 8765
+# Define input/output models
+class EchoInput(BaseModel):
+    """Input for the echo tool."""
+    data: Dict[str, Any] = Field(description="Data to echo back")
 
+class EchoOutput(BaseModel):
+    """Output from the echo tool."""
+    echo: Dict[str, Any] = Field(description="Echoed data")
 
-class MCPHandler(BaseHTTPRequestHandler):
-    def _send(self, code: int, payload: dict) -> None:
-        self.send_response(code)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(json.dumps(payload).encode("utf-8"))
+class HealthOutput(BaseModel):
+    """Output from the health check tool."""
+    status: str = Field(description="Health status")
 
-    def log_message(self, format: str, *args) -> None:
-        # Keep server quiet; rely on client-side structured logs
-        return
+# Create FastMCP instance
+mcp = FastMCP("MCP Server")
 
-    def do_GET(self) -> None:
-        if self.path == "/health":
-            self._send(200, {"status": "ok"})
-        else:
-            self._send(404, {"error": "not_found"})
+@mcp.tool()
+def echo(input: EchoInput) -> EchoOutput:
+    """Echo back the input data."""
+    print("CALLED: echo(EchoInput) -> EchoOutput")
+    return EchoOutput(echo=input.data)
 
-    def do_POST(self) -> None:
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8") if length else "{}"
-        try:
-            data = json.loads(body) if body else {}
-        except Exception:
-            data = {"raw": body}
+@mcp.tool()
+def health() -> HealthOutput:
+    """Return the health status of the server."""
+    print("CALLED: health() -> HealthOutput")
+    return HealthOutput(status="ok")
 
-        if self.path == "/echo":
-            self._send(200, {"echo": data})
-        else:
-            self._send(404, {"error": "not_found"})
-
-
-def run_server(host: str = HOST, port: int = PORT) -> Tuple[str, int]:
-    server = HTTPServer((host, port), MCPHandler)
-    print(f"MCP server running at http://{host}:{port}")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
-    return host, port
-
-
+# Main entry point
 if __name__ == "__main__":
-    run_server()
+    print("MCP server starting...")
+    if len(sys.argv) > 1 and sys.argv[1] == "dev":
+        # Run without transport for dev server
+        # Default port is 8765, matching the original implementation
+        mcp.run()
+    else:
+        # Run with stdio for direct execution
+        mcp.run(transport="stdio")
+        print("\nShutting down...")
