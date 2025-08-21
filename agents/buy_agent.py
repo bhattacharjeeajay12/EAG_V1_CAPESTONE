@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import google.generativeai as genai
 from perceptions.buy_perception import extract_buy_details
 from memory import SessionMemory
+from utils.logger import get_logger, log_decision
 
 
 def _project_path(*parts: str) -> str:
@@ -87,6 +88,9 @@ class BuyAgent:
         self.perceptions_history: List[Dict[str, Any]] = []  # list of {message, perception}
         self.perceptions: Dict[str, Any] = {"specifications": {}, "quantity": 1}
 
+        # Logging
+        self.logger = get_logger("buy")
+
         # Shared session memory manager (reusable across agents)
         self.memory = SessionMemory(agent_name="buy")
         self._last_state: Dict[str, Any] = {}
@@ -116,6 +120,7 @@ class BuyAgent:
         self._last_state = {}
         # Initialize memory session and persist an initial shell
         self.memory.new_session(label=label, config={"model": self.model_name})
+        log_decision(self.logger, agent="buy", event="new_session", why="start conversation", data={"label": label}, session_id=self.memory.session_id)
 
     # ---------- Payload for LLM ----------
     def _build_input_payload(self, latest_message: str, latest_perception: Dict[str, Any]) -> Dict[str, Any]:
@@ -187,6 +192,16 @@ class BuyAgent:
             print("[WARN] LLM generation failed:", e)
             return None
 
+    def delegate_recommendation(self, recommender, query: str):
+        """Delegate a recommendation request to RecommendationAgent.
+        Note: We accept the agent instance to avoid tight coupling/imports here.
+        """
+        return recommender.handle(query)
+
+    def place_order(self, order_agent, payload: Any):
+        """Trigger an order via OrderAgent using the Buy agent context."""
+        return order_agent.handle(payload, is_buy_agent=True)
+
     def handle(self, query: str):
         print("[BuyAgent] Processing buy query...")
         # Update chat with user message
@@ -205,8 +220,10 @@ class BuyAgent:
         # Get agent response via LLM, fallback if needed
         out = self._llm_response(payload)
         if out is None:
+            log_decision(self.logger, agent="buy", event="decision", why="fallback", data={"reason": "llm_unavailable_or_parse_failed"}, session_id=self.memory.session_id)
             reply_text, state = self._fallback_response(query)
         else:
+            log_decision(self.logger, agent="buy", event="decision", why="llm", data={"model": self.model_name}, session_id=self.memory.session_id)
             reply_text, state = out
 
         # Print and record agent reply

@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import google.generativeai as genai
 from perceptions.order_perception import extract_order_details, process_payment, generate_order_id, OrderDetails
 from memory import SessionMemory
+from utils.logger import get_logger, log_decision
 
 
 def _project_path(*parts: str) -> str:
@@ -61,6 +62,9 @@ class OrderAgent:
         self.chat_history: List[Dict[str, str]] = []  # {role: 'user'|'agent', content: str}
         self.order_details: Optional[OrderDetails] = None
         self.payment_result: Optional[Dict[str, Any]] = None
+
+        # Logging
+        self.logger = get_logger("order")
 
         # Shared session memory manager (reusable across agents)
         self.memory = SessionMemory(agent_name="order")
@@ -309,22 +313,15 @@ class OrderAgent:
         reversed_chat_history = list(reversed(self.chat_history))
 
         try:
-            # Ensure the Memory directory exists
-            memory_dir = "Memory"
-            os.makedirs(memory_dir, exist_ok=True)
-
-            # Ensure the agent-specific directory exists
-            agent_dir = os.path.join(memory_dir, "order")
-            os.makedirs(agent_dir, exist_ok=True)
-
+            # Save directly via shared SessionMemory (handles pathing and ordering)
             self.memory.save(
-                chat_history=reversed_chat_history,  # Reverse to get oldest at top
+                chat_history=self.chat_history,
                 perceptions_history=[],  # Order agent doesn't use perceptions_history
                 perceptions={},  # Order agent doesn't use perceptions
                 last_agent_state=self._last_state,
                 config={"model": self.model_name},
             )
-            print(f"[OrderAgent] Saved memory to {agent_dir}")
+            print(f"[OrderAgent] Saved memory for session {self.memory.session_id}")
         except Exception as e:
             print(f"[ERROR] Failed to save memory: {e}")
 

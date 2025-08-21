@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import google.generativeai as genai
 from perceptions.recommendation_perception import extract_user_preferences, load_product_data, get_recommendations, UserPreference
 from memory import SessionMemory
+from utils.logger import get_logger, log_decision
 
 
 def _project_path(*parts: str) -> str:
@@ -63,6 +64,9 @@ class RecommendationAgent:
         self.available_products = load_product_data(product_data_path)
         self.recommendations = []
 
+        # Logging
+        self.logger = get_logger("recommendation")
+
         # Shared session memory manager (reusable across agents)
         self.memory = SessionMemory(agent_name="recommendation")
         self._last_state: Dict[str, Any] = {}
@@ -89,6 +93,7 @@ class RecommendationAgent:
         self._last_state = {}
         # Initialize memory session and persist an initial shell
         self.memory.new_session(label=label, config={"model": self.model_name})
+        log_decision(self.logger, agent="recommendation", event="new_session", why="start conversation", data={"label": label}, session_id=self.memory.session_id)
 
     # ---------- Payload for LLM ----------
     def _build_input_payload(self, latest_message: str) -> Dict[str, Any]:
@@ -230,25 +235,15 @@ class RecommendationAgent:
         self._last_state = state
 
         try:
-            # Ensure the Memory directory exists
-            memory_dir = "Memory"
-            os.makedirs(memory_dir, exist_ok=True)
-
-            # Ensure the agent-specific directory exists
-            agent_dir = os.path.join(memory_dir, "recommendation")
-            os.makedirs(agent_dir, exist_ok=True)
-
-            # Reverse before saving to get oldest at the top (newest at the bottom) in memory files
-            reversed_chat_history = list(reversed(self.chat_history))
-
+            # Save directly via shared SessionMemory (handles pathing and ordering)
             self.memory.save(
-                chat_history=reversed_chat_history,  # Reverse to get oldest at top
+                chat_history=self.chat_history,
                 perceptions_history=[],  # Recommendation agent doesn't use perceptions_history
                 perceptions=self.user_preferences.dict() if self.user_preferences else {},
                 last_agent_state=self._last_state,
                 config={"model": self.model_name},
             )
-            print(f"[RecommendationAgent] Saved memory to {agent_dir}")
+            print(f"[RecommendationAgent] Saved memory for session {self.memory.session_id}")
         except Exception as e:
             print(f"[ERROR] Failed to save memory: {e}")
 
