@@ -9,71 +9,12 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Define schema for structured extraction
 class BuyDetails(BaseModel):
-    product_name: str
-    specifications: Dict[str, str] = Field(default_factory=dict)  # matches your db schema
+    category: Optional[str] = None
+    subcategory: Optional[str] = None
+    product_name: Optional[str] = None
+    specifications: Dict[str, str] = Field(default_factory=dict)
     quantity: int = 1
     budget: Optional[str] = None
-    category: Optional[str] = None
-
-
-def _heuristic_extract(query: str) -> BuyDetails:
-    """A lightweight fallback extractor used when Gemini is unavailable or fails."""
-    q_lower = query.lower()
-    # Quantity: simple number detection
-    qty_match = re.search(r"\b(\d+)\b", q_lower)
-    quantity = int(qty_match.group(1)) if qty_match else 1
-
-    # Budget: look for patterns like $100, 100 usd, 5000 inr, under 100
-    budget = None
-    currency_match = re.search(r"(?:rs\.?|inr|usd|\$|₹)\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)", q_lower)
-    if currency_match:
-        budget = currency_match.group(0)
-    else:
-        under_match = re.search(r"(?:under|below|less than)\s*([0-9]+)", q_lower)
-        if under_match:
-            budget = under_match.group(0)
-
-    # Category keywords (very rough)
-    category = None
-    for cat in ["electronics", "books", "sports", "fashion", "clothing", "shoes", "utensils", "home", "grocery", "toys"]:
-        if cat in q_lower:
-            category = cat
-            break
-
-    # Product name: capture words after intent verbs
-    product_name = "unknown"
-    intent_match = re.search(r"\b(?:need|want|buy|looking for|searching for|get me|show me)\b\s+(.+)", q_lower)
-    if intent_match:
-        product_name = intent_match.group(1).strip().rstrip(".?!")
-    else:
-        # fallback: take the query minus politeness
-        product_name = re.sub(r"^(hi|hello|hey)[,\s]+", "", q_lower).strip().rstrip(".?!")
-
-    # Very naive spec extraction: colors and gender/age hints
-    specifications: Dict[str, str] = {}
-    colors = ["black", "white", "red", "blue", "green", "yellow", "pink", "purple", "grey", "gray", "brown", "orange"]
-    for c in colors:
-        if re.search(rf"\b{re.escape(c)}\b", q_lower):
-            specifications["color"] = c
-            break
-    if "male" in q_lower or "men" in q_lower or "man" in q_lower:
-        specifications["gender"] = "men"
-    if "female" in q_lower or "women" in q_lower or "woman" in q_lower:
-        specifications["gender"] = "women"
-    size_match = re.search(r"\bsize\s*(\w+)\b", q_lower)
-    if size_match:
-        specifications["size"] = size_match.group(1)
-    brand_match = re.search(r"\bby\s+([a-z0-9\- ]{2,})\b", q_lower)
-    if brand_match:
-        specifications["brand"] = brand_match.group(1).strip()
-
-    return BuyDetails(
-        product_name=product_name,
-        specifications=specifications,
-        quantity=quantity,
-        budget=budget,
-        category=category,
-    )
 
 
 def extract_buy_details(query: str) -> BuyDetails:
@@ -84,41 +25,144 @@ def extract_buy_details(query: str) -> BuyDetails:
     """
     model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
-    if not GEMINI_API_KEY:
-        # No API key; use fallback
-        return _heuristic_extract(query)
-
     model = genai.GenerativeModel(model_name)
 
     prompt = f"""
-You are an information extraction assistant.
+            You are an information extraction assistant.
 
-Your task is to extract structured details from a user query related to buying a product.
+            Your task is to extract structured details from a user query related to buying a product. 
+            Implemented categories: electronics, sports.
+            Electronics subcategories: laptop, smartphone, earphone, graphic tablet, camera.
+            Sports subcategories: yoga mat, shoes, dumbbells, cricket bat, basketball, treadmill.
 
-User query: "{query}"
+            Rules for extraction:
+            - category: must be "electronics" or "sports". If not identifiable, set to null.
+            - subcategory: must be one of the listed subcategories for that category. If not identifiable, set to null.
+            - product_name: natural phrasing of the product (e.g. "Dell laptop", "Sony earphones", "SG cricket bat"). 
+              If no brand given, use just the subcategory (e.g. "laptop"). If product is not identifiable, set to null.
+            - specifications: only intrinsic product attributes (brand, color, RAM, storage, GPU, weight, size, material, etc.). Default = {{}}.
+            - quantity: if not mentioned, default to 1.
+            - budget: include if user mentions price, budget, or range. Otherwise omit.
+            - Always return valid JSON. 
+            - Use null explicitly if category, subcategory, or product_name cannot be determined.
 
-Return your answer in pure JSON only with the following structure:
+            Here are some examples:
 
-- product_name (string, required) → the main product the user wants
-- specifications (object, optional) → only the intrinsic product attributes such as:
-  - color
-  - size
-  - gender
-  - age_group
-  - brand
-  - material
-  - model
-  - any other descriptive features of the product itself
-- quantity (integer, default = 1 if not provided) → how many units the user wants
-- budget (string or number, optional) → the budget or price range mentioned by the user (e.g., "80000 INR", "<50 USD")
-- category (string, optional) → high-level product category such as "electronics", "books", "sports", "utensils"
+            User query: "I want to buy a black Dell laptop with 16GB RAM under 80000 INR"
+            JSON:
+            {{
+              "category": "electronics",
+              "subcategory": "laptop",
+              "product_name": "Dell laptop",
+              "specifications": {{
+                "brand": "Dell",
+                "color": "black",
+                "RAM": "16GB"
+              }},
+              "quantity": 1,
+              "budget": "80000 INR"
+            }}
 
-Rules:
-- The response must be a single valid JSON object and nothing else.
-- `specifications` must include only product attributes (do NOT include quantity, budget, or category).
-- If a field is not mentioned, omit it (do not include null or empty strings).
-- Always return valid, parseable JSON.
-"""
+            User query: "Need 2 basketballs size 7"
+            JSON:
+            {{
+              "category": "sports",
+              "subcategory": "basketball",
+              "product_name": "basketball",
+              "specifications": {{
+                "size": "7"
+              }},
+              "quantity": 2
+            }}
+
+            User query: "Looking for a cricket bat by SG under ₹5000"
+            JSON:
+            {{
+              "category": "sports",
+              "subcategory": "cricket bat",
+              "product_name": "SG cricket bat",
+              "specifications": {{
+                "brand": "SG"
+              }},
+              "quantity": 1,
+              "budget": "₹5000"
+            }}
+
+            User query: "Buy two 10kg dumbbells"
+            JSON:
+            {{
+              "category": "sports",
+              "subcategory": "dumbbells",
+              "product_name": "dumbbells",
+              "specifications": {{
+                "weight": "10kg"
+              }},
+              "quantity": 2
+            }}
+
+            User query: "Show me a 128GB Samsung smartphone under 60000 INR"
+            JSON:
+            {{
+              "category": "electronics",
+              "subcategory": "smartphone",
+              "product_name": "Samsung smartphone",
+              "specifications": {{
+                "brand": "Samsung",
+                "storage": "128GB"
+              }},
+              "quantity": 1,
+              "budget": "60000 INR"
+            }}
+
+            User query: "Need 2 wireless Bluetooth earphones by Sony"
+            JSON:
+            {{
+              "category": "electronics",
+              "subcategory": "earphone",
+              "product_name": "Sony wireless Bluetooth earphones",
+              "specifications": {{
+                "brand": "Sony",
+                "connectivity": "Bluetooth",
+                "form_factor": "wireless"
+              }},
+              "quantity": 2
+            }}
+
+            User query: "Show me a laptop"
+            JSON:
+            {{
+              "category": "electronics",
+              "subcategory": "laptop",
+              "product_name": "laptop",
+              "specifications": {{}},
+              "quantity": 1
+            }}
+
+            User query: "Hello"
+            JSON:
+            {{
+              "category": null,
+              "subcategory": null,
+              "product_name": null,
+              "specifications": {{}},
+              "quantity": 1
+            }}
+
+            User query: "Can you help me?"
+            JSON:
+            {{
+              "category": null,
+              "subcategory": null,
+              "product_name": null,
+              "specifications": {{}},
+              "quantity": 1
+            }}
+
+            Now process this query:
+
+            User query: "{query}"
+            JSON:
+            """
 
     try:
         response = model.generate_content(
@@ -130,5 +174,22 @@ Rules:
         details = json.loads(response.text.strip())
         return BuyDetails(**details)
     except Exception as e:
-        print("[WARN] Falling back to heuristic extractor due to error:", e)
-        return _heuristic_extract(query)
+        print("[WARN] Buy Perception layer failed due to error:", e)
+
+
+if __name__ == "__main__":
+    samples = [
+        "I want to buy a black Dell laptop with 16GB RAM under 80000 INR",
+        "Need 2 pairs of running shoes for men, size 10",
+        "Looking for a green yoga mat",
+        "Buy iPhone 14 Pro Max",
+        "Show me smart watches",
+        "Budget is 30000"
+    ]
+
+    print("\n=== Running test samples ===\n")
+    for q in samples:
+        print(f"Query: {q}")
+        details = extract_buy_details(q)
+        print("Extracted:", details.model_dump())
+        print("-" * 60)

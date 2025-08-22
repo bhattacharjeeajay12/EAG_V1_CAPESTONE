@@ -46,7 +46,6 @@ class SessionMemory:
         initial_chat_history: Optional[List[Dict[str, str]]] = None,
         initial_perceptions_history: Optional[List[Dict[str, Any]]] = None,
         initial_perceptions: Optional[Dict[str, Any]] = None,
-        initial_last_agent_state: Optional[Dict[str, Any]] = None,
         config: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
@@ -63,7 +62,6 @@ class SessionMemory:
             chat_history=initial_chat_history or [],
             perceptions_history=initial_perceptions_history or [],
             perceptions=initial_perceptions or {"specifications": {}, "quantity": 1},
-            last_agent_state=initial_last_agent_state or {},
             config=config or {},
         )
 
@@ -73,7 +71,6 @@ class SessionMemory:
         chat_history: List[Dict[str, str]],
         perceptions_history: List[Dict[str, Any]],
         perceptions: Dict[str, Any],
-        last_agent_state: Dict[str, Any],
         config: Dict[str, Any],
     ) -> Dict[str, Any]:
         # Persist NEWEST-first to match prompt input expectations
@@ -88,7 +85,6 @@ class SessionMemory:
             "chat_history": newest_first_chat,
             "perceptions_history": newest_first_perc,
             "perceptions": perceptions,
-            "last_agent_state": last_agent_state,
             "config": dict(config or {}),
         }
 
@@ -97,7 +93,6 @@ class SessionMemory:
         chat_history: List[Dict[str, str]],
         perceptions_history: List[Dict[str, Any]],
         perceptions: Dict[str, Any],
-        last_agent_state: Dict[str, Any],
         config: Optional[Dict[str, Any]] = None,
     ) -> None:
         path = self._session_path()
@@ -106,7 +101,7 @@ class SessionMemory:
             return
         self.updated_at = datetime.utcnow().isoformat() + "Z"
         doc = self._build_document(
-            chat_history, perceptions_history, perceptions, last_agent_state, config or {}
+            chat_history, perceptions_history, perceptions, config or {}
         )
         try:
             with open(path, "w", encoding="utf-8") as f:
