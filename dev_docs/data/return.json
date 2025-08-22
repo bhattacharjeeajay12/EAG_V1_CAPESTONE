@@ -1,0 +1,30 @@
+[
+    {
+      "return_id": 9001,
+      "buy_order_id": 5002,
+      "return_request_date": "2025-07-05",
+      "return_reason": "Defective item",
+      "return_status": "Approved"
+    },
+    {
+      "return_id": 9002,
+      "buy_order_id": 5003,
+      "return_request_date": "2025-07-10",
+      "return_reason": "Wrong item received",
+      "return_status": "Pending"
+    },
+    {
+      "return_id": 9003,
+      "buy_order_id": 5008,
+      "return_request_date": "2025-07-25",
+      "return_reason": "Changed mind",
+      "return_status": "Denied"
+    },
+    {
+      "return_id": 9004,
+      "buy_order_id": 5005,
+      "return_request_date": "2025-07-15",
+      "return_reason": "Item damaged during shipping",
+      "return_status": "Approved"
+    }
+  ]

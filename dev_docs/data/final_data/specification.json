@@ -1,0 +1,3392 @@
+[
+    {
+      "spec_id": 10001,
+      "product_id": "1001",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i9-13980HX"
+    },
+    {
+      "spec_id": 10002,
+      "product_id": "1001",
+      "spec_name": "RAM",
+      "spec_value": "32GB DDR5"
+    },
+    {
+      "spec_id": 10003,
+      "product_id": "1001",
+      "spec_name": "Storage",
+      "spec_value": "1TB PCIe NVMe SSD"
+    },
+    {
+      "spec_id": 10004,
+      "product_id": "1001",
+      "spec_name": "Graphics",
+      "spec_value": "NVIDIA GeForce RTX 4070 8GB GDDR6"
+    },
+    {
+      "spec_id": 10005,
+      "product_id": "1001",
+      "spec_name": "Display",
+      "spec_value": "16-inch FHD+ 165Hz"
+    },
+    {
+      "spec_id": 10006,
+      "product_id": "1001",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Home"
+    },
+    {
+      "spec_id": 10007,
+      "product_id": "1001",
+      "spec_name": "Weight",
+      "spec_value": "2.5 kg"
+    },
+    {
+      "spec_id": 10008,
+      "product_id": "1002",
+      "spec_name": "Processor",
+      "spec_value": "Apple M2 Pro 10-core CPU"
+    },
+    {
+      "spec_id": 10009,
+      "product_id": "1002",
+      "spec_name": "RAM",
+      "spec_value": "16GB Unified Memory"
+    },
+    {
+      "spec_id": 10010,
+      "product_id": "1002",
+      "spec_name": "Storage",
+      "spec_value": "512GB SSD"
+    },
+    {
+      "spec_id": 10011,
+      "product_id": "1002",
+      "spec_name": "Graphics",
+      "spec_value": "16-core GPU"
+    },
+    {
+      "spec_id": 10012,
+      "product_id": "1002",
+      "spec_name": "Display",
+      "spec_value": "14.2-inch Liquid Retina XDR"
+    },
+    {
+      "spec_id": 10013,
+      "product_id": "1002",
+      "spec_name": "Operating System",
+      "spec_value": "macOS"
+    },
+    {
+      "spec_id": 10014,
+      "product_id": "1002",
+      "spec_name": "Weight",
+      "spec_value": "1.6 kg"
+    },
+    {
+      "spec_id": 10015,
+      "product_id": "1003",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i7-13700H"
+    },
+    {
+      "spec_id": 10016,
+      "product_id": "1003",
+      "spec_name": "RAM",
+      "spec_value": "16GB DDR5"
+    },
+    {
+      "spec_id": 10017,
+      "product_id": "1003",
+      "spec_name": "Storage",
+      "spec_value": "1TB M.2 PCIe SSD"
+    },
+    {
+      "spec_id": 10018,
+      "product_id": "1003",
+      "spec_name": "Graphics",
+      "spec_value": "NVIDIA RTX 3050Ti 4GB GDDR6"
+    },
+    {
+      "spec_id": 10019,
+      "product_id": "1003",
+      "spec_name": "Display",
+      "spec_value": "15.6-inch 4K UHD OLED"
+    },
+    {
+      "spec_id": 10020,
+      "product_id": "1003",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Home"
+    },
+    {
+      "spec_id": 10021,
+      "product_id": "1004",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i7-1370P"
+    },
+    {
+      "spec_id": 10022,
+      "product_id": "1004",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5"
+    },
+    {
+      "spec_id": 10023,
+      "product_id": "1004",
+      "spec_name": "Storage",
+      "spec_value": "512GB PCIe NVMe SSD"
+    },
+    {
+      "spec_id": 10024,
+      "product_id": "1004",
+      "spec_name": "Graphics",
+      "spec_value": "Intel Iris Xe Graphics"
+    },
+    {
+      "spec_id": 10025,
+      "product_id": "1004",
+      "spec_name": "Display",
+      "spec_value": "14-inch FHD+ (1920 x 1200)"
+    },
+    {
+      "spec_id": 10026,
+      "product_id": "1004",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Pro"
+    },
+    {
+      "spec_id": 10027,
+      "product_id": "1004",
+      "spec_name": "Weight",
+      "spec_value": "1.12 kg"
+    },
+    {
+      "spec_id": 10028,
+      "product_id": "1005",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i7-1355U"
+    },
+    {
+      "spec_id": 10029,
+      "product_id": "1005",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR4x"
+    },
+    {
+      "spec_id": 10030,
+      "product_id": "1005",
+      "spec_name": "Storage",
+      "spec_value": "1TB PCIe NVMe SSD"
+    },
+    {
+      "spec_id": 10031,
+      "product_id": "1005",
+      "spec_name": "Graphics",
+      "spec_value": "Intel Iris Xe Graphics"
+    },
+    {
+      "spec_id": 10032,
+      "product_id": "1005",
+      "spec_name": "Display",
+      "spec_value": "13.5-inch OLED Touchscreen"
+    },
+    {
+      "spec_id": 10033,
+      "product_id": "1005",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Home"
+    },
+    {
+      "spec_id": 10034,
+      "product_id": "1005",
+      "spec_name": "Weight",
+      "spec_value": "1.36 kg"
+    },
+    {
+      "spec_id": 10035,
+      "product_id": "1006",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i9-13900H"
+    },
+    {
+      "spec_id": 10036,
+      "product_id": "1006",
+      "spec_name": "RAM",
+      "spec_value": "32GB DDR5"
+    },
+    {
+      "spec_id": 10037,
+      "product_id": "1006",
+      "spec_name": "Storage",
+      "spec_value": "2TB PCIe NVMe SSD"
+    },
+    {
+      "spec_id": 10038,
+      "product_id": "1006",
+      "spec_name": "Graphics",
+      "spec_value": "NVIDIA RTX 4070 8GB GDDR6"
+    },
+    {
+      "spec_id": 10039,
+      "product_id": "1006",
+      "spec_name": "Display",
+      "spec_value": "16-inch Mini LED QHD+ 165Hz"
+    },
+    {
+      "spec_id": 10040,
+      "product_id": "1006",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Pro"
+    },
+    {
+      "spec_id": 10041,
+      "product_id": "1007",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i7-12700H"
+    },
+    {
+      "spec_id": 10042,
+      "product_id": "1007",
+      "spec_name": "RAM",
+      "spec_value": "16GB DDR5"
+    },
+    {
+      "spec_id": 10043,
+      "product_id": "1007",
+      "spec_name": "Storage",
+      "spec_value": "512GB PCIe NVMe SSD"
+    },
+    {
+      "spec_id": 10044,
+      "product_id": "1007",
+      "spec_name": "Graphics",
+      "spec_value": "NVIDIA RTX 3060 6GB GDDR6"
+    },
+    {
+      "spec_id": 10045,
+      "product_id": "1007",
+      "spec_name": "Display",
+      "spec_value": "15.6-inch FHD IPS 165Hz"
+    },
+    {
+      "spec_id": 10046,
+      "product_id": "1007",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Home"
+    },
+    {
+      "spec_id": 10047,
+      "product_id": "1008",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i7-1355U"
+    },
+    {
+      "spec_id": 10048,
+      "product_id": "1008",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5"
+    },
+    {
+      "spec_id": 10049,
+      "product_id": "1008",
+      "spec_name": "Storage",
+      "spec_value": "512GB SSD"
+    },
+    {
+      "spec_id": 10050,
+      "product_id": "1008",
+      "spec_name": "Graphics",
+      "spec_value": "Intel Iris Xe Graphics"
+    },
+    {
+      "spec_id": 10051,
+      "product_id": "1008",
+      "spec_name": "Display",
+      "spec_value": "13.5-inch PixelSense Touch"
+    },
+    {
+      "spec_id": 10052,
+      "product_id": "1008",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Home"
+    },
+    {
+      "spec_id": 10053,
+      "product_id": "1009",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i9-13900H"
+    },
+    {
+      "spec_id": 10054,
+      "product_id": "1009",
+      "spec_name": "RAM",
+      "spec_value": "32GB DDR5"
+    },
+    {
+      "spec_id": 10055,
+      "product_id": "1009",
+      "spec_name": "Storage",
+      "spec_value": "1TB PCIe NVMe SSD"
+    },
+    {
+      "spec_id": 10056,
+      "product_id": "1009",
+      "spec_name": "Graphics",
+      "spec_value": "NVIDIA RTX 4080 12GB GDDR6"
+    },
+    {
+      "spec_id": 10057,
+      "product_id": "1009",
+      "spec_name": "Display",
+      "spec_value": "15.6-inch QHD 240Hz"
+    },
+    {
+      "spec_id": 10058,
+      "product_id": "1009",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Pro"
+    },
+    {
+      "spec_id": 10059,
+      "product_id": "1010",
+      "spec_name": "Processor",
+      "spec_value": "Intel Core i7-1360P"
+    },
+    {
+      "spec_id": 10060,
+      "product_id": "1010",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5"
+    },
+    {
+      "spec_id": 10061,
+      "product_id": "1010",
+      "spec_name": "Storage",
+      "spec_value": "1TB NVMe SSD"
+    },
+    {
+      "spec_id": 10062,
+      "product_id": "1010",
+      "spec_name": "Graphics",
+      "spec_value": "Intel Iris Xe Graphics"
+    },
+    {
+      "spec_id": 10063,
+      "product_id": "1010",
+      "spec_name": "Display",
+      "spec_value": "17-inch WQXGA (2560 x 1600)"
+    },
+    {
+      "spec_id": 10064,
+      "product_id": "1010",
+      "spec_name": "Operating System",
+      "spec_value": "Windows 11 Home"
+    },
+    {
+      "spec_id": 10065,
+      "product_id": "1010",
+      "spec_name": "Weight",
+      "spec_value": "1.35 kg"
+    },
+    {
+      "spec_id": 10066,
+      "product_id": "1011",
+      "spec_name": "Processor",
+      "spec_value": "Apple A17 Pro"
+    },
+    {
+      "spec_id": 10067,
+      "product_id": "1011",
+      "spec_name": "RAM",
+      "spec_value": "8GB"
+    },
+    {
+      "spec_id": 10068,
+      "product_id": "1011",
+      "spec_name": "Storage",
+      "spec_value": "256GB"
+    },
+    {
+      "spec_id": 10069,
+      "product_id": "1011",
+      "spec_name": "Display",
+      "spec_value": "6.1-inch Super Retina XDR"
+    },
+    {
+      "spec_id": 10070,
+      "product_id": "1011",
+      "spec_name": "Camera",
+      "spec_value": "48MP Main, 12MP Ultra Wide, 12MP Telephoto"
+    },
+    {
+      "spec_id": 10071,
+      "product_id": "1011",
+      "spec_name": "Battery",
+      "spec_value": "3,274 mAh"
+    },
+    {
+      "spec_id": 10072,
+      "product_id": "1011",
+      "spec_name": "Operating System",
+      "spec_value": "iOS 17"
+    },
+    {
+      "spec_id": 10073,
+      "product_id": "1012",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8 Gen 3"
+    },
+    {
+      "spec_id": 10074,
+      "product_id": "1012",
+      "spec_name": "RAM",
+      "spec_value": "12GB LPDDR5X"
+    },
+    {
+      "spec_id": 10075,
+      "product_id": "1012",
+      "spec_name": "Storage",
+      "spec_value": "512GB UFS 4.0"
+    },
+    {
+      "spec_id": 10076,
+      "product_id": "1012",
+      "spec_name": "Display",
+      "spec_value": "6.8-inch QHD+ Dynamic AMOLED 2X 120Hz"
+    },
+    {
+      "spec_id": 10077,
+      "product_id": "1012",
+      "spec_name": "Camera",
+      "spec_value": "200MP Main, 12MP Ultra Wide, 50MP 5x Telephoto, 10MP 3x Telephoto"
+    },
+    {
+      "spec_id": 10078,
+      "product_id": "1012",
+      "spec_name": "Battery",
+      "spec_value": "5,000 mAh"
+    },
+    {
+      "spec_id": 10079,
+      "product_id": "1012",
+      "spec_name": "Operating System",
+      "spec_value": "Android 14 with One UI 6.1"
+    },
+    {
+      "spec_id": 10080,
+      "product_id": "1013",
+      "spec_name": "Processor",
+      "spec_value": "Google Tensor G3"
+    },
+    {
+      "spec_id": 10081,
+      "product_id": "1013",
+      "spec_name": "RAM",
+      "spec_value": "12GB LPDDR5"
+    },
+    {
+      "spec_id": 10082,
+      "product_id": "1013",
+      "spec_name": "Storage",
+      "spec_value": "128GB UFS 3.1"
+    },
+    {
+      "spec_id": 10083,
+      "product_id": "1013",
+      "spec_name": "Display",
+      "spec_value": "6.7-inch LTPO OLED 120Hz"
+    },
+    {
+      "spec_id": 10084,
+      "product_id": "1013",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 48MP Ultra Wide, 48MP Telephoto"
+    },
+    {
+      "spec_id": 10085,
+      "product_id": "1013",
+      "spec_name": "Battery",
+      "spec_value": "5,050 mAh"
+    },
+    {
+      "spec_id": 10086,
+      "product_id": "1013",
+      "spec_name": "Operating System",
+      "spec_value": "Android 14"
+    },
+    {
+      "spec_id": 10087,
+      "product_id": "1014",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8 Gen 3"
+    },
+    {
+      "spec_id": 10088,
+      "product_id": "1014",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5X"
+    },
+    {
+      "spec_id": 10089,
+      "product_id": "1014",
+      "spec_name": "Storage",
+      "spec_value": "256GB UFS 4.0"
+    },
+    {
+      "spec_id": 10090,
+      "product_id": "1014",
+      "spec_name": "Display",
+      "spec_value": "6.7-inch LTPO AMOLED 120Hz"
+    },
+    {
+      "spec_id": 10091,
+      "product_id": "1014",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 48MP Ultra Wide, 64MP Telephoto"
+    },
+    {
+      "spec_id": 10092,
+      "product_id": "1014",
+      "spec_name": "Battery",
+      "spec_value": "5,400 mAh"
+    },
+    {
+      "spec_id": 10093,
+      "product_id": "1014",
+      "spec_name": "Operating System",
+      "spec_value": "OxygenOS 14 based on Android 14"
+    },
+    {
+      "spec_id": 10094,
+      "product_id": "1015",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8 Gen 3"
+    },
+    {
+      "spec_id": 10095,
+      "product_id": "1015",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5X"
+    },
+    {
+      "spec_id": 10096,
+      "product_id": "1015",
+      "spec_name": "Storage",
+      "spec_value": "512GB UFS 4.0"
+    },
+    {
+      "spec_id": 10097,
+      "product_id": "1015",
+      "spec_name": "Display",
+      "spec_value": "6.73-inch WQHD+ AMOLED 120Hz"
+    },
+    {
+      "spec_id": 10098,
+      "product_id": "1015",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 50MP Ultra Wide, 50MP Telephoto, 50MP Periscope"
+    },
+    {
+      "spec_id": 10099,
+      "product_id": "1015",
+      "spec_name": "Battery",
+      "spec_value": "5,000 mAh"
+    },
+    {
+      "spec_id": 10100,
+      "product_id": "1015",
+      "spec_name": "Operating System",
+      "spec_value": "HyperOS based on Android 14"
+    },
+    {
+      "spec_id": 10101,
+      "product_id": "1016",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8s Gen 3"
+    },
+    {
+      "spec_id": 10102,
+      "product_id": "1016",
+      "spec_name": "RAM",
+      "spec_value": "12GB LPDDR5X"
+    },
+    {
+      "spec_id": 10103,
+      "product_id": "1016",
+      "spec_name": "Storage",
+      "spec_value": "256GB UFS 4.0"
+    },
+    {
+      "spec_id": 10104,
+      "product_id": "1016",
+      "spec_name": "Display",
+      "spec_value": "6.67-inch pOLED 144Hz"
+    },
+    {
+      "spec_id": 10105,
+      "product_id": "1016",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 50MP Ultra Wide, 10MP Telephoto"
+    },
+    {
+      "spec_id": 10106,
+      "product_id": "1016",
+      "spec_name": "Battery",
+      "spec_value": "4,500 mAh"
+    },
+    {
+      "spec_id": 10107,
+      "product_id": "1016",
+      "spec_name": "Operating System",
+      "spec_value": "Android 14"
+    },
+    {
+      "spec_id": 10108,
+      "product_id": "1017",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8 Gen 2"
+    },
+    {
+      "spec_id": 10109,
+      "product_id": "1017",
+      "spec_name": "RAM",
+      "spec_value": "12GB LPDDR5"
+    },
+    {
+      "spec_id": 10110,
+      "product_id": "1017",
+      "spec_name": "Storage",
+      "spec_value": "256GB UFS 4.0"
+    },
+    {
+      "spec_id": 10111,
+      "product_id": "1017",
+      "spec_name": "Display",
+      "spec_value": "6.5-inch 4K HDR OLED 120Hz"
+    },
+    {
+      "spec_id": 10112,
+      "product_id": "1017",
+      "spec_name": "Camera",
+      "spec_value": "12MP Main, 12MP Ultra Wide, 12MP Telephoto"
+    },
+    {
+      "spec_id": 10113,
+      "product_id": "1017",
+      "spec_name": "Battery",
+      "spec_value": "5,000 mAh"
+    },
+    {
+      "spec_id": 10114,
+      "product_id": "1017",
+      "spec_name": "Operating System",
+      "spec_value": "Android 13"
+    },
+    {
+      "spec_id": 10115,
+      "product_id": "1018",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8 Gen 3"
+    },
+    {
+      "spec_id": 10116,
+      "product_id": "1018",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5X"
+    },
+    {
+      "spec_id": 10117,
+      "product_id": "1018",
+      "spec_name": "Storage",
+      "spec_value": "512GB UFS 4.0"
+    },
+    {
+      "spec_id": 10118,
+      "product_id": "1018",
+      "spec_name": "Display",
+      "spec_value": "6.78-inch AMOLED 165Hz"
+    },
+    {
+      "spec_id": 10119,
+      "product_id": "1018",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 13MP Ultra Wide, 32MP Telephoto"
+    },
+    {
+      "spec_id": 10120,
+      "product_id": "1018",
+      "spec_name": "Battery",
+      "spec_value": "6,000 mAh"
+    },
+    {
+      "spec_id": 10121,
+      "product_id": "1018",
+      "spec_name": "Operating System",
+      "spec_value": "Android 14 with ROG UI"
+    },
+    {
+      "spec_id": 10122,
+      "product_id": "1019",
+      "spec_name": "Processor",
+      "spec_value": "Snapdragon 8+ Gen 1"
+    },
+    {
+      "spec_id": 10123,
+      "product_id": "1019",
+      "spec_name": "RAM",
+      "spec_value": "12GB LPDDR5"
+    },
+    {
+      "spec_id": 10124,
+      "product_id": "1019",
+      "spec_name": "Storage",
+      "spec_value": "256GB UFS 3.1"
+    },
+    {
+      "spec_id": 10125,
+      "product_id": "1019",
+      "spec_name": "Display",
+      "spec_value": "6.7-inch OLED 120Hz"
+    },
+    {
+      "spec_id": 10126,
+      "product_id": "1019",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 50MP Ultra Wide"
+    },
+    {
+      "spec_id": 10127,
+      "product_id": "1019",
+      "spec_name": "Battery",
+      "spec_value": "4,700 mAh"
+    },
+    {
+      "spec_id": 10128,
+      "product_id": "1019",
+      "spec_name": "Operating System",
+      "spec_value": "Nothing OS 2.5 based on Android 14"
+    },
+    {
+      "spec_id": 10129,
+      "product_id": "1020",
+      "spec_name": "Processor",
+      "spec_value": "MediaTek Dimensity 9300"
+    },
+    {
+      "spec_id": 10130,
+      "product_id": "1020",
+      "spec_name": "RAM",
+      "spec_value": "16GB LPDDR5X"
+    },
+    {
+      "spec_id": 10131,
+      "product_id": "1020",
+      "spec_name": "Storage",
+      "spec_value": "512GB UFS 4.0"
+    },
+    {
+      "spec_id": 10132,
+      "product_id": "1020",
+      "spec_name": "Display",
+      "spec_value": "6.82-inch LTPO AMOLED 120Hz"
+    },
+    {
+      "spec_id": 10133,
+      "product_id": "1020",
+      "spec_name": "Camera",
+      "spec_value": "50MP Main, 50MP Ultra Wide, 50MP Periscope, 50MP Telephoto"
+    },
+    {
+      "spec_id": 10134,
+      "product_id": "1020",
+      "spec_name": "Battery",
+      "spec_value": "5,000 mAh"
+    },
+    {
+      "spec_id": 10135,
+      "product_id": "1020",
+      "spec_name": "Operating System",
+      "spec_value": "ColorOS 14 based on Android 14"
+    },
+    {
+      "spec_id": 10136,
+      "product_id": "1021",
+      "spec_name": "Driver Size",
+      "spec_value": "11mm"
+    },
+    {
+      "spec_id": 10137,
+      "product_id": "1021",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10138,
+      "product_id": "1021",
+      "spec_name": "Battery Life",
+      "spec_value": "6 hours (30 hours with case)"
+    },
+    {
+      "spec_id": 10139,
+      "product_id": "1021",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Active Noise Cancellation"
+    },
+    {
+      "spec_id": 10140,
+      "product_id": "1021",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX4"
+    },
+    {
+      "spec_id": 10141,
+      "product_id": "1021",
+      "spec_name": "Charging",
+      "spec_value": "MagSafe, Wireless Qi, Lightning"
+    },
+    {
+      "spec_id": 10142,
+      "product_id": "1022",
+      "spec_name": "Driver Size",
+      "spec_value": "8.4mm Dynamic Driver"
+    },
+    {
+      "spec_id": 10143,
+      "product_id": "1022",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10144,
+      "product_id": "1022",
+      "spec_name": "Battery Life",
+      "spec_value": "8 hours (24 hours with case)"
+    },
+    {
+      "spec_id": 10145,
+      "product_id": "1022",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Adaptive Noise Cancellation"
+    },
+    {
+      "spec_id": 10146,
+      "product_id": "1022",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX4"
+    },
+    {
+      "spec_id": 10147,
+      "product_id": "1022",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10148,
+      "product_id": "1023",
+      "spec_name": "Driver Size",
+      "spec_value": "10mm Dynamic Driver"
+    },
+    {
+      "spec_id": 10149,
+      "product_id": "1023",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10150,
+      "product_id": "1023",
+      "spec_name": "Battery Life",
+      "spec_value": "5 hours (20 hours with case)"
+    },
+    {
+      "spec_id": 10151,
+      "product_id": "1023",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Intelligent ANC"
+    },
+    {
+      "spec_id": 10152,
+      "product_id": "1023",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX7"
+    },
+    {
+      "spec_id": 10153,
+      "product_id": "1023",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10154,
+      "product_id": "1024",
+      "spec_name": "Driver Size",
+      "spec_value": "9.3mm Dynamic Driver"
+    },
+    {
+      "spec_id": 10155,
+      "product_id": "1024",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10156,
+      "product_id": "1024",
+      "spec_name": "Battery Life",
+      "spec_value": "6 hours (24 hours with case)"
+    },
+    {
+      "spec_id": 10157,
+      "product_id": "1024",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Best-in-class Noise Cancellation"
+    },
+    {
+      "spec_id": 10158,
+      "product_id": "1024",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX4"
+    },
+    {
+      "spec_id": 10159,
+      "product_id": "1024",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10160,
+      "product_id": "1025",
+      "spec_name": "Driver Size",
+      "spec_value": "7mm TrueResponse Driver"
+    },
+    {
+      "spec_id": 10161,
+      "product_id": "1025",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.4"
+    },
+    {
+      "spec_id": 10162,
+      "product_id": "1025",
+      "spec_name": "Battery Life",
+      "spec_value": "7 hours (30 hours with case)"
+    },
+    {
+      "spec_id": 10163,
+      "product_id": "1025",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Adaptive Noise Cancellation"
+    },
+    {
+      "spec_id": 10164,
+      "product_id": "1025",
+      "spec_name": "Water Resistance",
+      "spec_value": "IP54"
+    },
+    {
+      "spec_id": 10165,
+      "product_id": "1025",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10166,
+      "product_id": "1026",
+      "spec_name": "Driver Size",
+      "spec_value": "6mm Driver"
+    },
+    {
+      "spec_id": 10167,
+      "product_id": "1026",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10168,
+      "product_id": "1026",
+      "spec_name": "Battery Life",
+      "spec_value": "6 hours (27 hours with case)"
+    },
+    {
+      "spec_id": 10169,
+      "product_id": "1026",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Advanced Active Noise Cancellation"
+    },
+    {
+      "spec_id": 10170,
+      "product_id": "1026",
+      "spec_name": "Water Resistance",
+      "spec_value": "IP57"
+    },
+    {
+      "spec_id": 10171,
+      "product_id": "1026",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10172,
+      "product_id": "1027",
+      "spec_name": "Driver Size",
+      "spec_value": "11mm Dynamic Driver"
+    },
+    {
+      "spec_id": 10173,
+      "product_id": "1027",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10174,
+      "product_id": "1027",
+      "spec_name": "Battery Life",
+      "spec_value": "11 hours (31 hours with case)"
+    },
+    {
+      "spec_id": 10175,
+      "product_id": "1027",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Active Noise Cancellation"
+    },
+    {
+      "spec_id": 10176,
+      "product_id": "1027",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX4"
+    },
+    {
+      "spec_id": 10177,
+      "product_id": "1027",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10178,
+      "product_id": "1028",
+      "spec_name": "Driver Size",
+      "spec_value": "9.5mm Dual-Element Driver"
+    },
+    {
+      "spec_id": 10179,
+      "product_id": "1028",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.2"
+    },
+    {
+      "spec_id": 10180,
+      "product_id": "1028",
+      "spec_name": "Battery Life",
+      "spec_value": "6 hours (24 hours with case)"
+    },
+    {
+      "spec_id": 10181,
+      "product_id": "1028",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Active Noise Cancellation"
+    },
+    {
+      "spec_id": 10182,
+      "product_id": "1028",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX4"
+    },
+    {
+      "spec_id": 10183,
+      "product_id": "1028",
+      "spec_name": "Charging",
+      "spec_value": "USB-C"
+    },
+    {
+      "spec_id": 10184,
+      "product_id": "1029",
+      "spec_name": "Driver Size",
+      "spec_value": "11.6mm Dynamic Driver"
+    },
+    {
+      "spec_id": 10185,
+      "product_id": "1029",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10186,
+      "product_id": "1029",
+      "spec_name": "Battery Life",
+      "spec_value": "6 hours (36 hours with case)"
+    },
+    {
+      "spec_id": 10187,
+      "product_id": "1029",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "Active Noise Cancellation"
+    },
+    {
+      "spec_id": 10188,
+      "product_id": "1029",
+      "spec_name": "Water Resistance",
+      "spec_value": "IP54"
+    },
+    {
+      "spec_id": 10189,
+      "product_id": "1029",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10190,
+      "product_id": "1030",
+      "spec_name": "Driver Size",
+      "spec_value": "10mm Dynamic Driver"
+    },
+    {
+      "spec_id": 10191,
+      "product_id": "1030",
+      "spec_name": "Connectivity",
+      "spec_value": "Bluetooth 5.3"
+    },
+    {
+      "spec_id": 10192,
+      "product_id": "1030",
+      "spec_name": "Battery Life",
+      "spec_value": "10 hours (40 hours with case)"
+    },
+    {
+      "spec_id": 10193,
+      "product_id": "1030",
+      "spec_name": "Noise Cancellation",
+      "spec_value": "True Adaptive Noise Cancellation"
+    },
+    {
+      "spec_id": 10194,
+      "product_id": "1030",
+      "spec_name": "Water Resistance",
+      "spec_value": "IPX5"
+    },
+    {
+      "spec_id": 10195,
+      "product_id": "1030",
+      "spec_name": "Charging",
+      "spec_value": "USB-C, Wireless Qi"
+    },
+    {
+      "spec_id": 10196,
+      "product_id": "1031",
+      "spec_name": "Active Area",
+      "spec_value": "311 x 216 mm"
+    },
+    {
+      "spec_id": 10197,
+      "product_id": "1031",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10198,
+      "product_id": "1031",
+      "spec_name": "Connectivity",
+      "spec_value": "USB-C, Bluetooth"
+    },
+    {
+      "spec_id": 10199,
+      "product_id": "1031",
+      "spec_name": "Express Keys",
+      "spec_value": "8 customizable keys + Touch Ring"
+    },
+    {
+      "spec_id": 10200,
+      "product_id": "1031",
+      "spec_name": "Multi-touch",
+      "spec_value": "Yes"
+    },
+    {
+      "spec_id": 10201,
+      "product_id": "1031",
+      "spec_name": "Pen",
+      "spec_value": "Wacom Pro Pen 2 (battery-free)"
+    },
+    {
+      "spec_id": 10202,
+      "product_id": "1032",
+      "spec_name": "Screen Size",
+      "spec_value": "15.6 inches"
+    },
+    {
+      "spec_id": 10203,
+      "product_id": "1032",
+      "spec_name": "Resolution",
+      "spec_value": "2.5K (2560 x 1440)"
+    },
+    {
+      "spec_id": 10204,
+      "product_id": "1032",
+      "spec_name": "Color Gamut",
+      "spec_value": "99% Adobe RGB"
+    },
+    {
+      "spec_id": 10205,
+      "product_id": "1032",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "16K levels"
+    },
+    {
+      "spec_id": 10206,
+      "product_id": "1032",
+      "spec_name": "Shortcut Keys",
+      "spec_value": "8 customizable keys"
+    },
+    {
+      "spec_id": 10207,
+      "product_id": "1032",
+      "spec_name": "Pen",
+      "spec_value": "X3 Pro Stylus (battery-free)"
+    },
+    {
+      "spec_id": 10208,
+      "product_id": "1033",
+      "spec_name": "Screen Size",
+      "spec_value": "23.8 inches"
+    },
+    {
+      "spec_id": 10209,
+      "product_id": "1033",
+      "spec_name": "Resolution",
+      "spec_value": "QHD (2560 x 1440)"
+    },
+    {
+      "spec_id": 10210,
+      "product_id": "1033",
+      "spec_name": "Color Gamut",
+      "spec_value": "140% sRGB"
+    },
+    {
+      "spec_id": 10211,
+      "product_id": "1033",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10212,
+      "product_id": "1033",
+      "spec_name": "Express Keys",
+      "spec_value": "10 programmable press keys"
+    },
+    {
+      "spec_id": 10213,
+      "product_id": "1033",
+      "spec_name": "Pen",
+      "spec_value": "PW517 Stylus (battery-free)"
+    },
+    {
+      "spec_id": 10214,
+      "product_id": "1034",
+      "spec_name": "Screen Size",
+      "spec_value": "27 inches"
+    },
+    {
+      "spec_id": 10215,
+      "product_id": "1034",
+      "spec_name": "Resolution",
+      "spec_value": "4K UHD (3840 x 2160)"
+    },
+    {
+      "spec_id": 10216,
+      "product_id": "1034",
+      "spec_name": "Color Gamut",
+      "spec_value": "98% DCI-P3"
+    },
+    {
+      "spec_id": 10217,
+      "product_id": "1034",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10218,
+      "product_id": "1034",
+      "spec_name": "Multi-touch",
+      "spec_value": "Yes"
+    },
+    {
+      "spec_id": 10219,
+      "product_id": "1034",
+      "spec_name": "Pen",
+      "spec_value": "Wacom Pro Pen 3 (battery-free)"
+    },
+    {
+      "spec_id": 10220,
+      "product_id": "1035",
+      "spec_name": "Screen Size",
+      "spec_value": "21.5 inches"
+    },
+    {
+      "spec_id": 10221,
+      "product_id": "1035",
+      "spec_name": "Resolution",
+      "spec_value": "Full HD (1920 x 1080)"
+    },
+    {
+      "spec_id": 10222,
+      "product_id": "1035",
+      "spec_name": "Color Gamut",
+      "spec_value": "120% sRGB"
+    },
+    {
+      "spec_id": 10223,
+      "product_id": "1035",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10224,
+      "product_id": "1035",
+      "spec_name": "Express Keys",
+      "spec_value": "8 programmable keys"
+    },
+    {
+      "spec_id": 10225,
+      "product_id": "1035",
+      "spec_name": "Pen",
+      "spec_value": "AP50 Stylus (battery-free)"
+    },
+    {
+      "spec_id": 10226,
+      "product_id": "1036",
+      "spec_name": "Active Area",
+      "spec_value": "13.6 x 8.5 inches"
+    },
+    {
+      "spec_id": 10227,
+      "product_id": "1036",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10228,
+      "product_id": "1036",
+      "spec_name": "Connectivity",
+      "spec_value": "USB-C, Bluetooth 5.0"
+    },
+    {
+      "spec_id": 10229,
+      "product_id": "1036",
+      "spec_name": "Express Keys",
+      "spec_value": "13 programmable keys"
+    },
+    {
+      "spec_id": 10230,
+      "product_id": "1036",
+      "spec_name": "Tilt Support",
+      "spec_value": "±60°"
+    },
+    {
+      "spec_id": 10231,
+      "product_id": "1036",
+      "spec_name": "Pen",
+      "spec_value": "PW517 Stylus (battery-free)"
+    },
+    {
+      "spec_id": 10232,
+      "product_id": "1037",
+      "spec_name": "Active Area",
+      "spec_value": "11 x 6 inches"
+    },
+    {
+      "spec_id": 10233,
+      "product_id": "1037",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "16K levels"
+    },
+    {
+      "spec_id": 10234,
+      "product_id": "1037",
+      "spec_name": "Connectivity",
+      "spec_value": "USB-C, Bluetooth 5.0"
+    },
+    {
+      "spec_id": 10235,
+      "product_id": "1037",
+      "spec_name": "Express Keys",
+      "spec_value": "8 customizable shortcuts + dial"
+    },
+    {
+      "spec_id": 10236,
+      "product_id": "1037",
+      "spec_name": "Tilt Support",
+      "spec_value": "60°"
+    },
+    {
+      "spec_id": 10237,
+      "product_id": "1037",
+      "spec_name": "Pen",
+      "spec_value": "X3 Elite Stylus (battery-free)"
+    },
+    {
+      "spec_id": 10238,
+      "product_id": "1038",
+      "spec_name": "Screen Size",
+      "spec_value": "13.3 inches"
+    },
+    {
+      "spec_id": 10239,
+      "product_id": "1038",
+      "spec_name": "Resolution",
+      "spec_value": "Full HD (1920 x 1080)"
+    },
+    {
+      "spec_id": 10240,
+      "product_id": "1038",
+      "spec_name": "Color Gamut",
+      "spec_value": "72% NTSC"
+    },
+    {
+      "spec_id": 10241,
+      "product_id": "1038",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "4096 levels"
+    },
+    {
+      "spec_id": 10242,
+      "product_id": "1038",
+      "spec_name": "Connectivity",
+      "spec_value": "USB-C, HDMI"
+    },
+    {
+      "spec_id": 10243,
+      "product_id": "1038",
+      "spec_name": "Pen",
+      "spec_value": "Wacom One Pen (battery-free)"
+    },
+    {
+      "spec_id": 10244,
+      "product_id": "1039",
+      "spec_name": "Screen Size",
+      "spec_value": "21.5 inches"
+    },
+    {
+      "spec_id": 10245,
+      "product_id": "1039",
+      "spec_name": "Resolution",
+      "spec_value": "4K UHD (3840 x 2160)"
+    },
+    {
+      "spec_id": 10246,
+      "product_id": "1039",
+      "spec_name": "Color Gamut",
+      "spec_value": "120% sRGB"
+    },
+    {
+      "spec_id": 10247,
+      "product_id": "1039",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10248,
+      "product_id": "1039",
+      "spec_name": "Express Keys",
+      "spec_value": "8 customizable shortcuts"
+    },
+    {
+      "spec_id": 10249,
+      "product_id": "1039",
+      "spec_name": "Pen",
+      "spec_value": "Battery-free Stylus"
+    },
+    {
+      "spec_id": 10250,
+      "product_id": "1040",
+      "spec_name": "Active Area",
+      "spec_value": "10.33 x 5.8 inches"
+    },
+    {
+      "spec_id": 10251,
+      "product_id": "1040",
+      "spec_name": "Pressure Sensitivity",
+      "spec_value": "8192 levels"
+    },
+    {
+      "spec_id": 10252,
+      "product_id": "1040",
+      "spec_name": "Connectivity",
+      "spec_value": "USB-C, Bluetooth"
+    },
+    {
+      "spec_id": 10253,
+      "product_id": "1040",
+      "spec_name": "Express Keys",
+      "spec_value": "Quick Keys Remote with OLED display"
+    },
+    {
+      "spec_id": 10254,
+      "product_id": "1040",
+      "spec_name": "Tilt Support",
+      "spec_value": "±60°"
+    },
+    {
+      "spec_id": 10255,
+      "product_id": "1040",
+      "spec_name": "Pen",
+      "spec_value": "Thin Pen and Medium Pen options"
+    },
+    {
+      "spec_id": 10256,
+      "product_id": "1041",
+      "spec_name": "Sensor",
+      "spec_value": "33MP Exmor R CMOS"
+    },
+    {
+      "spec_id": 10257,
+      "product_id": "1041",
+      "spec_name": "Processor",
+      "spec_value": "BIONZ XR"
+    },
+    {
+      "spec_id": 10258,
+      "product_id": "1041",
+      "spec_name": "ISO Range",
+      "spec_value": "100-51200 (expandable to 50-204800)"
+    },
+    {
+      "spec_id": 10259,
+      "product_id": "1041",
+      "spec_name": "Video",
+      "spec_value": "4K 60p 10-bit 4:2:2"
+    },
+    {
+      "spec_id": 10260,
+      "product_id": "1041",
+      "spec_name": "Stabilization",
+      "spec_value": "5-axis in-body image stabilization"
+    },
+    {
+      "spec_id": 10261,
+      "product_id": "1041",
+      "spec_name": "Autofocus",
+      "spec_value": "759-point phase-detection AF"
+    },
+    {
+      "spec_id": 10262,
+      "product_id": "1042",
+      "spec_name": "Sensor",
+      "spec_value": "24.2MP CMOS"
+    },
+    {
+      "spec_id": 10263,
+      "product_id": "1042",
+      "spec_name": "Processor",
+      "spec_value": "DIGIC X"
+    },
+    {
+      "spec_id": 10264,
+      "product_id": "1042",
+      "spec_name": "ISO Range",
+      "spec_value": "100-102400 (expandable to 204800)"
+    },
+    {
+      "spec_id": 10265,
+      "product_id": "1042",
+      "spec_name": "Video",
+      "spec_value": "4K 60p, 6K RAW external recording"
+    },
+    {
+      "spec_id": 10266,
+      "product_id": "1042",
+      "spec_name": "Stabilization",
+      "spec_value": "5-axis In-Body Image Stabilizer"
+    },
+    {
+      "spec_id": 10267,
+      "product_id": "1042",
+      "spec_name": "Autofocus",
+      "spec_value": "Dual Pixel CMOS AF II with 1,053 AF areas"
+    },
+    {
+      "spec_id": 10268,
+      "product_id": "1043",
+      "spec_name": "Sensor",
+      "spec_value": "45.7MP Stacked CMOS"
+    },
+    {
+      "spec_id": 10269,
+      "product_id": "1043",
+      "spec_name": "Processor",
+      "spec_value": "EXPEED 7"
+    },
+    {
+      "spec_id": 10270,
+      "product_id": "1043",
+      "spec_name": "ISO Range",
+      "spec_value": "64-25600 (expandable to 32-102400)"
+    },
+    {
+      "spec_id": 10271,
+      "product_id": "1043",
+      "spec_name": "Video",
+      "spec_value": "8K 30p, 4K 120p, ProRes RAW"
+    },
+    {
+      "spec_id": 10272,
+      "product_id": "1043",
+      "spec_name": "Stabilization",
+      "spec_value": "5-axis in-body VR image stabilization"
+    },
+    {
+      "spec_id": 10273,
+      "product_id": "1043",
+      "spec_name": "Autofocus",
+      "spec_value": "493-point hybrid AF system"
+    },
+    {
+      "spec_id": 10274,
+      "product_id": "1044",
+      "spec_name": "Sensor",
+      "spec_value": "40.2MP X-Trans CMOS 5 HR"
+    },
+    {
+      "spec_id": 10275,
+      "product_id": "1044",
+      "spec_name": "Processor",
+      "spec_value": "X-Processor 5"
+    },
+    {
+      "spec_id": 10276,
+      "product_id": "1044",
+      "spec_name": "ISO Range",
+      "spec_value": "125-12800 (expandable to 64-51200)"
+    },
+    {
+      "spec_id": 10277,
+      "product_id": "1044",
+      "spec_name": "Video",
+      "spec_value": "6.2K 30p, 4K 60p, FHD 240p"
+    },
+    {
+      "spec_id": 10278,
+      "product_id": "1044",
+      "spec_name": "Stabilization",
+      "spec_value": "5-axis in-body image stabilization"
+    },
+    {
+      "spec_id": 10279,
+      "product_id": "1044",
+      "spec_name": "Autofocus",
+      "spec_value": "425-point hybrid AF system"
+    },
+    {
+      "spec_id": 10280,
+      "product_id": "1045",
+      "spec_name": "Sensor",
+      "spec_value": "24.2MP CMOS"
+    },
+    {
+      "spec_id": 10281,
+      "product_id": "1045",
+      "spec_name": "Processor",
+      "spec_value": "L2 Engine"
+    },
+    {
+      "spec_id": 10282,
+      "product_id": "1045",
+      "spec_name": "ISO Range",
+      "spec_value": "100-51200 (expandable to 50-204800)"
+    },
+    {
+      "spec_id": 10283,
+      "product_id": "1045",
+      "spec_name": "Video",
+      "spec_value": "6K 30p, 4K 60p, FHD 180p"
+    },
+    {
+      "spec_id": 10284,
+      "product_id": "1045",
+      "spec_name": "Stabilization",
+      "spec_value": "5-axis Dual I.S. with up to 6.5 stops"
+    },
+    {
+      "spec_id": 10285,
+      "product_id": "1045",
+      "spec_name": "Autofocus",
+      "spec_value": "Phase Hybrid AF system"
+    },
+    {
+      "spec_id": 10286,
+      "product_id": "1046",
+      "spec_name": "Sensor",
+      "spec_value": "1/1.3\" CMOS"
+    },
+    {
+      "spec_id": 10287,
+      "product_id": "1046",
+      "spec_name": "Video Resolution",
+      "spec_value": "4K 120fps, 1080p 240fps"
+    },
+    {
+      "spec_id": 10288,
+      "product_id": "1046",
+      "spec_name": "Field of View",
+      "spec_value": "155°"
+    },
+    {
+      "spec_id": 10289,
+      "product_id": "1046",
+      "spec_name": "Waterproof",
+      "spec_value": "Up to 18m without case"
+    },
+    {
+      "spec_id": 10290,
+      "product_id": "1046",
+      "spec_name": "Stabilization",
+      "spec_value": "3-axis electronic stabilization"
+    },
+    {
+      "spec_id": 10291,
+      "product_id": "1046",
+      "spec_name": "Battery Life",
+      "spec_value": "160 minutes at 1080p/30fps"
+    },
+    {
+      "spec_id": 10292,
+      "product_id": "1047",
+      "spec_name": "Sensor",
+      "spec_value": "1/1.9\" CMOS"
+    },
+    {
+      "spec_id": 10293,
+      "product_id": "1047",
+      "spec_name": "Video Resolution",
+      "spec_value": "5.3K 60fps, 4K 120fps, 2.7K 240fps"
+    },
+    {
+      "spec_id": 10294,
+      "product_id": "1047",
+      "spec_name": "Photo Resolution",
+      "spec_value": "27MP"
+    },
+    {
+      "spec_id": 10295,
+      "product_id": "1047",
+      "spec_name": "Waterproof",
+      "spec_value": "Up to 40m with housing"
+    },
+    {
+      "spec_id": 10296,
+      "product_id": "1047",
+      "spec_name": "Stabilization",
+      "spec_value": "HyperSmooth 6.0"
+    },
+    {
+      "spec_id": 10297,
+      "product_id": "1047",
+      "spec_name": "Battery Life",
+      "spec_value": "Up to 137 minutes at 1080p/30fps"
+    },
+    {
+      "spec_id": 10298,
+      "product_id": "1048",
+      "spec_name": "Sensor",
+      "spec_value": "24.2MP APS-C Exmor CMOS"
+    },
+    {
+      "spec_id": 10299,
+      "product_id": "1048",
+      "spec_name": "Processor",
+      "spec_value": "BIONZ X"
+    },
+    {
+      "spec_id": 10300,
+      "product_id": "1048",
+      "spec_name": "ISO Range",
+      "spec_value": "100-32000 (expandable to 50-51200)"
+    },
+    {
+      "spec_id": 10301,
+      "product_id": "1048",
+      "spec_name": "Video",
+      "spec_value": "4K 30p, 1080p 120p"
+    },
+    {
+      "spec_id": 10302,
+      "product_id": "1048",
+      "spec_name": "Special Features",
+      "spec_value": "Product Showcase setting, Background Defocus button"
+    },
+    {
+      "spec_id": 10303,
+      "product_id": "1048",
+      "spec_name": "Autofocus",
+      "spec_value": "425-point hybrid AF system"
+    },
+    {
+      "spec_id": 10304,
+      "product_id": "1049",
+      "spec_name": "Sensor",
+      "spec_value": "1/2\" CMOS"
+    },
+    {
+      "spec_id": 10305,
+      "product_id": "1049",
+      "spec_name": "Video Resolution",
+      "spec_value": "8K Single-Lens, 5.7K 360° 30fps"
+    },
+    {
+      "spec_id": 10306,
+      "product_id": "1049",
+      "spec_name": "Photo Resolution",
+      "spec_value": "48MP"
+    },
+    {
+      "spec_id": 10307,
+      "product_id": "1049",
+      "spec_name": "Waterproof",
+      "spec_value": "Up to 10m"
+    },
+    {
+      "spec_id": 10308,
+      "product_id": "1049",
+      "spec_name": "Stabilization",
+      "spec_value": "FlowState Stabilization"
+    },
+    {
+      "spec_id": 10309,
+      "product_id": "1049",
+      "spec_name": "Battery Life",
+      "spec_value": "135 minutes of recording"
+    },
+    {
+      "spec_id": 10310,
+      "product_id": "1050",
+      "spec_name": "Sensor",
+      "spec_value": "Super 35 6K"
+    },
+    {
+      "spec_id": 10311,
+      "product_id": "1050",
+      "spec_name": "Video Resolution",
+      "spec_value": "6K 50fps, 4K 120fps"
+    },
+    {
+      "spec_id": 10312,
+      "product_id": "1050",
+      "spec_name": "Dynamic Range",
+      "spec_value": "13 stops"
+    },
+    {
+      "spec_id": 10313,
+      "product_id": "1050",
+      "spec_name": "ISO Range",
+      "spec_value": "Dual native ISO 400 & 3200"
+    },
+    {
+      "spec_id": 10314,
+      "product_id": "1050",
+      "spec_name": "Recording Format",
+      "spec_value": "Blackmagic RAW, ProRes"
+    },
+    {
+      "spec_id": 10315,
+      "product_id": "1050",
+      "spec_name": "Mount",
+      "spec_value": "Canon EF"
+    },
+    {
+      "spec_id": 40001,
+      "product_id": "4001",
+      "spec_name": "Thickness",
+      "spec_value": "5mm"
+    },
+    {
+      "spec_id": 40002,
+      "product_id": "4001",
+      "spec_name": "Material",
+      "spec_value": "Natural rubber base, polyurethane top layer"
+    },
+    {
+      "spec_id": 40003,
+      "product_id": "4001",
+      "spec_name": "Dimensions",
+      "spec_value": "71\" x 26\" (180 x 66 cm)"
+    },
+    {
+      "spec_id": 40004,
+      "product_id": "4001",
+      "spec_name": "Weight",
+      "spec_value": "5.24 lbs (2.38 kg)"
+    },
+    {
+      "spec_id": 40005,
+      "product_id": "4001",
+      "spec_name": "Features",
+      "spec_value": "Antimicrobial additive, reversible, non-slip"
+    },
+    {
+      "spec_id": 40006,
+      "product_id": "4002",
+      "spec_name": "Thickness",
+      "spec_value": "6mm"
+    },
+    {
+      "spec_id": 40007,
+      "product_id": "4002",
+      "spec_name": "Material",
+      "spec_value": "High-density PVC"
+    },
+    {
+      "spec_id": 40008,
+      "product_id": "4002",
+      "spec_name": "Dimensions",
+      "spec_value": "71\" x 26\" (180 x 66 cm)"
+    },
+    {
+      "spec_id": 40009,
+      "product_id": "4002",
+      "spec_name": "Weight",
+      "spec_value": "7.5 lbs (3.4 kg)"
+    },
+    {
+      "spec_id": 40010,
+      "product_id": "4002",
+      "spec_name": "Features",
+      "spec_value": "Closed-cell surface, OEKO-TEX certified, lifetime guarantee"
+    },
+    {
+      "spec_id": 40011,
+      "product_id": "4003",
+      "spec_name": "Thickness",
+      "spec_value": "4.8mm"
+    },
+    {
+      "spec_id": 40012,
+      "product_id": "4003",
+      "spec_name": "Material",
+      "spec_value": "Natural rubber"
+    },
+    {
+      "spec_id": 40013,
+      "product_id": "4003",
+      "spec_name": "Dimensions",
+      "spec_value": "68\" x 24\" (173 x 61 cm)"
+    },
+    {
+      "spec_id": 40014,
+      "product_id": "4003",
+      "spec_name": "Weight",
+      "spec_value": "4.5 lbs (2 kg)"
+    },
+    {
+      "spec_id": 40015,
+      "product_id": "4003",
+      "spec_name": "Features",
+      "spec_value": "Made in USA, open-cell construction, sustainable production"
+    },
+    {
+      "spec_id": 40016,
+      "product_id": "4004",
+      "spec_name": "Thickness",
+      "spec_value": "6mm"
+    },
+    {
+      "spec_id": 40017,
+      "product_id": "4004",
+      "spec_name": "Material",
+      "spec_value": "PVC"
+    },
+    {
+      "spec_id": 40018,
+      "product_id": "4004",
+      "spec_name": "Dimensions",
+      "spec_value": "68\" x 24\" (173 x 61 cm)"
+    },
+    {
+      "spec_id": 40019,
+      "product_id": "4004",
+      "spec_name": "Weight",
+      "spec_value": "3.2 lbs (1.45 kg)"
+    },
+    {
+      "spec_id": 40020,
+      "product_id": "4004",
+      "spec_name": "Features",
+      "spec_value": "Non-slip texture, printed designs, lightweight"
+    },
+    {
+      "spec_id": 40021,
+      "product_id": "4005",
+      "spec_name": "Thickness",
+      "spec_value": "4.2mm"
+    },
+    {
+      "spec_id": 40022,
+      "product_id": "4005",
+      "spec_name": "Material",
+      "spec_value": "Eco-friendly natural rubber, PU top layer"
+    },
+    {
+      "spec_id": 40023,
+      "product_id": "4005",
+      "spec_name": "Dimensions",
+      "spec_value": "72.8\" x 26.8\" (185 x 68 cm)"
+    },
+    {
+      "spec_id": 40024,
+      "product_id": "4005",
+      "spec_name": "Weight",
+      "spec_value": "5.5 lbs (2.5 kg)"
+    },
+    {
+      "spec_id": 40025,
+      "product_id": "4005",
+      "spec_name": "Features",
+      "spec_value": "AlignForMe system, GripForMe technology, biodegradable"
+    },
+    {
+      "spec_id": 40026,
+      "product_id": "4006",
+      "spec_name": "Thickness",
+      "spec_value": "5mm"
+    },
+    {
+      "spec_id": 40027,
+      "product_id": "4006",
+      "spec_name": "Material",
+      "spec_value": "Matte rubber"
+    },
+    {
+      "spec_id": 40028,
+      "product_id": "4006",
+      "spec_name": "Dimensions",
+      "spec_value": "74\" x 26.5\" (188 x 67.3 cm)"
+    },
+    {
+      "spec_id": 40029,
+      "product_id": "4006",
+      "spec_name": "Weight",
+      "spec_value": "6 lbs (2.72 kg)"
+    },
+    {
+      "spec_id": 40030,
+      "product_id": "4006",
+      "spec_name": "Features",
+      "spec_value": "Antimicrobial surface, dry-wicking technology, non-slip"
+    },
+    {
+      "spec_id": 40031,
+      "product_id": "4007",
+      "spec_name": "Thickness",
+      "spec_value": "8mm"
+    },
+    {
+      "spec_id": 40032,
+      "product_id": "4007",
+      "spec_name": "Material",
+      "spec_value": "TPE (Thermoplastic Elastomer)"
+    },
+    {
+      "spec_id": 40033,
+      "product_id": "4007",
+      "spec_name": "Dimensions",
+      "spec_value": "72\" x 24\" (183 x 61 cm)"
+    },
+    {
+      "spec_id": 40034,
+      "product_id": "4007",
+      "spec_name": "Weight",
+      "spec_value": "2.5 lbs (1.13 kg)"
+    },
+    {
+      "spec_id": 40035,
+      "product_id": "4007",
+      "spec_name": "Features",
+      "spec_value": "Double-sided textured surfaces, eco-friendly, extra padding"
+    },
+    {
+      "spec_id": 40036,
+      "product_id": "4008",
+      "spec_name": "Thickness",
+      "spec_value": "1.5mm"
+    },
+    {
+      "spec_id": 40037,
+      "product_id": "4008",
+      "spec_name": "Material",
+      "spec_value": "Natural rubber, biodegradable"
+    },
+    {
+      "spec_id": 40038,
+      "product_id": "4008",
+      "spec_name": "Dimensions",
+      "spec_value": "68\" x 24\" (173 x 61 cm)"
+    },
+    {
+      "spec_id": 40039,
+      "product_id": "4008",
+      "spec_name": "Weight",
+      "spec_value": "2.2 lbs (1 kg)"
+    },
+    {
+      "spec_id": 40040,
+      "product_id": "4008",
+      "spec_name": "Features",
+      "spec_value": "Foldable, travel-friendly, superior grip"
+    },
+    {
+      "spec_id": 40041,
+      "product_id": "4009",
+      "spec_name": "Thickness",
+      "spec_value": "6mm"
+    },
+    {
+      "spec_id": 40042,
+      "product_id": "4009",
+      "spec_name": "Material",
+      "spec_value": "100% rubber"
+    },
+    {
+      "spec_id": 40043,
+      "product_id": "4009",
+      "spec_name": "Dimensions",
+      "spec_value": "71\" x 26\" (180 x 66 cm)"
+    },
+    {
+      "spec_id": 40044,
+      "product_id": "4009",
+      "spec_name": "Weight",
+      "spec_value": "5.6 lbs (2.54 kg)"
+    },
+    {
+      "spec_id": 40045,
+      "product_id": "4009",
+      "spec_name": "Features",
+      "spec_value": "Ultra-grippy texture, moisture-activated grip, perfect for hot yoga"
+    },
+    {
+      "spec_id": 40046,
+      "product_id": "4010",
+      "spec_name": "Thickness",
+      "spec_value": "5mm"
+    },
+    {
+      "spec_id": 40047,
+      "product_id": "4010",
+      "spec_name": "Material",
+      "spec_value": "Cork surface, natural rubber base"
+    },
+    {
+      "spec_id": 40048,
+      "product_id": "4010",
+      "spec_name": "Dimensions",
+      "spec_value": "72\" x 24\" (183 x 61 cm)"
+    },
+    {
+      "spec_id": 40049,
+      "product_id": "4010",
+      "spec_name": "Weight",
+      "spec_value": "3.5 lbs (1.59 kg)"
+    },
+    {
+      "spec_id": 40050,
+      "product_id": "4010",
+      "spec_name": "Features",
+      "spec_value": "Natural antimicrobial properties, improves grip when wet, eco-friendly"
+    },
+    {
+      "spec_id": 40051,
+      "product_id": "4011",
+      "spec_name": "Weight Range",
+      "spec_value": "5 to 52.5 lbs (2.3 to 23.8 kg) per dumbbell"
+    },
+    {
+      "spec_id": 40052,
+      "product_id": "4011",
+      "spec_name": "Adjustment Increments",
+      "spec_value": "2.5 lbs (1.1 kg) for first 25 lbs, 5 lbs (2.3 kg) thereafter"
+    },
+    {
+      "spec_id": 40053,
+      "product_id": "4011",
+      "spec_name": "Dimensions (each)",
+      "spec_value": "15.75\" x 8\" x 9\" (40 x 20.3 x 22.9 cm)"
+    },
+    {
+      "spec_id": 40054,
+      "product_id": "4011",
+      "spec_name": "Handle Diameter",
+      "spec_value": "1.25\" (3.2 cm)"
+    },
+    {
+      "spec_id": 40055,
+      "product_id": "4011",
+      "spec_name": "Material",
+      "spec_value": "Steel plates with molded plastic housing"
+    },
+    {
+      "spec_id": 40056,
+      "product_id": "4012",
+      "spec_name": "Weight Range",
+      "spec_value": "3 pairs: 3 lbs, 5 lbs, 8 lbs (1.4 kg, 2.3 kg, 3.6 kg)"
+    },
+    {
+      "spec_id": 40057,
+      "product_id": "4012",
+      "spec_name": "Material",
+      "spec_value": "Cast iron with neoprene coating"
+    },
+    {
+      "spec_id": 40058,
+      "product_id": "4012",
+      "spec_name": "Handle",
+      "spec_value": "Hex shaped to prevent rolling"
+    },
+    {
+      "spec_id": 40059,
+      "product_id": "4012",
+      "spec_name": "Color Coding",
+      "spec_value": "Different color for each weight"
+    },
+    {
+      "spec_id": 40060,
+      "product_id": "4012",
+      "spec_name": "Rack Dimensions",
+      "spec_value": "16\" x 4.5\" x 8\" (40.6 x 11.4 x 20.3 cm)"
+    },
+    {
+      "spec_id": 40061,
+      "product_id": "4013",
+      "spec_name": "Weight Range",
+      "spec_value": "10 to 55 lbs (4.5 to 25 kg)"
+    },
+    {
+      "spec_id": 40062,
+      "product_id": "4013",
+      "spec_name": "Adjustment Increments",
+      "spec_value": "2.5 and 5 lb (1.1 and 2.3 kg) increments"
+    },
+    {
+      "spec_id": 40063,
+      "product_id": "4013",
+      "spec_name": "Dimensions",
+      "spec_value": "14.5\" x 7.5\" x 7\" (36.8 x 19 x 17.8 cm)"
+    },
+    {
+      "spec_id": 40064,
+      "product_id": "4013",
+      "spec_name": "Handle",
+      "spec_value": "Knurled for secure grip"
+    },
+    {
+      "spec_id": 40065,
+      "product_id": "4013",
+      "spec_name": "Adjustment Mechanism",
+      "spec_value": "Selector pin technology"
+    },
+    {
+      "spec_id": 40066,
+      "product_id": "4014",
+      "spec_name": "Weight",
+      "spec_value": "Available in 5-100 lbs (2.3-45.4 kg)"
+    },
+    {
+      "spec_id": 40067,
+      "product_id": "4014",
+      "spec_name": "Material",
+      "spec_value": "Rubber-encased cast iron with knurled chrome handles"
+    },
+    {
+      "spec_id": 40068,
+      "product_id": "4014",
+      "spec_name": "Shape",
+      "spec_value": "Hex design to prevent rolling"
+    },
+    {
+      "spec_id": 40069,
+      "product_id": "4014",
+      "spec_name": "Handle Diameter",
+      "spec_value": "32mm (1.26\")"
+    },
+    {
+      "spec_id": 40070,
+      "product_id": "4014",
+      "spec_name": "Features",
+      "spec_value": "Solid cast construction, commercial-grade quality"
+    },
+    {
+      "spec_id": 40071,
+      "product_id": "4015",
+      "spec_name": "Weight Range",
+      "spec_value": "5-50 lbs (2.3-22.7 kg) per hand, expandable to 90 lbs"
+    },
+    {
+      "spec_id": 40072,
+      "product_id": "4015",
+      "spec_name": "Adjustment Increments",
+      "spec_value": "2.5 lbs (1.1 kg) for the first 25 lbs"
+    },
+    {
+      "spec_id": 40073,
+      "product_id": "4015",
+      "spec_name": "Dimensions (each)",
+      "spec_value": "12.5\" x 7\" x 7\" (31.8 x 17.8 x 17.8 cm)"
+    },
+    {
+      "spec_id": 40074,
+      "product_id": "4015",
+      "spec_name": "Handle Diameter",
+      "spec_value": "1.06\" (2.7 cm)"
+    },
+    {
+      "spec_id": 40075,
+      "product_id": "4015",
+      "spec_name": "Adjustment Mechanism",
+      "spec_value": "Selector pin technology"
+    },
+    {
+      "spec_id": 40076,
+      "product_id": "4016",
+      "spec_name": "Weight Set",
+      "spec_value": "5 lbs, 10 lbs, 15 lbs (2.3 kg, 4.5 kg, 6.8 kg)"
+    },
+    {
+      "spec_id": 40077,
+      "product_id": "4016",
+      "spec_name": "Material",
+      "spec_value": "Cast iron with vinyl coating"
+    },
+    {
+      "spec_id": 40078,
+      "product_id": "4016",
+      "spec_name": "Handle",
+      "spec_value": "Wide handle for secure two-handed grip"
+    },
+    {
+      "spec_id": 40079,
+      "product_id": "4016",
+      "spec_name": "Bottom",
+      "spec_value": "Flat bottom for stability"
+    },
+    {
+      "spec_id": 40080,
+      "product_id": "4016",
+      "spec_name": "Color Coding",
+      "spec_value": "Different color for each weight"
+    },
+    {
+      "spec_id": 40081,
+      "product_id": "4017",
+      "spec_name": "Weight Range",
+      "spec_value": "11 to 71.5 lbs (5 to 32.4 kg)"
+    },
+    {
+      "spec_id": 40082,
+      "product_id": "4017",
+      "spec_name": "Adjustment Increments",
+      "spec_value": "5.5 lb (2.5 kg) increments"
+    },
+    {
+      "spec_id": 40083,
+      "product_id": "4017",
+      "spec_name": "Dimensions",
+      "spec_value": "15.9\" x 7.9\" x 6.3\" (40.4 x 20 x 16 cm)"
+    },
+    {
+      "spec_id": 40084,
+      "product_id": "4017",
+      "spec_name": "Handle",
+      "spec_value": "Textured grip"
+    },
+    {
+      "spec_id": 40085,
+      "product_id": "4017",
+      "spec_name": "Adjustment Mechanism",
+      "spec_value": "Push-pull design"
+    },
+    {
+      "spec_id": 40086,
+      "product_id": "4018",
+      "spec_name": "Weight",
+      "spec_value": "Available in 3-50 lbs (1.4-22.7 kg)"
+    },
+    {
+      "spec_id": 40087,
+      "product_id": "4018",
+      "spec_name": "Material",
+      "spec_value": "Cast iron with rubber coating, contoured chrome handle"
+    },
+    {
+      "spec_id": 40088,
+      "product_id": "4018",
+      "spec_name": "Shape",
+      "spec_value": "Hex design to prevent rolling"
+    },
+    {
+      "spec_id": 40089,
+      "product_id": "4018",
+      "spec_name": "Handle Length",
+      "spec_value": "4.5\" (11.4 cm)"
+    },
+    {
+      "spec_id": 40090,
+      "product_id": "4018",
+      "spec_name": "Features",
+      "spec_value": "Reduced noise, floor protection, rust-resistant"
+    },
+    {
+      "spec_id": 40091,
+      "product_id": "4019",
+      "spec_name": "Weight Range",
+      "spec_value": "5 pairs: 5, 10, 15, 20, 25 lbs (2.3, 4.5, 6.8, 9.1, 11.3 kg)"
+    },
+    {
+      "spec_id": 40092,
+      "product_id": "4019",
+      "spec_name": "Material",
+      "spec_value": "Cast iron with rubber coating, knurled chrome handles"
+    },
+    {
+      "spec_id": 40093,
+      "product_id": "4019",
+      "spec_name": "Rack",
+      "spec_value": "3-tier steel rack"
+    },
+    {
+      "spec_id": 40094,
+      "product_id": "4019",
+      "spec_name": "Rack Dimensions",
+      "spec_value": "36\" x 20\" x 28\" (91.4 x 50.8 x 71.1 cm)"
+    },
+    {
+      "spec_id": 40095,
+      "product_id": "4019",
+      "spec_name": "Features",
+      "spec_value": "Hex design, floor protection, commercial-grade quality"
+    },
+    {
+      "spec_id": 40096,
+      "product_id": "4020",
+      "spec_name": "Material",
+      "spec_value": "Impact-resistant plastic"
+    },
+    {
+      "spec_id": 40097,
+      "product_id": "4020",
+      "spec_name": "Weight",
+      "spec_value": "Less than 1 lb (0.45 kg)"
+    },
+    {
+      "spec_id": 40098,
+      "product_id": "4020",
+      "spec_name": "Compatibility",
+      "spec_value": "Fits dumbbells up to 55 lbs (25 kg) with handles up to 1.5\" diameter"
+    },
+    {
+      "spec_id": 40099,
+      "product_id": "4020",
+      "spec_name": "Dimensions",
+      "spec_value": "6.3\" x 5.9\" x 2.8\" (16 x 15 x 7.1 cm)"
+    },
+    {
+      "spec_id": 40100,
+      "product_id": "4020",
+      "spec_name": "Features",
+      "spec_value": "Portable, travel-friendly, secure locking mechanism"
+    },
+    {
+      "spec_id": 40101,
+      "product_id": "4021",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1 English Willow"
+    },
+    {
+      "spec_id": 40102,
+      "product_id": "4021",
+      "spec_name": "Weight",
+      "spec_value": "2.8-2.9 lbs (1.27-1.32 kg)"
+    },
+    {
+      "spec_id": 40103,
+      "product_id": "4021",
+      "spec_name": "Profile",
+      "spec_value": "Mid-low, massive sweet spot"
+    },
+    {
+      "spec_id": 40104,
+      "product_id": "4021",
+      "spec_name": "Handle",
+      "spec_value": "Semi-oval handle with Octopus grip"
+    },
+    {
+      "spec_id": 40105,
+      "product_id": "4021",
+      "spec_name": "Edges",
+      "spec_value": "38-40mm thick edges"
+    },
+    {
+      "spec_id": 40106,
+      "product_id": "4022",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1 English Willow"
+    },
+    {
+      "spec_id": 40107,
+      "product_id": "4022",
+      "spec_name": "Weight",
+      "spec_value": "2.8-3.0 lbs (1.27-1.36 kg)"
+    },
+    {
+      "spec_id": 40108,
+      "product_id": "4022",
+      "spec_name": "Profile",
+      "spec_value": "Mid blade profile with pronounced bow"
+    },
+    {
+      "spec_id": 40109,
+      "product_id": "4022",
+      "spec_name": "Handle",
+      "spec_value": "Oval handle with Kookaburra grip"
+    },
+    {
+      "spec_id": 40110,
+      "product_id": "4022",
+      "spec_name": "Edges",
+      "spec_value": "40mm thick edges"
+    },
+    {
+      "spec_id": 40111,
+      "product_id": "4023",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1+ English Willow"
+    },
+    {
+      "spec_id": 40112,
+      "product_id": "4023",
+      "spec_name": "Weight",
+      "spec_value": "2.9-3.0 lbs (1.32-1.36 kg)"
+    },
+    {
+      "spec_id": 40113,
+      "product_id": "4023",
+      "spec_name": "Profile",
+      "spec_value": "Traditional shape, balanced pickup"
+    },
+    {
+      "spec_id": 40114,
+      "product_id": "4023",
+      "spec_name": "Handle",
+      "spec_value": "Semi-oval handle with premium grip"
+    },
+    {
+      "spec_id": 40115,
+      "product_id": "4023",
+      "spec_name": "Edges",
+      "spec_value": "36-38mm thick edges"
+    },
+    {
+      "spec_id": 40116,
+      "product_id": "4024",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1+ English Willow"
+    },
+    {
+      "spec_id": 40117,
+      "product_id": "4024",
+      "spec_name": "Weight",
+      "spec_value": "2.8-2.9 lbs (1.27-1.32 kg)"
+    },
+    {
+      "spec_id": 40118,
+      "product_id": "4024",
+      "spec_name": "Profile",
+      "spec_value": "Full profile with massive edges"
+    },
+    {
+      "spec_id": 40119,
+      "product_id": "4024",
+      "spec_name": "Handle",
+      "spec_value": "Oval handle with premium octopus grip"
+    },
+    {
+      "spec_id": 40120,
+      "product_id": "4024",
+      "spec_name": "Edges",
+      "spec_value": "40-42mm thick edges"
+    },
+    {
+      "spec_id": 40121,
+      "product_id": "4025",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1 English Willow"
+    },
+    {
+      "spec_id": 40122,
+      "product_id": "4025",
+      "spec_name": "Weight",
+      "spec_value": "2.9-3.0 lbs (1.32-1.36 kg)"
+    },
+    {
+      "spec_id": 40123,
+      "product_id": "4025",
+      "spec_name": "Profile",
+      "spec_value": "Mid-blade profile with balanced pickup"
+    },
+    {
+      "spec_id": 40124,
+      "product_id": "4025",
+      "spec_name": "Handle",
+      "spec_value": "Semi-oval handle with SG grip"
+    },
+    {
+      "spec_id": 40125,
+      "product_id": "4025",
+      "spec_name": "Edges",
+      "spec_value": "38mm thick edges"
+    },
+    {
+      "spec_id": 40126,
+      "product_id": "4026",
+      "spec_name": "Grade",
+      "spec_value": "Kashmir Willow"
+    },
+    {
+      "spec_id": 40127,
+      "product_id": "4026",
+      "spec_name": "Weight",
+      "spec_value": "2.8-2.9 lbs (1.27-1.32 kg)"
+    },
+    {
+      "spec_id": 40128,
+      "product_id": "4026",
+      "spec_name": "Profile",
+      "spec_value": "Mid-blade profile, lightweight design"
+    },
+    {
+      "spec_id": 40129,
+      "product_id": "4026",
+      "spec_name": "Handle",
+      "spec_value": "Oval handle with Adidas grip"
+    },
+    {
+      "spec_id": 40130,
+      "product_id": "4026",
+      "spec_name": "Edges",
+      "spec_value": "35-38mm thick edges"
+    },
+    {
+      "spec_id": 40131,
+      "product_id": "4027",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1+ English Willow"
+    },
+    {
+      "spec_id": 40132,
+      "product_id": "4027",
+      "spec_name": "Weight",
+      "spec_value": "2.8-2.9 lbs (1.27-1.32 kg)"
+    },
+    {
+      "spec_id": 40133,
+      "product_id": "4027",
+      "spec_name": "Profile",
+      "spec_value": "Full profile with pronounced bow"
+    },
+    {
+      "spec_id": 40134,
+      "product_id": "4027",
+      "spec_name": "Handle",
+      "spec_value": "Semi-oval handle with MRF grip"
+    },
+    {
+      "spec_id": 40135,
+      "product_id": "4027",
+      "spec_name": "Edges",
+      "spec_value": "40-42mm thick edges"
+    },
+    {
+      "spec_id": 40136,
+      "product_id": "4028",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1 English Willow"
+    },
+    {
+      "spec_id": 40137,
+      "product_id": "4028",
+      "spec_name": "Weight",
+      "spec_value": "2.9-3.0 lbs (1.32-1.36 kg)"
+    },
+    {
+      "spec_id": 40138,
+      "product_id": "4028",
+      "spec_name": "Profile",
+      "spec_value": "Concave back profile with large sweet spot"
+    },
+    {
+      "spec_id": 40139,
+      "product_id": "4028",
+      "spec_name": "Handle",
+      "spec_value": "Oval handle with DSC grip"
+    },
+    {
+      "spec_id": 40140,
+      "product_id": "4028",
+      "spec_name": "Edges",
+      "spec_value": "38-40mm thick edges"
+    },
+    {
+      "spec_id": 40141,
+      "product_id": "4029",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1+ English Willow"
+    },
+    {
+      "spec_id": 40142,
+      "product_id": "4029",
+      "spec_name": "Weight",
+      "spec_value": "2.8-2.9 lbs (1.27-1.32 kg)"
+    },
+    {
+      "spec_id": 40143,
+      "product_id": "4029",
+      "spec_name": "Profile",
+      "spec_value": "Full profile with pronounced bow"
+    },
+    {
+      "spec_id": 40144,
+      "product_id": "4029",
+      "spec_name": "Handle",
+      "spec_value": "Oval handle with MS Dhoni signature grip"
+    },
+    {
+      "spec_id": 40145,
+      "product_id": "4029",
+      "spec_name": "Edges",
+      "spec_value": "40-42mm thick edges"
+    },
+    {
+      "spec_id": 40146,
+      "product_id": "4030",
+      "spec_name": "Grade",
+      "spec_value": "Grade 1 English Willow"
+    },
+    {
+      "spec_id": 40147,
+      "product_id": "4030",
+      "spec_name": "Weight",
+      "spec_value": "2.9-3.0 lbs (1.32-1.36 kg)"
+    },
+    {
+      "spec_id": 40148,
+      "product_id": "4030",
+      "spec_name": "Profile",
+      "spec_value": "Full profile with air flow grooves"
+    },
+    {
+      "spec_id": 40149,
+      "product_id": "4030",
+      "spec_name": "Handle",
+      "spec_value": "Semi-oval handle with Puma grip"
+    },
+    {
+      "spec_id": 40150,
+      "product_id": "4030",
+      "spec_name": "Edges",
+      "spec_value": "38-40mm thick edges"
+    },
+    {
+      "spec_id": 40151,
+      "product_id": "4031",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40152,
+      "product_id": "4031",
+      "spec_name": "Material",
+      "spec_value": "Microfiber composite leather"
+    },
+    {
+      "spec_id": 40153,
+      "product_id": "4031",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40154,
+      "product_id": "4031",
+      "spec_name": "Construction",
+      "spec_value": "Cushion core technology"
+    },
+    {
+      "spec_id": 40155,
+      "product_id": "4031",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor"
+    },
+    {
+      "spec_id": 40156,
+      "product_id": "4032",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40157,
+      "product_id": "4032",
+      "spec_name": "Material",
+      "spec_value": "Genuine leather"
+    },
+    {
+      "spec_id": 40158,
+      "product_id": "4032",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40159,
+      "product_id": "4032",
+      "spec_name": "Construction",
+      "spec_value": "Deep channel design"
+    },
+    {
+      "spec_id": 40160,
+      "product_id": "4032",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor"
+    },
+    {
+      "spec_id": 40161,
+      "product_id": "4033",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40162,
+      "product_id": "4033",
+      "spec_name": "Material",
+      "spec_value": "Premium composite leather"
+    },
+    {
+      "spec_id": 40163,
+      "product_id": "4033",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40164,
+      "product_id": "4033",
+      "spec_name": "Construction",
+      "spec_value": "Dual-cushion construction"
+    },
+    {
+      "spec_id": 40165,
+      "product_id": "4033",
+      "spec_name": "Intended Use",
+      "spec_value": "Outdoor 3x3"
+    },
+    {
+      "spec_id": 40166,
+      "product_id": "4034",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40167,
+      "product_id": "4034",
+      "spec_name": "Material",
+      "spec_value": "Durable rubber cover"
+    },
+    {
+      "spec_id": 40168,
+      "product_id": "4034",
+      "spec_name": "Weight",
+      "spec_value": "20 oz (567 g)"
+    },
+    {
+      "spec_id": 40169,
+      "product_id": "4034",
+      "spec_name": "Construction",
+      "spec_value": "Deep channel construction"
+    },
+    {
+      "spec_id": 40170,
+      "product_id": "4034",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor/Outdoor"
+    },
+    {
+      "spec_id": 40171,
+      "product_id": "4035",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40172,
+      "product_id": "4035",
+      "spec_name": "Material",
+      "spec_value": "Moisture-wicking composite leather"
+    },
+    {
+      "spec_id": 40173,
+      "product_id": "4035",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40174,
+      "product_id": "4035",
+      "spec_name": "Construction",
+      "spec_value": "8-panel design with Nike Aero Trac grooves"
+    },
+    {
+      "spec_id": 40175,
+      "product_id": "4035",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor/Outdoor"
+    },
+    {
+      "spec_id": 40176,
+      "product_id": "4036",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40177,
+      "product_id": "4036",
+      "spec_name": "Material",
+      "spec_value": "ZK microfiber composite cover"
+    },
+    {
+      "spec_id": 40178,
+      "product_id": "4036",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40179,
+      "product_id": "4036",
+      "spec_name": "Construction",
+      "spec_value": "Deep channel design with Soft Touch Technology"
+    },
+    {
+      "spec_id": 40180,
+      "product_id": "4036",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor"
+    },
+    {
+      "spec_id": 40181,
+      "product_id": "4037",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40182,
+      "product_id": "4037",
+      "spec_name": "Material",
+      "spec_value": "Composite leather"
+    },
+    {
+      "spec_id": 40183,
+      "product_id": "4037",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40184,
+      "product_id": "4037",
+      "spec_name": "Construction",
+      "spec_value": "Laid-in channels"
+    },
+    {
+      "spec_id": 40185,
+      "product_id": "4037",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor/Outdoor"
+    },
+    {
+      "spec_id": 40186,
+      "product_id": "4038",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40187,
+      "product_id": "4038",
+      "spec_name": "Material",
+      "spec_value": "Synthetic leather"
+    },
+    {
+      "spec_id": 40188,
+      "product_id": "4038",
+      "spec_name": "Weight",
+      "spec_value": "21 oz (595.3 g)"
+    },
+    {
+      "spec_id": 40189,
+      "product_id": "4038",
+      "spec_name": "Construction",
+      "spec_value": "12-panel design with dual-cushion construction"
+    },
+    {
+      "spec_id": 40190,
+      "product_id": "4038",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor/Outdoor"
+    },
+    {
+      "spec_id": 40191,
+      "product_id": "4039",
+      "spec_name": "Size",
+      "spec_value": "Size 7 (29.5\")"
+    },
+    {
+      "spec_id": 40192,
+      "product_id": "4039",
+      "spec_name": "Material",
+      "spec_value": "Composite cover"
+    },
+    {
+      "spec_id": 40193,
+      "product_id": "4039",
+      "spec_name": "Weight",
+      "spec_value": "22 oz (623.7 g)"
+    },
+    {
+      "spec_id": 40194,
+      "product_id": "4039",
+      "spec_name": "Construction",
+      "spec_value": "Foam-backed design with deep channel construction"
+    },
+    {
+      "spec_id": 40195,
+      "product_id": "4039",
+      "spec_name": "Intended Use",
+      "spec_value": "Indoor/Outdoor"
+    },
+    {
+      "spec_id": 40196,
+      "product_id": "4040",
+      "spec_name": "Size",
+      "spec_value": "Size 6 (28.5\")"
+    },
+    {
+      "spec_id": 40197,
+      "product_id": "4040",
+      "spec_name": "Material",
+      "spec_value": "Moisture-wicking composite cover"
+    },
+    {
+      "spec_id": 40198,
+      "product_id": "4040",
+      "spec_name": "Weight",
+      "spec_value": "20 oz (567 g)"
+    },
+    {
+      "spec_id": 40199,
+      "product_id": "4040",
+      "spec_name": "Construction",
+      "spec_value": "Wave Triple Threat Technology"
+    },
+    {
+      "spec_id": 40200,
+      "product_id": "4040",
+      "spec_name": "Intended Use",
+      "spec_value": "Outdoor 3x3"
+    },
+    {
+      "spec_id": 40201,
+      "product_id": "4041",
+      "spec_name": "Motor",
+      "spec_value": "3.6 CHP DurX Commercial Plus Motor"
+    },
+    {
+      "spec_id": 40202,
+      "product_id": "4041",
+      "spec_name": "Speed Range",
+      "spec_value": "0-12 MPH (0-19.3 km/h)"
+    },
+    {
+      "spec_id": 40203,
+      "product_id": "4041",
+      "spec_name": "Incline Range",
+      "spec_value": "-3% to 15%"
+    },
+    {
+      "spec_id": 40204,
+      "product_id": "4041",
+      "spec_name": "Running Surface",
+      "spec_value": "22\" x 60\" (55.9 x 152.4 cm)"
+    },
+    {
+      "spec_id": 40205,
+      "product_id": "4041",
+      "spec_name": "Display",
+      "spec_value": "22\" HD Touchscreen with iFit integration"
+    },
+    {
+      "spec_id": 40206,
+      "product_id": "4042",
+      "spec_name": "Motor",
+      "spec_value": "3.5 HP DC Motor"
+    },
+    {
+      "spec_id": 40207,
+      "product_id": "4042",
+      "spec_name": "Speed Range",
+      "spec_value": "0.5-12 MPH (0.8-19.3 km/h)"
+    },
+    {
+      "spec_id": 40208,
+      "product_id": "4042",
+      "spec_name": "Incline Range",
+      "spec_value": "0-15%"
+    },
+    {
+      "spec_id": 40209,
+      "product_id": "4042",
+      "spec_name": "Running Surface",
+      "spec_value": "22\" x 60\" (55.9 x 152.4 cm)"
+    },
+    {
+      "spec_id": 40210,
+      "product_id": "4042",
+      "spec_name": "Display",
+      "spec_value": "9\" LCD display with 10 built-in programs"
+    },
+    {
+      "spec_id": 40211,
+      "product_id": "4043",
+      "spec_name": "Motor",
+      "spec_value": "3.6 CHP Motor"
+    },
+    {
+      "spec_id": 40212,
+      "product_id": "4043",
+      "spec_name": "Speed Range",
+      "spec_value": "0-12 MPH (0-19.3 km/h)"
+    },
+    {
+      "spec_id": 40213,
+      "product_id": "4043",
+      "spec_name": "Incline Range",
+      "spec_value": "-3% to 12%"
+    },
+    {
+      "spec_id": 40214,
+      "product_id": "4043",
+      "spec_name": "Running Surface",
+      "spec_value": "20\" x 60\" (50.8 x 152.4 cm)"
+    },
+    {
+      "spec_id": 40215,
+      "product_id": "4043",
+      "spec_name": "Display",
+      "spec_value": "22\" HD Touchscreen with iFit integration"
+    },
+    {
+      "spec_id": 40216,
+      "product_id": "4044",
+      "spec_name": "Motor",
+      "spec_value": "4.0 CHP Motor"
+    },
+    {
+      "spec_id": 40217,
+      "product_id": "4044",
+      "spec_name": "Speed Range",
+      "spec_value": "0.5-12 MPH (0.8-19.3 km/h)"
+    },
+    {
+      "spec_id": 40218,
+      "product_id": "4044",
+      "spec_name": "Incline Range",
+      "spec_value": "0-15%"
+    },
+    {
+      "spec_id": 40219,
+      "product_id": "4044",
+      "spec_name": "Running Surface",
+      "spec_value": "22\" x 60\" (55.9 x 152.4 cm)"
+    },
+    {
+      "spec_id": 40220,
+      "product_id": "4044",
+      "spec_name": "Display",
+      "spec_value": "9.3\" Color TFT Screen with fitness app connectivity"
+    },
+    {
+      "spec_id": 40221,
+      "product_id": "4045",
+      "spec_name": "Motor",
+      "spec_value": "3.5 HP Motor"
+    },
+    {
+      "spec_id": 40222,
+      "product_id": "4045",
+      "spec_name": "Speed Range",
+      "spec_value": "0-12 MPH (0-19.3 km/h)"
+    },
+    {
+      "spec_id": 40223,
+      "product_id": "4045",
+      "spec_name": "Incline Range",
+      "spec_value": "-5% to 20%"
+    },
+    {
+      "spec_id": 40224,
+      "product_id": "4045",
+      "spec_name": "Running Surface",
+      "spec_value": "22\" x 60\" (55.9 x 152.4 cm)"
+    },
+    {
+      "spec_id": 40225,
+      "product_id": "4045",
+      "spec_name": "Display",
+      "spec_value": "22\" HD Touchscreen with JRNY membership integration"
+    },
+    {
+      "spec_id": 40226,
+      "product_id": "4046",
+      "spec_name": "Motor",
+      "spec_value": "1.75 HP Motor"
+    },
+    {
+      "spec_id": 40227,
+      "product_id": "4046",
+      "spec_name": "Speed Range",
+      "spec_value": "0.5-12 MPH (0.8-19.3 km/h)"
+    },
+    {
+      "spec_id": 40228,
+      "product_id": "4046",
+      "spec_name": "Incline Range",
+      "spec_value": "0-12%"
+    },
+    {
+      "spec_id": 40229,
+      "product_id": "4046",
+      "spec_name": "Running Surface",
+      "spec_value": "20\" x 55\" (50.8 x 139.7 cm)"
+    },
+    {
+      "spec_id": 40230,
+      "product_id": "4046",
+      "spec_name": "Display",
+      "spec_value": "LED display with Echelon Fit app integration"
+    },
+    {
+      "spec_id": 40231,
+      "product_id": "4047",
+      "spec_name": "Motor",
+      "spec_value": "3.0 HP DC Motor"
+    },
+    {
+      "spec_id": 40232,
+      "product_id": "4047",
+      "spec_name": "Speed Range",
+      "spec_value": "0.5-12 MPH (0.8-19.3 km/h)"
+    },
+    {
+      "spec_id": 40233,
+      "product_id": "4047",
+      "spec_name": "Incline Range",
+      "spec_value": "0-15%"
+    },
+    {
+      "spec_id": 40234,
+      "product_id": "4047",
+      "spec_name": "Running Surface",
+      "spec_value": "20\" x 55\" (50.8 x 139.7 cm)"
+    },
+    {
+      "spec_id": 40235,
+      "product_id": "4047",
+      "spec_name": "Display",
+      "spec_value": "F3 Track Console with 15 workout programs"
+    },
+    {
+      "spec_id": 40236,
+      "product_id": "4048",
+      "spec_name": "Motor",
+      "spec_value": "3.0 HP AC Motor"
+    },
+    {
+      "spec_id": 40237,
+      "product_id": "4048",
+      "spec_name": "Speed Range",
+      "spec_value": "0.5-12 MPH (0.8-19.3 km/h)"
+    },
+    {
+      "spec_id": 40238,
+      "product_id": "4048",
+      "spec_name": "Incline Range",
+      "spec_value": "0-15%"
+    },
+    {
+      "spec_id": 40239,
+      "product_id": "4048",
+      "spec_name": "Running Surface",
+      "spec_value": "20\" x 57\" (50.8 x 144.8 cm)"
+    },
+    {
+      "spec_id": 40240,
+      "product_id": "4048",
+      "spec_name": "Display",
+      "spec_value": "LED display with 13 preset workout programs"
+    },
+    {
+      "spec_id": 40241,
+      "product_id": "4049",
+      "spec_name": "Motor",
+      "spec_value": "2.25 HP Motor"
+    },
+    {
+      "spec_id": 40242,
+      "product_id": "4049",
+      "spec_name": "Speed Range",
+      "spec_value": "0.5-10 MPH (0.8-16 km/h)"
+    },
+    {
+      "spec_id": 40243,
+      "product_id": "4049",
+      "spec_name": "Incline Range",
+      "spec_value": "3 manual settings (0%, 2%, 4%)"
+    },
+    {
+      "spec_id": 40244,
+      "product_id": "4049",
+      "spec_name": "Running Surface",
+      "spec_value": "16\" x 50\" (40.6 x 127 cm)"
+    },
+    {
+      "spec_id": 40245,
+      "product_id": "4049",
+      "spec_name": "Display",
+      "spec_value": "LCD display with 12 preset programs"
+    },
+    {
+      "spec_id": 40246,
+      "product_id": "4050",
+      "spec_name": "Motor",
+      "spec_value": "None (manual)"
+    },
+    {
+      "spec_id": 40247,
+      "product_id": "4050",
+      "spec_name": "Speed Range",
+      "spec_value": "Unlimited (user-powered)"
+    },
+    {
+      "spec_id": 40248,
+      "product_id": "4050",
+      "spec_name": "Incline",
+      "spec_value": "Fixed curved design"
+    },
+    {
+      "spec_id": 40249,
+      "product_id": "4050",
+      "spec_name": "Running Surface",
+      "spec_value": "17\" x 62\" (43.2 x 157.5 cm)"
+    },
+    {
+      "spec_id": 40250,
+      "product_id": "4050",
+      "spec_name": "Display",
+      "spec_value": "LCD console with built-in programs"
+    }
+]

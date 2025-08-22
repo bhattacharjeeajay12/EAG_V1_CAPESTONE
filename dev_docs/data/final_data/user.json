@@ -1,0 +1,202 @@
+[
+    {
+      "user_id": 1,
+      "first_name": "Alice",
+      "second_name": "Johnson",
+      "email": "alice.johnson@example.com",
+      "phone": "+1-555-123-4567",
+      "address": "123 Maple St, Springfield, IL, USA"
+    },
+    {
+      "user_id": 2,
+      "first_name": "Bob",
+      "second_name": "Smith",
+      "email": "bob.smith@example.com",
+      "phone": "+1-555-987-6543",
+      "address": "456 Oak Ave, Denver, CO, USA"
+    },
+    {
+      "user_id": 3,
+      "first_name": "Carol",
+      "second_name": "Martinez",
+      "email": "carol.martinez@example.com",
+      "phone": "+1-555-234-5678",
+      "address": "789 Pine Rd, Seattle, WA, USA"
+    },
+    {
+      "user_id": 4,
+      "first_name": "David",
+      "second_name": "Wilson",
+      "email": "david.wilson@example.com",
+      "phone": "+1-555-345-6789",
+      "address": "321 Cedar Ln, Boston, MA, USA"
+    },
+    {
+      "user_id": 5,
+      "first_name": "Emma",
+      "second_name": "Taylor",
+      "email": "emma.taylor@example.com",
+      "phone": "+1-555-456-7890",
+      "address": "654 Birch Dr, Austin, TX, USA"
+    },
+    {
+      "user_id": 6,
+      "first_name": "Frank",
+      "second_name": "Brown",
+      "email": "frank.brown@example.com",
+      "phone": "+1-555-567-8901",
+      "address": "987 Elm St, Chicago, IL, USA"
+    },
+    {
+      "user_id": 7,
+      "first_name": "Grace",
+      "second_name": "Lee",
+      "email": "grace.lee@example.com",
+      "phone": "+1-555-678-9012",
+      "address": "135 Walnut Ave, San Francisco, CA, USA"
+    },
+    {
+      "user_id": 8,
+      "first_name": "Henry",
+      "second_name": "Garcia",
+      "email": "henry.garcia@example.com",
+      "phone": "+1-555-789-0123",
+      "address": "246 Pineapple Ln, Miami, FL, USA"
+    },
+    {
+      "user_id": 9,
+      "first_name": "Isabella",
+      "second_name": "Chen",
+      "email": "isabella.chen@example.com",
+      "phone": "+1-555-890-1234",
+      "address": "579 Apple Ct, Portland, OR, USA"
+    },
+    {
+      "user_id": 10,
+      "first_name": "James",
+      "second_name": "Kim",
+      "email": "james.kim@example.com",
+      "phone": "+1-555-901-2345",
+      "address": "802 Orange Rd, New York, NY, USA"
+    },
+    {
+      "user_id": 11,
+      "first_name": "Katherine",
+      "second_name": "Patel",
+      "email": "katherine.patel@example.com",
+      "phone": "+1-555-012-3456",
+      "address": "314 Grape St, Atlanta, GA, USA"
+    },
+    {
+      "user_id": 12,
+      "first_name": "Liam",
+      "second_name": "Nguyen",
+      "email": "liam.nguyen@example.com",
+      "phone": "+1-555-123-4567",
+      "address": "628 Lemon Ave, Philadelphia, PA, USA"
+    },
+    {
+      "user_id": 13,
+      "first_name": "Mia",
+      "second_name": "Rodriguez",
+      "email": "mia.rodriguez@example.com",
+      "phone": "+1-555-234-5678",
+      "address": "941 Cherry Ln, San Diego, CA, USA"
+    },
+    {
+      "user_id": 14,
+      "first_name": "Noah",
+      "second_name": "Wong",
+      "email": "noah.wong@example.com",
+      "phone": "+1-555-345-6789",
+      "address": "257 Peach Blvd, Las Vegas, NV, USA"
+    },
+    {
+      "user_id": 15,
+      "first_name": "Olivia",
+      "second_name": "Singh",
+      "email": "olivia.singh@example.com",
+      "phone": "+1-555-456-7890",
+      "address": "468 Plum St, Detroit, MI, USA"
+    },
+    {
+      "user_id": 16,
+      "first_name": "Peter",
+      "second_name": "Kumar",
+      "email": "peter.kumar@example.com",
+      "phone": "+1-555-567-8901",
+      "address": "753 Strawberry Dr, Phoenix, AZ, USA"
+    },
+    {
+      "user_id": 17,
+      "first_name": "Quinn",
+      "second_name": "Sharma",
+      "email": "quinn.sharma@example.com",
+      "phone": "+1-555-678-9012",
+      "address": "864 Kiwi Ct, Minneapolis, MN, USA"
+    },
+    {
+      "user_id": 18,
+      "first_name": "Ryan",
+      "second_name": "Lopez",
+      "email": "ryan.lopez@example.com",
+      "phone": "+1-555-789-0123",
+      "address": "975 Mango Rd, Nashville, TN, USA"
+    },
+    {
+      "user_id": 19,
+      "first_name": "Sophia",
+      "second_name": "Jackson",
+      "email": "sophia.jackson@example.com",
+      "phone": "+1-555-890-1234",
+      "address": "159 Papaya Ln, Salt Lake City, UT, USA"
+    },
+    {
+      "user_id": 20,
+      "first_name": "Thomas",
+      "second_name": "Hernandez",
+      "email": "thomas.hernandez@example.com",
+      "phone": "+1-555-901-2345",
+      "address": "357 Melon Ave, Honolulu, HI, USA"
+    },
+    {
+      "user_id": 21,
+      "first_name": "Uma",
+      "second_name": "Gupta",
+      "email": "uma.gupta@example.com",
+      "phone": "+1-555-012-3456",
+      "address": "486 Coconut Blvd, Anchorage, AK, USA"
+    },
+    {
+      "user_id": 22,
+      "first_name": "Victor",
+      "second_name": "Zhao",
+      "email": "victor.zhao@example.com",
+      "phone": "+1-555-123-4567",
+      "address": "792 Pear St, Indianapolis, IN, USA"
+    },
+    {
+      "user_id": 23,
+      "first_name": "Whitney",
+      "second_name": "Ali",
+      "email": "whitney.ali@example.com",
+      "phone": "+1-555-234-5678",
+      "address": "138 Fig Dr, Charlotte, NC, USA"
+    },
+    {
+      "user_id": 24,
+      "first_name": "Xavier",
+      "second_name": "Santos",
+      "email": "xavier.santos@example.com",
+      "phone": "+1-555-345-6789",
+      "address": "246 Date Ln, New Orleans, LA, USA"
+    },
+    {
+      "user_id": 25,
+      "first_name": "Yasmine",
+      "second_name": "Park",
+      "email": "yasmine.park@example.com",
+      "phone": "+1-555-456-7890",
+      "address": "753 Raspberry Rd, Kansas City, MO, USA"
+    }
+]

@@ -184,12 +184,12 @@ def load_product_data(data_path: Optional[str] = None) -> List[Product]:
     from pathlib import Path
 
     if data_path is None:
-        # Look for product.csv in common locations
+        # Look for product.json in common locations
         possible_paths = [
-            "product.csv",
-            "../product.csv",
-            "Data/product.csv",
-            "../Data/product.csv",
+            "product.json",
+            "../product.json",
+            "Data/product.json",
+            "../Data/product.json",
         ]
 
         for path in possible_paths:

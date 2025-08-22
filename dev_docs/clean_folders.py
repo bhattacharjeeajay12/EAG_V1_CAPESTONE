@@ -2,6 +2,8 @@
 
 import os
 import shutil
+import json
+
 
 def clear_memory_folders():
     base_dir = os.path.dirname(os.path.abspath(__file__))  # path to dev_docs
@@ -22,6 +24,17 @@ def clear_memory_folders():
                 elif os.path.isdir(sub_item_path):
                     shutil.rmtree(sub_item_path)
             print(f"Cleared folder: {item_path}")
+
+
+def load_json(file_path):
+    """Load and parse JSON data from given file path"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading JSON from {file_path}: {e}")
+        return None
+
 
 if __name__ == "__main__":
     clear_memory_folders()

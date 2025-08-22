@@ -1,0 +1,1482 @@
+[
+    {
+      "order_id": "O0001",
+      "user_id": 1,
+      "date": "2025-06-30",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "123 Maple St, Springfield, IL, USA",
+      "return_eligible_date": "2025-07-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0002",
+      "user_id": 2,
+      "date": "2025-06-07",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "456 Oak Ave, Denver, CO, USA",
+      "return_eligible_date": "2025-07-07",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0003",
+      "user_id": 3,
+      "date": "2025-05-23",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "789 Pine Rd, Seattle, WA, USA",
+      "return_eligible_date": "2025-06-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0004",
+      "user_id": 4,
+      "date": "2025-04-10",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "321 Cedar Ln, Boston, MA, USA",
+      "return_eligible_date": "2025-05-10",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0005",
+      "user_id": 5,
+      "date": "2025-03-02",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "654 Birch Dr, Austin, TX, USA",
+      "return_eligible_date": "2025-04-01",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0006",
+      "user_id": 6,
+      "date": "2025-07-27",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "987 Elm St, Chicago, IL, USA",
+      "return_eligible_date": "2025-08-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0007",
+      "user_id": 7,
+      "date": "2025-02-17",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "135 Walnut Ave, San Francisco, CA, USA",
+      "return_eligible_date": "2025-03-19",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0008",
+      "user_id": 8,
+      "date": "2025-01-13",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Pineapple Ln, Miami, FL, USA",
+      "return_eligible_date": "2025-02-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0009",
+      "user_id": 9,
+      "date": "2025-04-28",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "579 Apple Ct, Portland, OR, USA",
+      "return_eligible_date": "2025-05-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0010",
+      "user_id": 10,
+      "date": "2025-07-14",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "802 Orange Rd, New York, NY, USA",
+      "return_eligible_date": "2025-08-13",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0011",
+      "user_id": 11,
+      "date": "2025-05-31",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "314 Grape St, Atlanta, GA, USA",
+      "return_eligible_date": "2025-06-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0012",
+      "user_id": 12,
+      "date": "2025-04-25",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "628 Lemon Ave, Philadelphia, PA, USA",
+      "return_eligible_date": "2025-05-25",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0013",
+      "user_id": 13,
+      "date": "2025-03-10",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "941 Cherry Ln, San Diego, CA, USA",
+      "return_eligible_date": "2025-04-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0014",
+      "user_id": 14,
+      "date": "2025-02-05",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "257 Peach Blvd, Las Vegas, NV, USA",
+      "return_eligible_date": "2025-03-07",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0015",
+      "user_id": 15,
+      "date": "2025-01-20",
+      "product_id": "1001",
+      "payment_method": "PayPal",
+      "shipping_address": "468 Plum St, Detroit, MI, USA",
+      "return_eligible_date": "2025-02-19",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0016",
+      "user_id": 16,
+      "date": "2025-07-25",
+      "product_id": "1001",
+      "payment_method": "Credit Card",
+      "shipping_address": "753 Strawberry Dr, Phoenix, AZ, USA",
+      "return_eligible_date": "2025-08-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0017",
+      "user_id": 17,
+      "date": "2025-06-20",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "864 Kiwi Ct, Minneapolis, MN, USA",
+      "return_eligible_date": "2025-07-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0018",
+      "user_id": 18,
+      "date": "2025-07-29",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "975 Mango Rd, Nashville, TN, USA",
+      "return_eligible_date": "2025-08-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0019",
+      "user_id": 19,
+      "date": "2025-05-09",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "159 Papaya Ln, Salt Lake City, UT, USA",
+      "return_eligible_date": "2025-05-23",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0020",
+      "user_id": 20,
+      "date": "2025-03-15",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "357 Melon Ave, Honolulu, HI, USA",
+      "return_eligible_date": "2025-03-29",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0021",
+      "user_id": 21,
+      "date": "2025-01-31",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "486 Coconut Blvd, Anchorage, AK, USA",
+      "return_eligible_date": "2025-02-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0022",
+      "user_id": 22,
+      "date": "2025-07-06",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "792 Pear St, Indianapolis, IN, USA",
+      "return_eligible_date": "2025-07-20",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0023",
+      "user_id": 23,
+      "date": "2025-03-29",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "138 Fig Dr, Charlotte, NC, USA",
+      "return_eligible_date": "2025-04-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0024",
+      "user_id": 24,
+      "date": "2025-01-25",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Date Ln, New Orleans, LA, USA",
+      "return_eligible_date": "2025-02-08",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0025",
+      "user_id": 25,
+      "date": "2025-08-10",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "753 Raspberry Rd, Kansas City, MO, USA",
+      "return_eligible_date": "2025-08-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0026",
+      "user_id": 1,
+      "date": "2025-06-02",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "123 Maple St, Springfield, IL, USA",
+      "return_eligible_date": "2025-06-16",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0027",
+      "user_id": 2,
+      "date": "2025-03-06",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "456 Oak Ave, Denver, CO, USA",
+      "return_eligible_date": "2025-03-20",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0028",
+      "user_id": 3,
+      "date": "2025-05-17",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "789 Pine Rd, Seattle, WA, USA",
+      "return_eligible_date": "2025-05-31",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0029",
+      "user_id": 4,
+      "date": "2025-07-20",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "321 Cedar Ln, Boston, MA, USA",
+      "return_eligible_date": "2025-08-03",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0030",
+      "user_id": 5,
+      "date": "2025-02-13",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "654 Birch Dr, Austin, TX, USA",
+      "return_eligible_date": "2025-02-27",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0031",
+      "user_id": 6,
+      "date": "2025-04-12",
+      "product_id": "1002",
+      "payment_method": "Credit Card",
+      "shipping_address": "987 Elm St, Chicago, IL, USA",
+      "return_eligible_date": "2025-04-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0032",
+      "user_id": 7,
+      "date": "2025-08-04",
+      "product_id": "1002",
+      "payment_method": "PayPal",
+      "shipping_address": "135 Walnut Ave, San Francisco, CA, USA",
+      "return_eligible_date": "2025-08-18",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0033",
+      "user_id": 8,
+      "date": "2025-07-13",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Pineapple Ln, Miami, FL, USA",
+      "return_eligible_date": "2025-07-27",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0034",
+      "user_id": 9,
+      "date": "2025-05-29",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "579 Apple Ct, Portland, OR, USA",
+      "return_eligible_date": "2025-06-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0035",
+      "user_id": 10,
+      "date": "2025-08-02",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "802 Orange Rd, New York, NY, USA",
+      "return_eligible_date": "2025-08-16",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0036",
+      "user_id": 11,
+      "date": "2025-04-07",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "314 Grape St, Atlanta, GA, USA",
+      "return_eligible_date": "2025-04-21",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0037",
+      "user_id": 12,
+      "date": "2025-03-15",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "628 Lemon Ave, Philadelphia, PA, USA",
+      "return_eligible_date": "2025-03-29",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0038",
+      "user_id": 13,
+      "date": "2025-05-10",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "941 Cherry Ln, San Diego, CA, USA",
+      "return_eligible_date": "2025-05-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0039",
+      "user_id": 14,
+      "date": "2025-06-30",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "257 Peach Blvd, Las Vegas, NV, USA",
+      "return_eligible_date": "2025-07-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0040",
+      "user_id": 15,
+      "date": "2025-02-23",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "468 Plum St, Detroit, MI, USA",
+      "return_eligible_date": "2025-03-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0041",
+      "user_id": 16,
+      "date": "2025-06-14",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "753 Strawberry Dr, Phoenix, AZ, USA",
+      "return_eligible_date": "2025-06-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0042",
+      "user_id": 17,
+      "date": "2025-03-31",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "864 Kiwi Ct, Minneapolis, MN, USA",
+      "return_eligible_date": "2025-04-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0043",
+      "user_id": 18,
+      "date": "2025-07-27",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "975 Mango Rd, Nashville, TN, USA",
+      "return_eligible_date": "2025-08-10",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0044",
+      "user_id": 19,
+      "date": "2025-05-22",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "159 Papaya Ln, Salt Lake City, UT, USA",
+      "return_eligible_date": "2025-06-05",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0045",
+      "user_id": 20,
+      "date": "2025-03-05",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "357 Melon Ave, Honolulu, HI, USA",
+      "return_eligible_date": "2025-03-19",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0046",
+      "user_id": 21,
+      "date": "2025-07-07",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "486 Coconut Blvd, Anchorage, AK, USA",
+      "return_eligible_date": "2025-07-21",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0047",
+      "user_id": 22,
+      "date": "2025-01-20",
+      "product_id": "1011",
+      "payment_method": "Credit Card",
+      "shipping_address": "792 Pear St, Indianapolis, IN, USA",
+      "return_eligible_date": "2025-02-03",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0048",
+      "user_id": 23,
+      "date": "2025-06-25",
+      "product_id": "1011",
+      "payment_method": "PayPal",
+      "shipping_address": "138 Fig Dr, Charlotte, NC, USA",
+      "return_eligible_date": "2025-07-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0049",
+      "user_id": 24,
+      "date": "2025-08-05",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Date Ln, New Orleans, LA, USA",
+      "return_eligible_date": "2025-09-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0050",
+      "user_id": 25,
+      "date": "2025-06-28",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "753 Raspberry Rd, Kansas City, MO, USA",
+      "return_eligible_date": "2025-07-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0051",
+      "user_id": 1,
+      "date": "2025-04-12",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "123 Maple St, Springfield, IL, USA",
+      "return_eligible_date": "2025-05-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0052",
+      "user_id": 2,
+      "date": "2025-05-31",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "456 Oak Ave, Denver, CO, USA",
+      "return_eligible_date": "2025-06-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0053",
+      "user_id": 3,
+      "date": "2025-03-07",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "789 Pine Rd, Seattle, WA, USA",
+      "return_eligible_date": "2025-04-06",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0054",
+      "user_id": 4,
+      "date": "2025-07-31",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "321 Cedar Ln, Boston, MA, USA",
+      "return_eligible_date": "2025-08-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0055",
+      "user_id": 5,
+      "date": "2025-05-16",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "654 Birch Dr, Austin, TX, USA",
+      "return_eligible_date": "2025-06-15",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0056",
+      "user_id": 6,
+      "date": "2025-02-10",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "987 Elm St, Chicago, IL, USA",
+      "return_eligible_date": "2025-03-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0057",
+      "user_id": 7,
+      "date": "2025-07-13",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "135 Walnut Ave, San Francisco, CA, USA",
+      "return_eligible_date": "2025-08-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0058",
+      "user_id": 8,
+      "date": "2025-03-29",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Pineapple Ln, Miami, FL, USA",
+      "return_eligible_date": "2025-04-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0059",
+      "user_id": 9,
+      "date": "2025-06-17",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "579 Apple Ct, Portland, OR, USA",
+      "return_eligible_date": "2025-07-17",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0060",
+      "user_id": 10,
+      "date": "2025-03-23",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "802 Orange Rd, New York, NY, USA",
+      "return_eligible_date": "2025-04-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0061",
+      "user_id": 11,
+      "date": "2025-05-05",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "314 Grape St, Atlanta, GA, USA",
+      "return_eligible_date": "2025-06-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0062",
+      "user_id": 12,
+      "date": "2025-07-23",
+      "product_id": "1012",
+      "payment_method": "Credit Card",
+      "shipping_address": "628 Lemon Ave, Philadelphia, PA, USA",
+      "return_eligible_date": "2025-08-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0063",
+      "user_id": 13,
+      "date": "2025-01-29",
+      "product_id": "1012",
+      "payment_method": "PayPal",
+      "shipping_address": "941 Cherry Ln, San Diego, CA, USA",
+      "return_eligible_date": "2025-02-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0064",
+      "user_id": 14,
+      "date": "2025-07-10",
+      "product_id": "1021",
+      "payment_method": "Credit Card",
+      "shipping_address": "257 Peach Blvd, Las Vegas, NV, USA",
+      "return_eligible_date": "2025-07-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0065",
+      "user_id": 15,
+      "date": "2025-05-29",
+      "product_id": "1021",
+      "payment_method": "PayPal",
+      "shipping_address": "468 Plum St, Detroit, MI, USA",
+      "return_eligible_date": "2025-06-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0066",
+      "user_id": 16,
+      "date": "2025-04-13",
+      "product_id": "1021",
+      "payment_method": "Credit Card",
+      "shipping_address": "753 Strawberry Dr, Phoenix, AZ, USA",
+      "return_eligible_date": "2025-04-27",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0067",
+      "user_id": 17,
+      "date": "2025-02-17",
+      "product_id": "1021",
+      "payment_method": "PayPal",
+      "shipping_address": "864 Kiwi Ct, Minneapolis, MN, USA",
+      "return_eligible_date": "2025-03-03",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0068",
+      "user_id": 18,
+      "date": "2025-07-25",
+      "product_id": "1021",
+      "payment_method": "Credit Card",
+      "shipping_address": "975 Mango Rd, Nashville, TN, USA",
+      "return_eligible_date": "2025-08-08",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0069",
+      "user_id": 19,
+      "date": "2025-05-02",
+      "product_id": "1021",
+      "payment_method": "PayPal",
+      "shipping_address": "159 Papaya Ln, Salt Lake City, UT, USA",
+      "return_eligible_date": "2025-05-16",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0070",
+      "user_id": 20,
+      "date": "2025-03-06",
+      "product_id": "1021",
+      "payment_method": "Credit Card",
+      "shipping_address": "357 Melon Ave, Honolulu, HI, USA",
+      "return_eligible_date": "2025-03-20",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0071",
+      "user_id": 21,
+      "date": "2025-06-14",
+      "product_id": "1021",
+      "payment_method": "PayPal",
+      "shipping_address": "486 Coconut Blvd, Anchorage, AK, USA",
+      "return_eligible_date": "2025-06-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0072",
+      "user_id": 22,
+      "date": "2025-01-20",
+      "product_id": "1021",
+      "payment_method": "Credit Card",
+      "shipping_address": "792 Pear St, Indianapolis, IN, USA",
+      "return_eligible_date": "2025-02-03",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0073",
+      "user_id": 23,
+      "date": "2025-07-31",
+      "product_id": "1021",
+      "payment_method": "PayPal",
+      "shipping_address": "138 Fig Dr, Charlotte, NC, USA",
+      "return_eligible_date": "2025-08-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0074",
+      "user_id": 24,
+      "date": "2025-04-25",
+      "product_id": "1021",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Date Ln, New Orleans, LA, USA",
+      "return_eligible_date": "2025-05-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0075",
+      "user_id": 25,
+      "date": "2025-03-13",
+      "product_id": "1021",
+      "payment_method": "PayPal",
+      "shipping_address": "753 Raspberry Rd, Kansas City, MO, USA",
+      "return_eligible_date": "2025-03-27",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0076",
+      "user_id": 1,
+      "date": "2025-08-07",
+      "product_id": "1022",
+      "payment_method": "PayPal",
+      "shipping_address": "123 Maple St, Springfield, IL, USA",
+      "return_eligible_date": "2025-09-06",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0077",
+      "user_id": 2,
+      "date": "2025-06-22",
+      "product_id": "1022",
+      "payment_method": "Credit Card",
+      "shipping_address": "456 Oak Ave, Denver, CO, USA",
+      "return_eligible_date": "2025-07-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0078",
+      "user_id": 3,
+      "date": "2025-04-28",
+      "product_id": "1022",
+      "payment_method": "PayPal",
+      "shipping_address": "789 Pine Rd, Seattle, WA, USA",
+      "return_eligible_date": "2025-05-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0079",
+      "user_id": 4,
+      "date": "2025-07-10",
+      "product_id": "1022",
+      "payment_method": "Credit Card",
+      "shipping_address": "321 Cedar Ln, Boston, MA, USA",
+      "return_eligible_date": "2025-08-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0080",
+      "user_id": 5,
+      "date": "2025-03-14",
+      "product_id": "1022",
+      "payment_method": "PayPal",
+      "shipping_address": "654 Birch Dr, Austin, TX, USA",
+      "return_eligible_date": "2025-04-13",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0081",
+      "user_id": 6,
+      "date": "2025-02-03",
+      "product_id": "1022",
+      "payment_method": "Credit Card",
+      "shipping_address": "987 Elm St, Chicago, IL, USA",
+      "return_eligible_date": "2025-03-05",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0082",
+      "user_id": 7,
+      "date": "2025-06-05",
+      "product_id": "1022",
+      "payment_method": "PayPal",
+      "shipping_address": "135 Walnut Ave, San Francisco, CA, USA",
+      "return_eligible_date": "2025-07-05",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0083",
+      "user_id": 8,
+      "date": "2025-04-17",
+      "product_id": "1022",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Pineapple Ln, Miami, FL, USA",
+      "return_eligible_date": "2025-05-17",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0084",
+      "user_id": 9,
+      "date": "2025-07-27",
+      "product_id": "1022",
+      "payment_method": "PayPal",
+      "shipping_address": "579 Apple Ct, Portland, OR, USA",
+      "return_eligible_date": "2025-08-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0085",
+      "user_id": 10,
+      "date": "2025-05-13",
+      "product_id": "1022",
+      "payment_method": "Credit Card",
+      "shipping_address": "802 Orange Rd, New York, NY, USA",
+      "return_eligible_date": "2025-06-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0086",
+      "user_id": 11,
+      "date": "2025-06-28",
+      "product_id": "1022",
+      "payment_method": "PayPal",
+      "shipping_address": "314 Grape St, Atlanta, GA, USA",
+      "return_eligible_date": "2025-07-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0087",
+      "user_id": 12,
+      "date": "2025-03-25",
+      "product_id": "1022",
+      "payment_method": "Credit Card",
+      "shipping_address": "628 Lemon Ave, Philadelphia, PA, USA",
+      "return_eligible_date": "2025-04-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0088",
+      "user_id": 13,
+      "date": "2025-07-05",
+      "product_id": "1031",
+      "payment_method": "PayPal",
+      "shipping_address": "941 Cherry Ln, San Diego, CA, USA",
+      "return_eligible_date": "2025-08-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0089",
+      "user_id": 14,
+      "date": "2025-05-31",
+      "product_id": "1031",
+      "payment_method": "Credit Card",
+      "shipping_address": "257 Peach Blvd, Las Vegas, NV, USA",
+      "return_eligible_date": "2025-06-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0090",
+      "user_id": 15,
+      "date": "2025-04-07",
+      "product_id": "1031",
+      "payment_method": "PayPal",
+      "shipping_address": "468 Plum St, Detroit, MI, USA",
+      "return_eligible_date": "2025-05-07",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0091",
+      "user_id": 16,
+      "date": "2025-07-29",
+      "product_id": "1031",
+      "payment_method": "Credit Card",
+      "shipping_address": "753 Strawberry Dr, Phoenix, AZ, USA",
+      "return_eligible_date": "2025-08-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0092",
+      "user_id": 17,
+      "date": "2025-05-13",
+      "product_id": "1031",
+      "payment_method": "PayPal",
+      "shipping_address": "864 Kiwi Ct, Minneapolis, MN, USA",
+      "return_eligible_date": "2025-06-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0093",
+      "user_id": 18,
+      "date": "2025-02-20",
+      "product_id": "1031",
+      "payment_method": "Credit Card",
+      "shipping_address": "975 Mango Rd, Nashville, TN, USA",
+      "return_eligible_date": "2025-03-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0094",
+      "user_id": 19,
+      "date": "2025-07-15",
+      "product_id": "1031",
+      "payment_method": "PayPal",
+      "shipping_address": "159 Papaya Ln, Salt Lake City, UT, USA",
+      "return_eligible_date": "2025-08-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0095",
+      "user_id": 20,
+      "date": "2025-03-10",
+      "product_id": "1031",
+      "payment_method": "Credit Card",
+      "shipping_address": "357 Melon Ave, Honolulu, HI, USA",
+      "return_eligible_date": "2025-04-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0096",
+      "user_id": 21,
+      "date": "2025-06-17",
+      "product_id": "1031",
+      "payment_method": "PayPal",
+      "shipping_address": "486 Coconut Blvd, Anchorage, AK, USA",
+      "return_eligible_date": "2025-07-17",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0097",
+      "user_id": 22,
+      "date": "2025-04-25",
+      "product_id": "1031",
+      "payment_method": "Credit Card",
+      "shipping_address": "792 Pear St, Indianapolis, IN, USA",
+      "return_eligible_date": "2025-05-25",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0098",
+      "user_id": 23,
+      "date": "2025-07-20",
+      "product_id": "1032",
+      "payment_method": "PayPal",
+      "shipping_address": "138 Fig Dr, Charlotte, NC, USA",
+      "return_eligible_date": "2025-08-19",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0099",
+      "user_id": 24,
+      "date": "2025-05-07",
+      "product_id": "1032",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Date Ln, New Orleans, LA, USA",
+      "return_eligible_date": "2025-06-06",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0100",
+      "user_id": 25,
+      "date": "2025-03-03",
+      "product_id": "1032",
+      "payment_method": "PayPal",
+      "shipping_address": "753 Raspberry Rd, Kansas City, MO, USA",
+      "return_eligible_date": "2025-04-02",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0101",
+      "user_id": 1,
+      "date": "2025-06-10",
+      "product_id": "1032",
+      "payment_method": "PayPal",
+      "shipping_address": "123 Maple St, Springfield, IL, USA",
+      "return_eligible_date": "2025-07-10",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0102",
+      "user_id": 2,
+      "date": "2025-03-29",
+      "product_id": "1032",
+      "payment_method": "Credit Card",
+      "shipping_address": "456 Oak Ave, Denver, CO, USA",
+      "return_eligible_date": "2025-04-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0103",
+      "user_id": 3,
+      "date": "2025-08-05",
+      "product_id": "1032",
+      "payment_method": "PayPal",
+      "shipping_address": "789 Pine Rd, Seattle, WA, USA",
+      "return_eligible_date": "2025-09-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0104",
+      "user_id": 4,
+      "date": "2025-05-25",
+      "product_id": "1032",
+      "payment_method": "Credit Card",
+      "shipping_address": "321 Cedar Ln, Boston, MA, USA",
+      "return_eligible_date": "2025-06-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0105",
+      "user_id": 5,
+      "date": "2025-02-13",
+      "product_id": "1032",
+      "payment_method": "PayPal",
+      "shipping_address": "654 Birch Dr, Austin, TX, USA",
+      "return_eligible_date": "2025-03-15",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0106",
+      "user_id": 6,
+      "date": "2025-06-30",
+      "product_id": "1032",
+      "payment_method": "Credit Card",
+      "shipping_address": "987 Elm St, Chicago, IL, USA",
+      "return_eligible_date": "2025-07-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0107",
+      "user_id": 7,
+      "date": "2025-08-10",
+      "product_id": "1041",
+      "payment_method": "PayPal",
+      "shipping_address": "135 Walnut Ave, San Francisco, CA, USA",
+      "return_eligible_date": "2025-09-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0108",
+      "user_id": 8,
+      "date": "2025-06-17",
+      "product_id": "1041",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Pineapple Ln, Miami, FL, USA",
+      "return_eligible_date": "2025-07-17",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0109",
+      "user_id": 9,
+      "date": "2025-04-05",
+      "product_id": "1041",
+      "payment_method": "PayPal",
+      "shipping_address": "579 Apple Ct, Portland, OR, USA",
+      "return_eligible_date": "2025-05-05",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0110",
+      "user_id": 10,
+      "date": "2025-06-28",
+      "product_id": "1041",
+      "payment_method": "Credit Card",
+      "shipping_address": "802 Orange Rd, New York, NY, USA",
+      "return_eligible_date": "2025-07-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0111",
+      "user_id": 11,
+      "date": "2025-03-13",
+      "product_id": "1041",
+      "payment_method": "PayPal",
+      "shipping_address": "314 Grape St, Atlanta, GA, USA",
+      "return_eligible_date": "2025-04-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0112",
+      "user_id": 12,
+      "date": "2025-05-23",
+      "product_id": "1041",
+      "payment_method": "Credit Card",
+      "shipping_address": "628 Lemon Ave, Philadelphia, PA, USA",
+      "return_eligible_date": "2025-06-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0113",
+      "user_id": 13,
+      "date": "2025-02-10",
+      "product_id": "1041",
+      "payment_method": "PayPal",
+      "shipping_address": "941 Cherry Ln, San Diego, CA, USA",
+      "return_eligible_date": "2025-03-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0114",
+      "user_id": 14,
+      "date": "2025-07-15",
+      "product_id": "1041",
+      "payment_method": "Credit Card",
+      "shipping_address": "257 Peach Blvd, Las Vegas, NV, USA",
+      "return_eligible_date": "2025-08-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0115",
+      "user_id": 15,
+      "date": "2025-03-31",
+      "product_id": "1041",
+      "payment_method": "PayPal",
+      "shipping_address": "468 Plum St, Detroit, MI, USA",
+      "return_eligible_date": "2025-04-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0116",
+      "user_id": 16,
+      "date": "2025-06-05",
+      "product_id": "1041",
+      "payment_method": "Credit Card",
+      "shipping_address": "753 Strawberry Dr, Phoenix, AZ, USA",
+      "return_eligible_date": "2025-07-05",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0117",
+      "user_id": 17,
+      "date": "2025-02-24",
+      "product_id": "1041",
+      "payment_method": "PayPal",
+      "shipping_address": "864 Kiwi Ct, Minneapolis, MN, USA",
+      "return_eligible_date": "2025-03-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0118",
+      "user_id": 18,
+      "date": "2025-07-27",
+      "product_id": "1041",
+      "payment_method": "Credit Card",
+      "shipping_address": "975 Mango Rd, Nashville, TN, USA",
+      "return_eligible_date": "2025-08-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0119",
+      "user_id": 19,
+      "date": "2025-07-05",
+      "product_id": "4001",
+      "payment_method": "PayPal",
+      "shipping_address": "159 Papaya Ln, Salt Lake City, UT, USA",
+      "return_eligible_date": "2025-08-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0120",
+      "user_id": 20,
+      "date": "2025-05-31",
+      "product_id": "4001",
+      "payment_method": "Credit Card",
+      "shipping_address": "357 Melon Ave, Honolulu, HI, USA",
+      "return_eligible_date": "2025-06-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0121",
+      "user_id": 21,
+      "date": "2025-04-07",
+      "product_id": "4001",
+      "payment_method": "PayPal",
+      "shipping_address": "486 Coconut Blvd, Anchorage, AK, USA",
+      "return_eligible_date": "2025-05-07",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0122",
+      "user_id": 22,
+      "date": "2025-07-29",
+      "product_id": "4001",
+      "payment_method": "Credit Card",
+      "shipping_address": "792 Pear St, Indianapolis, IN, USA",
+      "return_eligible_date": "2025-08-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0123",
+      "user_id": 23,
+      "date": "2025-05-13",
+      "product_id": "4001",
+      "payment_method": "PayPal",
+      "shipping_address": "138 Fig Dr, Charlotte, NC, USA",
+      "return_eligible_date": "2025-06-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0124",
+      "user_id": 24,
+      "date": "2025-02-24",
+      "product_id": "4001",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Date Ln, New Orleans, LA, USA",
+      "return_eligible_date": "2025-03-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0125",
+      "user_id": 25,
+      "date": "2025-07-15",
+      "product_id": "4001",
+      "payment_method": "PayPal",
+      "shipping_address": "753 Raspberry Rd, Kansas City, MO, USA",
+      "return_eligible_date": "2025-08-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0126",
+      "user_id": 1,
+      "date": "2025-02-10",
+      "product_id": "4001",
+      "payment_method": "PayPal",
+      "shipping_address": "123 Maple St, Springfield, IL, USA",
+      "return_eligible_date": "2025-03-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0127",
+      "user_id": 2,
+      "date": "2025-06-23",
+      "product_id": "4001",
+      "payment_method": "Credit Card",
+      "shipping_address": "456 Oak Ave, Denver, CO, USA",
+      "return_eligible_date": "2025-07-23",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0128",
+      "user_id": 3,
+      "date": "2025-07-10",
+      "product_id": "4011",
+      "payment_method": "PayPal",
+      "shipping_address": "789 Pine Rd, Seattle, WA, USA",
+      "return_eligible_date": "2025-08-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0129",
+      "user_id": 4,
+      "date": "2025-04-28",
+      "product_id": "4011",
+      "payment_method": "Credit Card",
+      "shipping_address": "321 Cedar Ln, Boston, MA, USA",
+      "return_eligible_date": "2025-05-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0130",
+      "user_id": 5,
+      "date": "2025-08-05",
+      "product_id": "4011",
+      "payment_method": "PayPal",
+      "shipping_address": "654 Birch Dr, Austin, TX, USA",
+      "return_eligible_date": "2025-09-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0131",
+      "user_id": 6,
+      "date": "2025-06-17",
+      "product_id": "4011",
+      "payment_method": "Credit Card",
+      "shipping_address": "987 Elm St, Chicago, IL, USA",
+      "return_eligible_date": "2025-07-17",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0132",
+      "user_id": 7,
+      "date": "2025-04-10",
+      "product_id": "4011",
+      "payment_method": "PayPal",
+      "shipping_address": "135 Walnut Ave, San Francisco, CA, USA",
+      "return_eligible_date": "2025-05-10",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0133",
+      "user_id": 8,
+      "date": "2025-07-25",
+      "product_id": "4011",
+      "payment_method": "Credit Card",
+      "shipping_address": "246 Pineapple Ln, Miami, FL, USA",
+      "return_eligible_date": "2025-08-24",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0134",
+      "user_id": 9,
+      "date": "2025-03-13",
+      "product_id": "4011",
+      "payment_method": "PayPal",
+      "shipping_address": "579 Apple Ct, Portland, OR, USA",
+      "return_eligible_date": "2025-04-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0135",
+      "user_id": 10,
+      "date": "2025-05-23",
+      "product_id": "4011",
+      "payment_method": "Credit Card",
+      "shipping_address": "802 Orange Rd, New York, NY, USA",
+      "return_eligible_date": "2025-06-22",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0136",
+      "user_id": 11,
+      "date": "2025-07-05",
+      "product_id": "4031",
+      "payment_method": "PayPal",
+      "shipping_address": "314 Grape St, Atlanta, GA, USA",
+      "return_eligible_date": "2025-08-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0137",
+      "user_id": 12,
+      "date": "2025-05-31",
+      "product_id": "4031",
+      "payment_method": "Credit Card",
+      "shipping_address": "628 Lemon Ave, Philadelphia, PA, USA",
+      "return_eligible_date": "2025-06-30",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0138",
+      "user_id": 13,
+      "date": "2025-04-07",
+      "product_id": "4031",
+      "payment_method": "PayPal",
+      "shipping_address": "941 Cherry Ln, San Diego, CA, USA",
+      "return_eligible_date": "2025-05-07",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0139",
+      "user_id": 14,
+      "date": "2025-02-24",
+      "product_id": "4031",
+      "payment_method": "Credit Card",
+      "shipping_address": "257 Peach Blvd, Las Vegas, NV, USA",
+      "return_eligible_date": "2025-03-26",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0140",
+      "user_id": 15,
+      "date": "2025-07-29",
+      "product_id": "4031",
+      "payment_method": "PayPal",
+      "shipping_address": "468 Plum St, Detroit, MI, USA",
+      "return_eligible_date": "2025-08-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0141",
+      "user_id": 16,
+      "date": "2025-05-13",
+      "product_id": "4031",
+      "payment_method": "Credit Card",
+      "shipping_address": "753 Strawberry Dr, Phoenix, AZ, USA",
+      "return_eligible_date": "2025-06-12",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0142",
+      "user_id": 17,
+      "date": "2025-07-15",
+      "product_id": "4031",
+      "payment_method": "PayPal",
+      "shipping_address": "864 Kiwi Ct, Minneapolis, MN, USA",
+      "return_eligible_date": "2025-08-14",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0143",
+      "user_id": 18,
+      "date": "2025-07-10",
+      "product_id": "4041",
+      "payment_method": "Credit Card",
+      "shipping_address": "975 Mango Rd, Nashville, TN, USA",
+      "return_eligible_date": "2025-08-09",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0144",
+      "user_id": 19,
+      "date": "2025-04-28",
+      "product_id": "4041",
+      "payment_method": "PayPal",
+      "shipping_address": "159 Papaya Ln, Salt Lake City, UT, USA",
+      "return_eligible_date": "2025-05-28",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0145",
+      "user_id": 20,
+      "date": "2025-08-05",
+      "product_id": "4041",
+      "payment_method": "Credit Card",
+      "shipping_address": "357 Melon Ave, Honolulu, HI, USA",
+      "return_eligible_date": "2025-09-04",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0146",
+      "user_id": 21,
+      "date": "2025-06-17",
+      "product_id": "4041",
+      "payment_method": "PayPal",
+      "shipping_address": "486 Coconut Blvd, Anchorage, AK, USA",
+      "return_eligible_date": "2025-07-17",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0147",
+      "user_id": 22,
+      "date": "2025-04-10",
+      "product_id": "4041",
+      "payment_method": "Credit Card",
+      "shipping_address": "792 Pear St, Indianapolis, IN, USA",
+      "return_eligible_date": "2025-05-10",
+      "quantity": 1
+    },
+    {
+      "order_id": "O0148",
+      "user_id": 23,
+      "date": "2025-07-25",
+      "product_id": "4041",
+      "payment_method": "PayPal",
+      "shipping_address": "138 Fig Dr, Charlotte, NC, USA",
+      "return_eligible_date": "2025-08-24",
+      "quantity": 1
+    }
+]

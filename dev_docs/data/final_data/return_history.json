@@ -1,0 +1,16 @@
+[
+    {
+      "return_id": "R0001",
+      "buy_order_id": "O0006",
+      "return_request_date": "2025-08-06",
+      "return_reason": "Product issues based on review text",
+      "return_status": "Approved"
+    },
+    {
+      "return_id": "R0002",
+      "buy_order_id": "O0012",
+      "return_request_date": "2025-05-05",
+      "return_reason": "Product issues based on review text",
+      "return_status": "Approved"
+    }
+]
