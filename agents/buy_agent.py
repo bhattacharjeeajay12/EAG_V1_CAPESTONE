@@ -13,7 +13,7 @@ def _project_path(*parts: str) -> str:
 
 
 def _load_buy_agent_prompt() -> str:
-    path = _project_path("Prompts", "buy_prompt.txt")
+    path = _project_path("prompts", "buy_prompt.txt")
     try:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()

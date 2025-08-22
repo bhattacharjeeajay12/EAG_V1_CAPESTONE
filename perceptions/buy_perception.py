@@ -10,7 +10,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 # Define schema for structured extraction
 class BuyDetails(BaseModel):
     product_name: str
-    specifications: Dict[str, str] = Field(default_factory=dict)  # matches your DB schema
+    specifications: Dict[str, str] = Field(default_factory=dict)  # matches your db schema
     quantity: int = 1
     budget: Optional[str] = None
     category: Optional[str] = None
