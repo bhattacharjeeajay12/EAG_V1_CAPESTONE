@@ -49,13 +49,21 @@ def _ready_check(state: Dict[str, Any]) -> bool:
 
 
 def _extract_last_json(s: str) -> Optional[Tuple[str, Dict[str, Any]]]:
-    # Find last JSON object in the text and return (text_before_json, json_obj)
+    """
+    Extract the last JSON object from text, handling incomplete JSON gracefully.
+    When incomplete JSON is detected, it attempts to reconstruct a valid state object
+    by extracting as much information as possible from the partial JSON.
+    """
+    # Find last JSON object in the text
     last_open = s.rfind("{")
     if last_open == -1:
         return None
+
+    # Extract text before the JSON part
+    prefix = s[:last_open].rstrip()
     json_text = s[last_open:]
-    # Trim trailing non-json characters (e.g., accidental markdown)
-    # Try to find a matching closing brace by scanning
+
+    # Try to find a complete JSON object
     depth = 0
     end_index = None
     for i, ch in enumerate(json_text):
@@ -66,30 +74,94 @@ def _extract_last_json(s: str) -> Optional[Tuple[str, Dict[str, Any]]]:
             if depth == 0:
                 end_index = i + 1
                 break
-    if end_index is None:
-        return None
-    candidate = json_text[:end_index]
-    try:
-        obj = json.loads(candidate)
-        prefix = s[:last_open].rstrip()
-        return prefix, obj
-    except Exception:
-        return None
+
+    # Create baseline state with default values
+    base_state = {
+        "product_name": None,
+        "specifications": {},
+        "quantity": 1,
+        "budget": None,
+        "category": None,
+        "conversation_state": "gathering_requirements",
+        "ready_for_tool_call": False,
+        "conversation_outcome": "undecided"
+    }
+
+    # If we have complete JSON, parse it normally
+    if end_index is not None:
+        candidate = json_text[:end_index]
+        try:
+            obj = json.loads(candidate)
+            return prefix, obj
+        except Exception as e:
+            print(f"\n[WARN] Failed to parse JSON response: {e}")
+    else:
+        print("\n[WARN] Incomplete JSON response detected. Attempting to recover partial state.")
+
+    # For incomplete JSON, try to extract as much information as possible
+    # Extract product_name
+    product_match = re.search(r'"product_name"\s*:\s*"([^"]+)"', json_text)
+    if product_match:
+        base_state["product_name"] = product_match.group(1)
+
+    # Extract specifications if they exist
+    specs_match = re.search(r'"specifications"\s*:\s*{([^{}]*)}', json_text)
+    if specs_match:
+        specs_text = specs_match.group(1)
+        # Parse individual specs
+        spec_pattern = r'"([^"]+)"\s*:\s*"?([^",}]+)"?'
+        for spec_match in re.finditer(spec_pattern, specs_text):
+            key, value = spec_match.groups()
+            base_state["specifications"][key] = value.strip('"')
+
+    # Extract quantity
+    quantity_match = re.search(r'"quantity"\s*:\s*(\d+)', json_text)
+    if quantity_match:
+        try:
+            base_state["quantity"] = int(quantity_match.group(1))
+        except ValueError:
+            pass
+
+    # Extract budget if present
+    budget_match = re.search(r'"budget"\s*:\s*"?([^",}]+)"?', json_text)
+    if budget_match:
+        base_state["budget"] = budget_match.group(1).strip('"')
+
+    # Extract category if present
+    category_match = re.search(r'"category"\s*:\s*"?([^",}]+)"?', json_text)
+    if category_match:
+        base_state["category"] = category_match.group(1).strip('"')
+
+    # Extract conversation_state if present
+    state_match = re.search(r'"conversation_state"\s*:\s*"([^"]+)"', json_text)
+    if state_match:
+        base_state["conversation_state"] = state_match.group(1)
+
+    # Extract ready_for_tool_call if present
+    tool_call_match = re.search(r'"ready_for_tool_call"\s*:\s*(true|false)', json_text)
+    if tool_call_match:
+        base_state["ready_for_tool_call"] = tool_call_match.group(1) == "true"
+
+    # Extract conversation_outcome if present
+    outcome_match = re.search(r'"conversation_outcome"\s*:\s*"([^"]+)"', json_text)
+    if outcome_match:
+        base_state["conversation_outcome"] = outcome_match.group(1)
+
+    return prefix, base_state
 
 
 class BuyAgent:
-    def __init__(self):
-        # Conversation state (store oldest-first for convenience internally)
-        self.chat_history: List[Dict[str, str]] = []  # {role: 'user'|'agent', content: str}
-        self.perceptions_history: List[Dict[str, Any]] = []  # list of {message, perception}
+    def __init__(self, verbose=True):
+        # Conversation state
+        self.chat_history: List[Dict[str, str]] = []
+        self.perceptions_history: List[Dict[str, Any]] = []
         self.perceptions: Dict[str, Any] = {"specifications": {}, "quantity": 1}
+        self.conversation_state: str = "initial_inquiry"
 
-        # Logging
+        self.verbose = verbose
         self.logger = get_logger("buy")
-
-        # Shared session memory manager (reusable across agents)
         self.memory = SessionMemory(agent_name="buy")
-        self._last_state: Dict[str, Any] = {}
+        self._last_state: Dict[str, Any] = {"conversation_state": "initial_inquiry"}
 
         # LLM setup
         self.prompt_text: str = _load_buy_agent_prompt()
@@ -110,11 +182,17 @@ class BuyAgent:
         self.chat_history = []
         self.perceptions_history = []
         self.perceptions = {"specifications": {}, "quantity": 1}
-        self._last_state = {}
-        # Initialize memory session and persist an initial shell
+        self.conversation_state = "initial_inquiry"
+        self._last_state = {"conversation_state": "initial_inquiry"}
         self.memory.new_session(label=label, config={"model": self.model_name})
-        log_decision(self.logger, agent="buy", event="new_session", why="start conversation", data={"label": label},
-                     session_id=self.memory.session_id)
+        log_decision(
+            self.logger,
+            agent="buy",
+            event="new_session",
+            why="start conversation",
+            data={"label": label},
+            session_id=self.memory.session_id,
+        )
 
     def initialize_for_testing(self, test_data: Dict[str, Any]) -> None:
         """
@@ -124,6 +202,7 @@ class BuyAgent:
             test_data: Dictionary containing any of:
                 - chat_history: List of message objects with role and content
                 - perceptions: Consolidated perceptions state
+                - conversation_state: Current stage in the conversation flow
         """
         # Set chat history if provided
         if "chat_history" in test_data and test_data["chat_history"]:
@@ -132,6 +211,11 @@ class BuyAgent:
         # Set consolidated perceptions if provided
         if "perceptions" in test_data and test_data["perceptions"]:
             self.perceptions = test_data["perceptions"]
+
+        # Set conversation state if provided
+        if "conversation_state" in test_data and test_data["conversation_state"]:
+            self.conversation_state = test_data["conversation_state"]
+            self._last_state["conversation_state"] = test_data["conversation_state"]
 
         # Optionally set perceptions_history if testing specific history integration
         if "perceptions_history" in test_data and test_data["perceptions_history"]:
@@ -143,19 +227,18 @@ class BuyAgent:
             agent="buy",
             event="test_initialization",
             why="setting up test state",
-            data={"test_scenario": test_data.get("name", "unnamed")},
+            data={"test_scenario": test_data.get("name", "unnamed"), "conversation_state": self.conversation_state},
             session_id=self.memory.session_id
         )
 
     # ---------- Payload for LLM ----------
     def _build_input_payload(self, latest_message: str, latest_perception: Dict[str, Any]) -> Dict[str, Any]:
-        # Chat history and perceptions history are already in chronological order (oldest first)
+        """Build a payload for the LLM that includes the conversation state."""
         return {
             "chat_history": self.chat_history,
-            "perceptions_history": self.perceptions_history,
             "perceptions": self.perceptions,
             "latest_message": latest_message,
-            "latest_perception": latest_perception,
+            "conversation_state": self.conversation_state
         }
 
     def _fallback_response(self, latest_message: str) -> Tuple[str, Dict[str, Any]]:
@@ -168,10 +251,26 @@ class BuyAgent:
             missing.append("key specs like brand, color, or size")
         if not self.perceptions.get("budget"):
             missing.append("your budget or price range (optional)")
+
+        # Determine conversation state based on what we know
+        if not self.perceptions.get("product_name"):
+            conversation_state = "initial_inquiry"
+        elif missing:
+            conversation_state = "gathering_requirements"
+        elif _ready_check(self.perceptions):
+            conversation_state = "suggesting_products"
+        else:
+            conversation_state = self.conversation_state
+
+        # Update instance conversation state
+        self.conversation_state = conversation_state
+
+        # Craft appropriate response based on state
         if missing:
-            ask = "; ".join(missing)
+            # Only ask about the first missing item
+            first_missing = missing[0]
             reply = (
-                f"Thanks! I captured your request. Could you share {ask}? "
+                f"Thanks! I captured your request. Could you share {first_missing}? "
                 f"This will help me find the best options."
             )
         else:
@@ -179,12 +278,14 @@ class BuyAgent:
                 "Great! I have enough details to search for options. "
                 "Would you like me to pull up some matches now?"
             )
+
         state = {
             "product_name": self.perceptions.get("product_name"),
             "specifications": self.perceptions.get("specifications") or {},
             "quantity": self.perceptions.get("quantity", 1),
             "budget": self.perceptions.get("budget"),
             "category": self.perceptions.get("category"),
+            "conversation_state": conversation_state,
             "ready_for_tool_call": _ready_check(self.perceptions),
             "conversation_outcome": "undecided",
         }
@@ -234,13 +335,17 @@ class BuyAgent:
         2. Extracts perceptions from the query
         3. Updates the consolidated perceptions
         4. Gets a response from the LLM (or fallback)
-        5. Adds the agent's response to chat history
-        6. Saves the conversation state
+        5. Updates the conversation state
+        6. Adds the agent's response to chat history
+        7. Saves the conversation state
 
         Returns:
             The extracted perceptions from the query
         """
+        print("\n" + "-" * 70)
         print("[BuyAgent] Processing buy query...")
+        print("-" * 70)
+
         # Update chat with user message
         self.chat_history.append({"role": "user", "content": query})
 
@@ -254,23 +359,64 @@ class BuyAgent:
         # Build payload for the agent prompt
         payload = self._build_input_payload(query, latest_perception)
 
+        # Capture logs to display them in a separate section
+        log_info = []
+
         # Get agent response via LLM, fallback if needed
         out = self._llm_response(payload)
         if out is None:
+            log_info.append("Using fallback response (LLM unavailable or parse failed)")
             log_decision(self.logger, agent="buy", event="decision", why="fallback",
                          data={"reason": "llm_unavailable_or_parse_failed"}, session_id=self.memory.session_id)
             reply_text, state = self._fallback_response(query)
         else:
+            log_info.append(f"Using LLM response from {self.model_name}")
             log_decision(self.logger, agent="buy", event="decision", why="llm", data={"model": self.model_name},
                          session_id=self.memory.session_id)
             reply_text, state = out
 
-        # Print and record agent reply
+        # Update conversation state based on LLM response
+        if "conversation_state" in state:
+            self.conversation_state = state["conversation_state"]
+            log_decision(self.logger, agent="buy", event="state_transition",
+                         why="conversation flow progression",
+                         data={"from": self._last_state.get("conversation_state", "unknown"),
+                               "to": self.conversation_state},
+                         session_id=self.memory.session_id)
+
+        # Print and record agent reply with better formatting
+        print("\n" + "=" * 50)
         print(f"Agent: {reply_text}")
-        print("[BuyAgent] State:", state)
+        print("-" * 50)
+        print(f"[BuyAgent] Current State: {self.conversation_state}")
+
+        # Filter out empty and None values for cleaner display
+        filtered_state = {k: v for k, v in state.items() if v is not None and v != {} and v != []}
+
+        if filtered_state:
+            print("[BuyAgent] Details:")
+            for key, value in filtered_state.items():
+                if isinstance(value, dict) and value:  # Only show non-empty dictionaries
+                    print(f"  {key}:")
+                    for k, v in value.items():
+                        print(f"    {k}: {v}")
+                elif isinstance(value, list) and value:  # Handle lists
+                    print(f"  {key}:")
+                    for item in value:
+                        print(f"    - {item}")
+                else:
+                    print(f"  {key}: {value}")
+        else:
+            print("[BuyAgent] Details: No details available")
+
+        print("=" * 50 + "\n")
         self.chat_history.append({"role": "agent", "content": reply_text})
-        # Cache last state and persist session memory
+
+        # Make sure conversation_state is included in the last_state
         self._last_state = state
+        if "conversation_state" not in self._last_state:
+            self._last_state["conversation_state"] = self.conversation_state
+
         # Save memory with chat history in chronological order (oldest first)
         self.memory.save(
             chat_history=self.chat_history,
@@ -281,41 +427,6 @@ class BuyAgent:
         )
 
         return result
-
-
-def run_examples(agent: BuyAgent) -> List[Dict[str, Any]]:
-    """Run basic sequential user message scenarios."""
-    scenarios = [
-        # scenario 3
-        [
-            "I want to buy a laptop.",
-            "Actually I need three laptops."
-        ]
-    ]
-
-    print("\n=== Running example scenarios ===")
-    perception_list = []
-    for i, scenario in enumerate(scenarios, start=1):
-        print(f"\n--- Scenario {i} ---")
-        # Start a new session per scenario
-        agent.new_session(label=f"example-scenario-{i}")
-        perception = []
-        for query in scenario:
-            print(f"User: {query}")
-            result = agent.handle(query)
-            perception.append({"query": query, "result": result.model_dump()})
-
-        # Save final state
-        agent.memory.save(
-            chat_history=agent.chat_history,
-            perceptions_history=agent.perceptions_history,
-            perceptions=agent.perceptions,
-            last_agent_state=agent._last_state,
-            config={"model": agent.model_name},
-        )
-        perception_list.append(perception)
-    print("=== Examples complete ===\n")
-    return perception_list
 
 
 def run_conversation_flow_examples(agent: BuyAgent) -> None:
@@ -339,6 +450,7 @@ def run_conversation_flow_examples(agent: BuyAgent) -> None:
                 "quantity": 1,
                 "category": "electronics"
             },
+            "conversation_state": "gathering_requirements",
             "current_query": "I need three laptops actually."
         },
 
@@ -359,13 +471,14 @@ def run_conversation_flow_examples(agent: BuyAgent) -> None:
                 "quantity": 3,
                 "category": "electronics"
             },
+            "conversation_state": "gathering_requirements",
             "current_query": "I want Dell laptops with at least 16GB RAM."
         }
     ]
 
-    print("\n=== Running conversation flow scenarios ===")
+    print("\n" + "=" * 30 + " CONVERSATION FLOW SCENARIOS " + "=" * 30)
     for i, scenario in enumerate(scenarios, start=1):
-        print(f"\n--- Scenario {i}: {scenario['name']} ---")
+        print(f"\n{'=' * 20} Scenario {i}: {scenario['name']} {'=' * 20}")
 
         # Start a new session
         agent.new_session(label=f"conversation-flow-{i}")
@@ -373,35 +486,84 @@ def run_conversation_flow_examples(agent: BuyAgent) -> None:
         # Initialize with test data
         agent.initialize_for_testing(scenario)
 
-        # Print the conversation so far
-        print("Conversation so far:")
+        # Print the conversation so far with better formatting
+        print("\n" + "-" * 30 + " CONVERSATION HISTORY " + "-" * 30)
         for msg in agent.chat_history:
-            print(f"{msg['role'].capitalize()}: {msg['content']}")
+            role = msg['role'].capitalize()
+            if role == "User":
+                print(f"\n{role}: {msg['content']}")
+            else:
+                print(f"\n{role}:\n{msg['content']}")
+
+        # Print initial conversation state
+        print("\n" + "-" * 30 + " INITIAL STATE " + "-" * 30)
+        print(f"Conversation state: {agent.conversation_state}")
 
         # Process the current query
         query = scenario["current_query"]
         print(f"\nCurrent user query: {query}")
         result = agent.handle(query)
 
-        # Show the result
-        print(f"Extracted perceptions: {result.model_dump()}")
-        print(f"Final perceptions state: {agent.perceptions}")
+        # Show the result with better formatting
+        print("\n" + "=" * 30 + " RESULTS " + "=" * 30)
+
+        # Extracted perceptions - only show non-empty values
+        perceptions_data = {k: v for k, v in result.model_dump().items() if v is not None and v != {} and v != []}
+        if perceptions_data:
+            print("Extracted perceptions:")
+            for key, value in perceptions_data.items():
+                if isinstance(value, dict) and value:
+                    print(f"  {key}:")
+                    for k, v in value.items():
+                        print(f"    {k}: {v}")
+                elif isinstance(value, list) and value:
+                    print(f"  {key}:")
+                    for item in value:
+                        print(f"    - {item}")
+                else:
+                    print(f"  {key}: {value}")
+        else:
+            print("Extracted perceptions: None")
+
+        # Final perceptions - only show non-empty values
+        perceptions_state = {k: v for k, v in agent.perceptions.items() if v is not None and v != {} and v != []}
+        if perceptions_state:
+            print("\nFinal perceptions state:")
+            for key, value in perceptions_state.items():
+                if isinstance(value, dict) and value:
+                    print(f"  {key}:")
+                    for k, v in value.items():
+                        print(f"    {k}: {v}")
+                elif isinstance(value, list) and value:
+                    print(f"  {key}:")
+                    for item in value:
+                        print(f"    - {item}")
+                else:
+                    print(f"  {key}: {value}")
+        else:
+            print("\nFinal perceptions state: Empty")
+
+        print(f"\nFinal conversation state: {agent.conversation_state}")
+        print("=" * 70)
 
     print("=== Conversation flow examples complete ===\n")
 
 
 def interactive_loop(agent: BuyAgent) -> None:
     """Start an interactive session for manual testing."""
+    print("\n" + "=" * 30 + " INTERACTIVE MODE " + "=" * 30)
     print("Enter your purchase queries. Type 'exit' to quit.")
     session_started = False
     while True:
         try:
+            print("\n" + "-" * 70)
             user_in = input("You: ").strip()
+            print("-" * 70)
         except (EOFError, KeyboardInterrupt):
             print("\nExiting.")
             break
         if user_in.lower() in {"exit", "quit", "q"}:
-            print("Goodbye!")
+            print("\nGoodbye! Thanks for shopping with us.")
             break
         if not user_in:
             continue
@@ -412,21 +574,19 @@ def interactive_loop(agent: BuyAgent) -> None:
 
 
 if __name__ == "__main__":
-    agent = BuyAgent()
+    # Create agent with verbose output enabled
+    agent = BuyAgent(verbose=True)
 
     # Choose which tests to run
-    run_basic_examples = True
-    run_conversation_examples = True
+    run_conversation_examples = False
     run_interactive = True
-
-    # 1) Run the basic sequential scenarios
-    if run_basic_examples:
-        _ = run_examples(agent)
 
     # 2) Run the conversation flow scenarios with context
     if run_conversation_examples:
         run_conversation_flow_examples(agent)
 
-        # 3) Start interactive input loop
+    # 3) Start interactive input loop
     if run_interactive:
+        # For interactive mode, enable verbose mode for better visibility
+        agent = BuyAgent(verbose=True)
         interactive_loop(agent)
