@@ -37,7 +37,7 @@ def _merge_perceptions(base: Dict[str, Any], latest: Dict[str, Any]) -> Dict[str
 
 
 class BuyAgent:
-    def __init__(self, verbose=True):
+    def __init__(self, verbose=True, mcp_client=None):
         self.chat_history: List[Dict[str, str]] = []
         self.perceptions_history: List[Dict[str, Any]] = []
         self.perceptions: Dict[str, Any] = {"specifications": {}, "quantity": 1}
@@ -45,6 +45,9 @@ class BuyAgent:
         self.verbose = verbose
         self.logger = get_logger("buy")
         self.memory = SessionMemory(agent_name=self.agent_name)
+
+        # MCP client for tool access
+        self.mcp_client = mcp_client
 
         self.prompt_text: str = _load_buy_agent_prompt()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -123,6 +126,80 @@ class BuyAgent:
         except Exception as e:
             print("[WARN] LLM generation failed:", e)
             return None
+
+    def search_products(self, category: str, subcategory: str = None, 
+                       budget_max: float = None, specifications: List[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Use MCP client to search for products.
+
+        Args:
+            category: Product category (electronics, sports, books, etc.)
+            subcategory: Product subcategory (optional)
+            budget_max: Maximum budget (optional)
+            specifications: Required specifications (optional)
+
+        Returns:
+            Product search results or None if MCP client unavailable
+        """
+        if not self.mcp_client:
+            print("[WARN] MCP client not available for product search")
+            return None
+
+        try:
+            search_args = {
+                "category": category,
+                "subcategory": subcategory,
+                "budget_max": budget_max,
+                "specifications": specifications or []
+            }
+
+            # Remove None values
+            search_args = {k: v for k, v in search_args.items() if v is not None}
+
+            result = self.mcp_client.call_tool("search_products", search_args)
+            if result:
+                print(f"[INFO] Found {result.get('total_found', 0)} products")
+                return result
+            else:
+                print("[WARN] Product search returned no results")
+                return None
+
+        except Exception as e:
+            print(f"[ERROR] Product search failed: {e}")
+            return None
+
+    def check_order_status(self, order_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Use MCP client to check order status.
+
+        Args:
+            order_id: Order ID to check
+
+        Returns:
+            Order status information or None if MCP client unavailable
+        """
+        if not self.mcp_client:
+            print("[WARN] MCP client not available for order status check")
+            return None
+
+        try:
+            result = self.mcp_client.call_tool("check_order_status", {"order_id": order_id})
+            if result:
+                print(f"[INFO] Order {order_id} status: {result.get('status', 'unknown')}")
+                return result
+            else:
+                print(f"[WARN] Could not find order {order_id}")
+                return None
+
+        except Exception as e:
+            print(f"[ERROR] Order status check failed: {e}")
+            return None
+
+    def get_available_tools(self) -> List[str]:
+        """Get list of available MCP tools."""
+        if not self.mcp_client:
+            return []
+        return self.mcp_client.get_available_tools()
 
     def handle(self, query: str):
         print("\n" + "-" * 70)

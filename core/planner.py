@@ -15,13 +15,20 @@ from prompts.planner_prompt import PLANNER_SYSTEM_PROMPT, PLANNER_USER_PROMPT_TE
 from core.nlu import NLUModule
 from memory import SessionMemory
 
-# MCP client import - adjust path based on your MCP client location
-try:
-    from mcp_client import MCPClient  # Assuming you have an MCP client class
+# MCP client import - use the working HTTP-based MCP client
+import sys
+import os
 
+# Add dev_docs/mcp_dev to path to import the working MCP client
+mcp_dev_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dev_docs", "mcp_dev")
+if os.path.exists(mcp_dev_path):
+    sys.path.insert(0, mcp_dev_path)
+
+try:
+    from mcp_test_client import MCPClient
     MCP_AVAILABLE = True
 except ImportError:
-    print("[WARN] MCP client not available. Install or check mcp_client module.")
+    print("[WARN] MCP client not available. Check mcp_test_client module in dev_docs/mcp_dev/.")
     MCP_AVAILABLE = False
     MCPClient = None
 
@@ -70,25 +77,34 @@ class PlannerAgent:
         Initialize the MCP client for tool access.
 
         Args:
-            server_command (str, optional): Command to start MCP server
+            server_command (str, optional): Command to start MCP server (ignored, uses HTTP)
         """
         if not MCP_AVAILABLE:
             print("[INFO] MCP client not available. Agents will run without tool access.")
             return
 
         try:
-            # Default server command if not provided
-            if server_command is None:
-                server_command = ["python", "mcp_server.py"]
+            # Check for environment variable for remote server
+            server_url = os.environ.get("MCP_SERVER_URL")
 
-            # Initialize MCP client
-            self.mcp_client = MCPClient(server_command)
-            print("[INFO] MCP client initialized successfully.")
+            if server_url:
+                print(f"[INFO] Using remote MCP server at {server_url}")
+                self.mcp_client = MCPClient(server_url=server_url)
+            else:
+                print("[INFO] Using local MCP server (will start automatically)")
+                # Use the working test server
+                server_script = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)), 
+                    "..", "dev_docs", "mcp_dev", "mcp_test_server.py"
+                )
+                self.mcp_client = MCPClient(server_command=["python", server_script])
 
             # Test connection
-            if hasattr(self.mcp_client, 'connect'):
-                self.mcp_client.connect()
-                print("[INFO] MCP client connected to server.")
+            if self.mcp_client.connect():
+                print(f"[INFO] MCP client connected. Available tools: {self.mcp_client.get_available_tools()}")
+            else:
+                print("[WARN] Failed to connect to MCP server")
+                self.mcp_client = None
 
         except Exception as e:
             print(f"[WARN] Failed to initialize MCP client: {e}")
@@ -121,10 +137,7 @@ class PlannerAgent:
             # Import and create agent based on type
             if agent_type == "BUY":
                 from agents.buy_agent import BuyAgent
-                agent = BuyAgent(
-                    llm_client=self.llm_client,
-                    mcp_client=self.mcp_client
-                )
+                agent = BuyAgent(verbose=True, mcp_client=self.mcp_client)
             elif agent_type == "ORDER":
                 from agents.order_agent import OrderAgent
                 agent = OrderAgent(
@@ -666,8 +679,8 @@ def test_planner_with_mcp():
     print("🧪 Testing Planner Agent with MCP Integration")
     print("=" * 50)
 
-    # Initialize planner with MCP client
-    planner = PlannerAgent(mcp_server_command=["python", "mcp_server.py"])
+    # Initialize planner with MCP client (server_command is ignored for HTTP client)
+    planner = PlannerAgent()
 
     test_messages = [
         "I want to buy a laptop under $1500",
