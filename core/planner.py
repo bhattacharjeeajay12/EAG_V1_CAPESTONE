@@ -2,6 +2,7 @@
 """
 Planner Agent for E-commerce System
 Routes user requests to appropriate specialist agents based on NLU analysis and conversation state.
+Includes MCP client integration for tool access across all agents.
 """
 
 import json
@@ -11,8 +12,18 @@ from datetime import datetime
 
 from core.llm_client import LLMClient
 from prompts.planner_prompt import PLANNER_SYSTEM_PROMPT, PLANNER_USER_PROMPT_TEMPLATE
-from nlu.nlu import NLUModule
+from core.nlu import NLUModule
 from memory import SessionMemory
+
+# MCP client import - adjust path based on your MCP client location
+try:
+    from mcp_client import MCPClient  # Assuming you have an MCP client class
+
+    MCP_AVAILABLE = True
+except ImportError:
+    print("[WARN] MCP client not available. Install or check mcp_client module.")
+    MCP_AVAILABLE = False
+    MCPClient = None
 
 
 class PlannerAgent:
@@ -24,14 +35,18 @@ class PlannerAgent:
     2. Maintain session state and conversation history in centralized memory
     3. Route requests to specialist agents (BUY, ORDER, RECOMMEND, RETURN)
     4. Coordinate multi-step conversations
+    5. Provide MCP client access to all agents for tool usage
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
+    def __init__(self,
+                 llm_client: Optional[LLMClient] = None,
+                 mcp_server_command: Optional[str] = None):
         """
-        Initialize the Planner Agent.
+        Initialize the Planner Agent with MCP client integration.
 
         Args:
             llm_client (LLMClient, optional): LLM client for decision making
+            mcp_server_command (str, optional): Command to start MCP server
         """
         self.llm_client = llm_client or LLMClient()
         self.nlu = NLUModule(self.llm_client)
@@ -42,6 +57,155 @@ class PlannerAgent:
 
         # Current session tracking
         self.current_session_id = None
+
+        # MCP Client Integration
+        self.mcp_client = None
+        self._initialize_mcp_client(mcp_server_command)
+
+        # Agent instances cache - will be created with MCP client when needed
+        self._agent_instances = {}
+
+    def _initialize_mcp_client(self, server_command: Optional[str] = None):
+        """
+        Initialize the MCP client for tool access.
+
+        Args:
+            server_command (str, optional): Command to start MCP server
+        """
+        if not MCP_AVAILABLE:
+            print("[INFO] MCP client not available. Agents will run without tool access.")
+            return
+
+        try:
+            # Default server command if not provided
+            if server_command is None:
+                server_command = ["python", "mcp_server.py"]
+
+            # Initialize MCP client
+            self.mcp_client = MCPClient(server_command)
+            print("[INFO] MCP client initialized successfully.")
+
+            # Test connection
+            if hasattr(self.mcp_client, 'connect'):
+                self.mcp_client.connect()
+                print("[INFO] MCP client connected to server.")
+
+        except Exception as e:
+            print(f"[WARN] Failed to initialize MCP client: {e}")
+            self.mcp_client = None
+
+    def get_mcp_client(self) -> Optional[Any]:
+        """
+        Get the MCP client instance for agents to use.
+
+        Returns:
+            MCP client instance or None if not available
+        """
+        return self.mcp_client
+
+    def _get_or_create_agent(self, agent_type: str) -> Optional[Any]:
+        """
+        Get or create an agent instance with MCP client integration.
+
+        Args:
+            agent_type (str): Type of agent (BUY, ORDER, RECOMMEND, RETURN)
+
+        Returns:
+            Agent instance or None if failed to create
+        """
+        # Return cached instance if exists
+        if agent_type in self._agent_instances:
+            return self._agent_instances[agent_type]
+
+        try:
+            # Import and create agent based on type
+            if agent_type == "BUY":
+                from agents.buy_agent import BuyAgent
+                agent = BuyAgent(
+                    llm_client=self.llm_client,
+                    mcp_client=self.mcp_client
+                )
+            elif agent_type == "ORDER":
+                from agents.order_agent import OrderAgent
+                agent = OrderAgent(
+                    llm_client=self.llm_client,
+                    mcp_client=self.mcp_client
+                )
+            elif agent_type == "RECOMMEND":
+                from agents.recommendation_agent import RecommendationAgent
+                agent = RecommendationAgent(
+                    llm_client=self.llm_client,
+                    mcp_client=self.mcp_client
+                )
+            elif agent_type == "RETURN":
+                from agents.return_agent import ReturnAgent
+                agent = ReturnAgent(
+                    llm_client=self.llm_client,
+                    mcp_client=self.mcp_client
+                )
+            else:
+                print(f"[ERROR] Unknown agent type: {agent_type}")
+                return None
+
+            # Cache the instance
+            self._agent_instances[agent_type] = agent
+            print(f"[INFO] Created {agent_type} agent with MCP client integration.")
+
+            return agent
+
+        except ImportError as e:
+            print(f"[ERROR] Failed to import {agent_type} agent: {e}")
+            return None
+        except Exception as e:
+            print(f"[ERROR] Failed to create {agent_type} agent: {e}")
+            return None
+
+    def execute_agent_task(self, agent_type: str, task_context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a task using the specified agent with MCP client access.
+
+        Args:
+            agent_type (str): Type of agent to use
+            task_context (Dict): Context and parameters for the task
+
+        Returns:
+            Dict: Agent's response and execution result
+        """
+        # Get or create agent instance
+        agent = self._get_or_create_agent(agent_type)
+
+        if not agent:
+            return {
+                "success": False,
+                "error": f"Failed to create or get {agent_type} agent",
+                "response": None
+            }
+
+        try:
+            # Execute the task with the agent
+            # Assuming agents have a standard 'execute' or 'handle' method
+            if hasattr(agent, 'execute'):
+                result = agent.execute(task_context)
+            elif hasattr(agent, 'handle'):
+                result = agent.handle(task_context)
+            else:
+                # Fallback method
+                result = agent.process(task_context)
+
+            return {
+                "success": True,
+                "agent_type": agent_type,
+                "response": result,
+                "mcp_tools_available": self.mcp_client is not None
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Agent execution failed: {str(e)}",
+                "agent_type": agent_type,
+                "response": None
+            }
 
     def start_session(self, session_label: Optional[str] = None) -> str:
         """
@@ -56,7 +220,11 @@ class PlannerAgent:
         # Create new session in memory
         session_id = self.memory.new_session(
             session_label=session_label or f"planner_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            config={"planner_version": "1.0", "created_by": "PlannerAgent"}
+            config={
+                "planner_version": "1.0",
+                "created_by": "PlannerAgent",
+                "mcp_available": self.mcp_client is not None
+            }
         )
 
         self.current_session_id = session_id
@@ -114,12 +282,17 @@ class PlannerAgent:
                 config=session_data.get("config", {})
             )
 
-            # Step 6: Prepare response
+            # Step 6: Prepare context for agent execution
+            agent_context = self._prepare_agent_context(updated_session_state, nlu_result, routing_decision)
+
+            # Step 7: Prepare response
             response = {
                 "session_id": self.current_session_id,
                 "routing_decision": routing_decision,
                 "nlu_analysis": nlu_result,
                 "session_state": updated_session_state,
+                "agent_context": agent_context,
+                "mcp_available": self.mcp_client is not None,
                 "success": True
             }
 
@@ -142,9 +315,34 @@ class PlannerAgent:
 
             return error_response
 
+    def _prepare_agent_context(self, session_state: Dict, nlu_result: Dict, routing_decision: Dict) -> Dict[str, Any]:
+        """
+        Prepare context for agent execution including MCP client access.
+
+        Args:
+            session_state (Dict): Current session state
+            nlu_result (Dict): NLU analysis
+            routing_decision (Dict): Routing decision
+
+        Returns:
+            Dict: Complete context for agent execution
+        """
+        return {
+            "session_id": self.current_session_id,
+            "entities": session_state.get("entities", {}),
+            "user_journey": session_state.get("user_journey"),
+            "nlu_analysis": nlu_result,
+            "priority_actions": routing_decision.get("priority_actions", []),
+            "context_transfer": routing_decision.get("context_transfer", {}),
+            "conversation_history": self.memory.get_context_for_agent(
+                routing_decision.get("next_agent", "BUY")
+            ).get("conversation_history", []),
+            "mcp_client_available": self.mcp_client is not None
+        }
+
     def get_agent_context(self, agent_type: str) -> Dict[str, Any]:
         """
-        Get context for a specific agent to execute.
+        Get context for a specific agent to execute, including MCP client.
 
         Args:
             agent_type (str): Type of agent (BUY, ORDER, RECOMMEND, RETURN)
@@ -152,7 +350,9 @@ class PlannerAgent:
         Returns:
             Dict: Context data for the agent
         """
-        return self.memory.get_context_for_agent(agent_type)
+        base_context = self.memory.get_context_for_agent(agent_type)
+        base_context["mcp_client_available"] = self.mcp_client is not None
+        return base_context
 
     def add_agent_response(self, agent_type: str, response: str) -> None:
         """
@@ -166,6 +366,22 @@ class PlannerAgent:
             role="agent",
             content=f"[{agent_type}] {response}"
         )
+
+    def cleanup(self):
+        """
+        Clean up resources including MCP client connection.
+        """
+        if self.mcp_client:
+            try:
+                if hasattr(self.mcp_client, 'disconnect'):
+                    self.mcp_client.disconnect()
+                elif hasattr(self.mcp_client, 'close'):
+                    self.mcp_client.close()
+                print("[INFO] MCP client disconnected.")
+            except Exception as e:
+                print(f"[WARN] Error disconnecting MCP client: {e}")
+
+    # ... (keeping all the existing methods unchanged)
 
     def _make_routing_decision(self, nlu_result: Dict[str, Any],
                                session_state: Dict[str, Any],
@@ -438,56 +654,70 @@ class PlannerAgent:
             "session_state": session_state,
             "conversation_length": len(conversation_history),
             "current_agent": session_state.get("current_agent"),
-            "user_journey": session_state.get("user_journey")
+            "user_journey": session_state.get("user_journey"),
+            "mcp_available": self.mcp_client is not None
         }
 
 
-def test_planner():
+def test_planner_with_mcp():
     """
-    Test the Planner Agent with various scenarios.
+    Test the Planner Agent with MCP client integration.
     """
-    print("🧪 Testing Planner Agent with Centralized Memory")
+    print("🧪 Testing Planner Agent with MCP Integration")
     print("=" * 50)
 
-    planner = PlannerAgent()
+    # Initialize planner with MCP client
+    planner = PlannerAgent(mcp_server_command=["python", "mcp_server.py"])
 
     test_messages = [
         "I want to buy a laptop under $1500",
-        "Track my order #12345",
-        "What's the best smartphone for photography?",
-        "I need to return a defective product",
-        "Show me gaming laptops with good graphics cards"
+        "What tools do you have available?",  # This could use MCP tools
+        "Track my order #12345"
     ]
 
-    # Start a test session
-    session_id = planner.start_session("test_session")
-    print(f"Started session: {session_id}")
+    try:
+        # Start a test session
+        session_id = planner.start_session("test_session_with_mcp")
+        print(f"Started session: {session_id}")
 
-    for i, message in enumerate(test_messages, 1):
-        print(f"\n🔍 Test {i}: {message}")
+        for i, message in enumerate(test_messages, 1):
+            print(f"\n🔍 Test {i}: {message}")
 
-        result = planner.process_user_message(message)
+            result = planner.process_user_message(message)
 
-        if result["success"]:
-            routing = result["routing_decision"]
-            print(f"   Next Agent: {routing['next_agent']}")
-            print(f"   Confidence: {routing['confidence']:.2f}")
-            print(f"   Reasoning: {routing['reasoning']}")
+            if result["success"]:
+                routing = result["routing_decision"]
+                print(f"   Next Agent: {routing['next_agent']}")
+                print(f"   Confidence: {routing['confidence']:.2f}")
+                print(f"   MCP Available: {result['mcp_available']}")
+                print(f"   Reasoning: {routing['reasoning']}")
 
-            if routing["priority_actions"]:
-                print(f"   Actions: {routing['priority_actions']}")
-        else:
-            print(f"   Error: {result['error']}")
+                # Test agent execution with MCP access
+                if routing["next_agent"] != "CLARIFY":
+                    agent_context = result["agent_context"]
+                    execution_result = planner.execute_agent_task(
+                        routing["next_agent"],
+                        agent_context
+                    )
+                    print(f"   Agent Execution Success: {execution_result['success']}")
+                    if execution_result["success"]:
+                        print(f"   MCP Tools Available to Agent: {execution_result['mcp_tools_available']}")
+            else:
+                print(f"   Error: {result['error']}")
 
-    # Show session summary
-    session_info = planner.get_session_info()
-    print(f"\n📊 Session Summary:")
-    print(f"   Current Agent: {session_info['current_agent']}")
-    print(f"   User Journey: {session_info['user_journey']}")
-    print(f"   Conversation Length: {session_info['conversation_length']}")
+        # Show session summary
+        session_info = planner.get_session_info()
+        print(f"\n📊 Session Summary:")
+        print(f"   Current Agent: {session_info['current_agent']}")
+        print(f"   User Journey: {session_info['user_journey']}")
+        print(f"   MCP Available: {session_info['mcp_available']}")
 
-    print("\n✅ Planner Agent Testing Complete!")
+    finally:
+        # Clean up
+        planner.cleanup()
+
+    print("\n✅ Planner Agent with MCP Testing Complete!")
 
 
 if __name__ == "__main__":
-    test_planner()
+    test_planner_with_mcp()
