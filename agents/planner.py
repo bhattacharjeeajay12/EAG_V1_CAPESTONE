@@ -1,8 +1,8 @@
 from typing import Any, Dict, Optional
 
-from agents.buy_agent import BuyAgent
-from agents.recommendation_agent import RecommendationAgent
-from agents.order_agent import OrderAgent
+from agents.buy import BuyAgent
+from agents.recommendation import RecommendationAgent
+from agents.order import OrderAgent
 from utils.logger import get_logger, log_decision
 from utils.graph_viz import AgentGraph
 

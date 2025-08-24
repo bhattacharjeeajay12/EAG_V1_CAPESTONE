@@ -65,8 +65,25 @@ You will always receive structured input with the following keys:
 ---
 
 ### Output Format
-Your response must always contain:
-1. A conversational reply to the user (clear, concise, bullet points where helpful).
+Your response must always be structured as:
+
+{
+  "text": "Your conversational reply to the user",
+  "tools": [
+    {
+      "name": "tool_name",  // Name of the tool to call (e.g., "product_catalog_search")
+      "parameters": {}      // Parameters required for the tool
+    }
+  ]
+}
+
+**Important:**
+- The "text" field must contain your natural, conversational response to the user
+- In the "text" field, NEVER mention tool names or technical implementation details
+- The "tools" field must contain any tools you need to call with their required parameters
+- If no tools are needed, use an empty array: "tools": []
+- Keep responses clear and concise, using bullet points where helpful
+
 
 ---
 
