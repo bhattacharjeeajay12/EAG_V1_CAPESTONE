@@ -1,4 +1,4 @@
-# nlu/nlu.py
+# nlu/nlu_prompt.py
 """
 Natural Language Understanding Module for E-commerce System
 Uses LLM client for intent classification and entity extraction.
@@ -7,7 +7,7 @@ Uses LLM client for intent classification and entity extraction.
 import json
 from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
-from prompts.nlu import NLU_SYSTEM_PROMPT, NLU_USER_PROMPT_TEMPLATE
+from prompts.nlu_prompt import NLU_SYSTEM_PROMPT, NLU_USER_PROMPT_TEMPLATE
 
 
 class NLUModule:
@@ -56,7 +56,6 @@ class NLUModule:
 
             # Parse and validate the LLM response
             result = self._parse_llm_response(llm_response)
-
             return self._validate_result(result)
 
         except Exception as e:
@@ -275,8 +274,7 @@ class NLUModule:
         }
 
         # Validate other fields
-        validated["clarification_needed"] = result.get("clarification_needed", []) if isinstance(
-            result.get("clarification_needed"), list) else []
+        validated["clarification_needed"] = result.get("clarification_needed", []) if isinstance(result.get("clarification_needed"), list) else []
         validated["reasoning"] = result.get("reasoning", "LLM analysis completed")
 
         return validated
