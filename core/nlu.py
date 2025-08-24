@@ -1,4 +1,4 @@
-# nlu/nlu_prompt.py
+# nlu/nlu.py
 """
 Natural Language Understanding Module for E-commerce System
 Uses LLM client for intent classification and entity extraction.
@@ -18,6 +18,7 @@ class NLUModule:
     1. Takes user messages and optional chat history
     2. Uses LLM to classify intent and extract entities
     3. Returns structured JSON for the Planner Agent
+    4. Is completely stateless - no memory management
     """
 
     def __init__(self, llm_client: Optional[LLMClient] = None):
@@ -56,6 +57,7 @@ class NLUModule:
 
             # Parse and validate the LLM response
             result = self._parse_llm_response(llm_response)
+
             return self._validate_result(result)
 
         except Exception as e:
@@ -245,7 +247,6 @@ class NLUModule:
         validated = {}
 
         # Validate intent
-        # Validate intent
         intent = result.get("intent", "BUY")
         validated["intent"] = intent if intent in self.valid_intents else "BUY"
 
@@ -274,7 +275,8 @@ class NLUModule:
         }
 
         # Validate other fields
-        validated["clarification_needed"] = result.get("clarification_needed", []) if isinstance(result.get("clarification_needed"), list) else []
+        validated["clarification_needed"] = result.get("clarification_needed", []) if isinstance(
+            result.get("clarification_needed"), list) else []
         validated["reasoning"] = result.get("reasoning", "LLM analysis completed")
 
         return validated
@@ -338,7 +340,7 @@ def test_nlu_module():
     Test the NLU module with various examples.
     Works with both real LLM and fallback mode.
     """
-    print("🧪 Testing NLU Module with LLM Client")
+    print("🧪 Testing NLU Module (Stateless)")
     print("=" * 50)
 
     # Initialize NLU with LLM client
@@ -385,15 +387,3 @@ def test_nlu_module():
 
 if __name__ == "__main__":
     test_nlu_module()
-
-    # Example usage
-    print("\n" + "=" * 50)
-    print("📝 Example Usage:")
-
-    nlu = NLUModule()
-    example_message = "I want to buy Nike running shoes under $150"
-    result = nlu.analyze(example_message)
-
-    print(f"Input: {example_message}")
-    print("Output:")
-    print(json.dumps(result, indent=2))

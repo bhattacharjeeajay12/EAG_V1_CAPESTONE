@@ -11,7 +11,7 @@ from datetime import datetime
 
 from core.llm_client import LLMClient
 from prompts.planner_prompt import PLANNER_SYSTEM_PROMPT, PLANNER_USER_PROMPT_TEMPLATE
-from core.nlu import NLUModule
+from nlu.nlu import NLUModule
 from memory import SessionMemory
 
 
@@ -21,7 +21,7 @@ class PlannerAgent:
 
     Responsibilities:
     1. Use NLU to understand user intent
-    2. Maintain session state and conversation history
+    2. Maintain session state and conversation history in centralized memory
     3. Route requests to specialist agents (BUY, ORDER, RECOMMEND, RETURN)
     4. Coordinate multi-step conversations
     """
@@ -35,15 +35,13 @@ class PlannerAgent:
         """
         self.llm_client = llm_client or LLMClient()
         self.nlu = NLUModule(self.llm_client)
-        self.memory = SessionMemory(agent_name="planner")
+        self.memory = SessionMemory()
 
         # Available agents that can be routed to
         self.available_agents = ["BUY", "ORDER", "RECOMMEND", "RETURN"]
 
         # Current session tracking
-        self.session_id = None
-        self.conversation_history = []
-        self.session_state = {}
+        self.current_session_id = None
 
     def start_session(self, session_label: Optional[str] = None) -> str:
         """
@@ -55,30 +53,14 @@ class PlannerAgent:
         Returns:
             str: Session ID
         """
-        # Generate new session ID
-        self.session_id = str(uuid.uuid4())[:8]
-
-        # Reset session state
-        self.conversation_history = []
-        self.session_state = {
-            "session_id": self.session_id,
-            "started_at": datetime.now().isoformat(),
-            "current_agent": None,
-            "user_journey": "initial",
-            "entities": {},
-            "completion_status": "active"
-        }
-
-        # Initialize memory for this session
-        self.memory.new_session(
-            label=session_label or f"planner_session_{self.session_id}",
-            config={"planner_version": "1.0"}
+        # Create new session in memory
+        session_id = self.memory.new_session(
+            session_label=session_label or f"planner_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            config={"planner_version": "1.0", "created_by": "PlannerAgent"}
         )
 
-        # Save initial state
-        self._save_session_state()
-
-        return self.session_id
+        self.current_session_id = session_id
+        return session_id
 
     def process_user_message(self, user_message: str) -> Dict[str, Any]:
         """
@@ -90,35 +72,54 @@ class PlannerAgent:
         Returns:
             Dict containing routing decision and context
         """
-        if not self.session_id:
+        # Start session if not already started
+        if not self.current_session_id:
             self.start_session()
 
         try:
-            # Step 1: Use NLU to understand user intent
-            nlu_result = self.nlu.analyze(user_message, self.conversation_history)
+            # Step 1: Load current session data
+            session_data = self.memory.load_session() or {}
+            conversation_history = session_data.get("conversation_history", [])
+            session_state = session_data.get("session_state", {})
 
-            # Step 2: Update conversation history
-            self.conversation_history.append({
+            # Step 2: Use NLU to understand user intent
+            nlu_result = self.nlu.analyze(user_message, conversation_history)
+
+            # Step 3: Use LLM to make routing decision
+            routing_decision = self._make_routing_decision(nlu_result, session_state, conversation_history)
+
+            # Step 4: Update session state
+            updated_session_state = self._update_session_state(session_state, nlu_result, routing_decision)
+
+            # Step 5: Save to memory
+            self.memory.add_conversation_turn(
+                role="user",
+                content=user_message,
+                nlu_analysis=nlu_result,
+                routing_decision=routing_decision
+            )
+
+            # Save updated session state
+            conversation_history.append({
                 "role": "user",
                 "content": user_message,
                 "timestamp": datetime.now().isoformat()
             })
 
-            # Step 3: Use LLM to make routing decision
-            routing_decision = self._make_routing_decision(nlu_result)
-
-            # Step 4: Update session state
-            self._update_session_state(nlu_result, routing_decision)
-
-            # Step 5: Save session state with memory
-            self._save_session_state()
+            self.memory.save(
+                conversation_history=conversation_history,
+                session_state=updated_session_state,
+                nlu_history=session_data.get("nlu_history", []),
+                routing_history=session_data.get("routing_history", []),
+                config=session_data.get("config", {})
+            )
 
             # Step 6: Prepare response
             response = {
-                "session_id": self.session_id,
+                "session_id": self.current_session_id,
                 "routing_decision": routing_decision,
                 "nlu_analysis": nlu_result,
-                "session_state": self.session_state,
+                "session_state": updated_session_state,
                 "success": True
             }
 
@@ -127,7 +128,7 @@ class PlannerAgent:
         except Exception as e:
             # Error handling
             error_response = {
-                "session_id": self.session_id,
+                "session_id": self.current_session_id,
                 "error": str(e),
                 "routing_decision": {
                     "next_agent": "CLARIFY",
@@ -139,24 +140,50 @@ class PlannerAgent:
                 "success": False
             }
 
-            # Still save the error state
-            self._save_session_state()
-
             return error_response
 
-    def _make_routing_decision(self, nlu_result: Dict[str, Any]) -> Dict[str, Any]:
+    def get_agent_context(self, agent_type: str) -> Dict[str, Any]:
+        """
+        Get context for a specific agent to execute.
+
+        Args:
+            agent_type (str): Type of agent (BUY, ORDER, RECOMMEND, RETURN)
+
+        Returns:
+            Dict: Context data for the agent
+        """
+        return self.memory.get_context_for_agent(agent_type)
+
+    def add_agent_response(self, agent_type: str, response: str) -> None:
+        """
+        Add agent response to conversation history.
+
+        Args:
+            agent_type (str): Type of agent that responded
+            response (str): Agent's response
+        """
+        self.memory.add_conversation_turn(
+            role="agent",
+            content=f"[{agent_type}] {response}"
+        )
+
+    def _make_routing_decision(self, nlu_result: Dict[str, Any],
+                               session_state: Dict[str, Any],
+                               conversation_history: List[Dict]) -> Dict[str, Any]:
         """
         Use LLM to make intelligent routing decisions.
 
         Args:
             nlu_result (Dict): NLU analysis of user message
+            session_state (Dict): Current session state
+            conversation_history (List): Conversation history
 
         Returns:
             Dict: Routing decision with agent choice and reasoning
         """
         # Prepare context for LLM
-        recent_conversation = self._format_recent_conversation()
-        session_state_summary = self._summarize_session_state()
+        recent_conversation = self._format_recent_conversation(conversation_history)
+        session_state_summary = self._summarize_session_state(session_state)
 
         # Create prompt for LLM
         user_prompt = PLANNER_USER_PROMPT_TEMPLATE.format(
@@ -294,27 +321,35 @@ class PlannerAgent:
             }
         }
 
-    def _update_session_state(self, nlu_result: Dict, routing_decision: Dict):
+    def _update_session_state(self, current_state: Dict[str, Any],
+                              nlu_result: Dict, routing_decision: Dict) -> Dict[str, Any]:
         """
         Update the session state with new information.
 
         Args:
+            current_state (Dict): Current session state
             nlu_result (Dict): NLU analysis
             routing_decision (Dict): Routing decision made
+
+        Returns:
+            Dict: Updated session state
         """
+        # Create updated state
+        updated_state = current_state.copy()
+
         # Update current agent
-        self.session_state["current_agent"] = routing_decision["next_agent"]
-        self.session_state["last_update"] = datetime.now().isoformat()
+        updated_state["current_agent"] = routing_decision["next_agent"]
+        updated_state["last_update"] = datetime.now().isoformat()
 
         # Merge entities from NLU
-        current_entities = self.session_state.get("entities", {})
+        current_entities = updated_state.get("entities", {})
         new_entities = nlu_result.get("entities", {})
 
         for key, value in new_entities.items():
             if value is not None:
                 current_entities[key] = value
 
-        self.session_state["entities"] = current_entities
+        updated_state["entities"] = current_entities
 
         # Update user journey based on agent
         journey_mapping = {
@@ -325,36 +360,28 @@ class PlannerAgent:
             "CLARIFY": "needs_clarification"
         }
 
-        self.session_state["user_journey"] = journey_mapping.get(
+        updated_state["user_journey"] = journey_mapping.get(
             routing_decision["next_agent"],
             "unknown"
         )
 
-        # Track routing history
-        if "routing_history" not in self.session_state:
-            self.session_state["routing_history"] = []
+        return updated_state
 
-        self.session_state["routing_history"].append({
-            "timestamp": datetime.now().isoformat(),
-            "agent": routing_decision["next_agent"],
-            "confidence": routing_decision["confidence"],
-            "reasoning": routing_decision["reasoning"]
-        })
-
-    def _format_recent_conversation(self, max_entries: int = 6) -> str:
+    def _format_recent_conversation(self, conversation_history: List[Dict], max_entries: int = 6) -> str:
         """
         Format recent conversation history for LLM context.
 
         Args:
+            conversation_history (List): Complete conversation history
             max_entries (int): Maximum number of conversation entries to include
 
         Returns:
             str: Formatted conversation history
         """
-        if not self.conversation_history:
+        if not conversation_history:
             return "No previous conversation in this session."
 
-        recent = self.conversation_history[-max_entries:]
+        recent = conversation_history[-max_entries:]
         formatted = []
 
         for entry in recent:
@@ -364,42 +391,30 @@ class PlannerAgent:
 
         return "\n".join(formatted)
 
-    def _summarize_session_state(self) -> str:
+    def _summarize_session_state(self, session_state: Dict[str, Any]) -> str:
         """
         Create a concise summary of current session state.
+
+        Args:
+            session_state (Dict): Current session state
 
         Returns:
             str: Session state summary
         """
-        state = self.session_state
-
         summary_parts = [
-            f"Session ID: {state.get('session_id', 'unknown')}",
-            f"Current Agent: {state.get('current_agent', 'none')}",
-            f"User Journey: {state.get('user_journey', 'initial')}",
-            f"Status: {state.get('completion_status', 'active')}"
+            f"Session ID: {session_state.get('session_id', 'unknown')}",
+            f"Current Agent: {session_state.get('current_agent', 'none')}",
+            f"User Journey: {session_state.get('user_journey', 'initial')}",
+            f"Status: {session_state.get('completion_status', 'active')}"
         ]
 
         # Add key entities if present
-        entities = state.get("entities", {})
+        entities = session_state.get("entities", {})
         non_null_entities = {k: v for k, v in entities.items() if v is not None}
         if non_null_entities:
             summary_parts.append(f"Key Entities: {json.dumps(non_null_entities)}")
 
         return "\n".join(summary_parts)
-
-    def _save_session_state(self):
-        """
-        Save current session state to memory.
-        """
-        try:
-            self.memory.save(
-                session_state=self.session_state,
-                conversation_history=self.conversation_history,
-                config={"last_saved": datetime.now().isoformat()}
-            )
-        except Exception as e:
-            print(f"[WARN] Failed to save session state: {e}")
 
     def get_session_info(self) -> Dict[str, Any]:
         """
@@ -408,12 +423,22 @@ class PlannerAgent:
         Returns:
             Dict: Current session info
         """
+        if not self.current_session_id:
+            return {"error": "No active session"}
+
+        session_data = self.memory.load_session()
+        if not session_data:
+            return {"error": "Session data not found"}
+
+        session_state = session_data.get("session_state", {})
+        conversation_history = session_data.get("conversation_history", [])
+
         return {
-            "session_id": self.session_id,
-            "session_state": self.session_state.copy(),
-            "conversation_length": len(self.conversation_history),
-            "current_agent": self.session_state.get("current_agent"),
-            "user_journey": self.session_state.get("user_journey")
+            "session_id": self.current_session_id,
+            "session_state": session_state,
+            "conversation_length": len(conversation_history),
+            "current_agent": session_state.get("current_agent"),
+            "user_journey": session_state.get("user_journey")
         }
 
 
@@ -421,7 +446,7 @@ def test_planner():
     """
     Test the Planner Agent with various scenarios.
     """
-    print("🧪 Testing Planner Agent")
+    print("🧪 Testing Planner Agent with Centralized Memory")
     print("=" * 50)
 
     planner = PlannerAgent()
@@ -429,9 +454,9 @@ def test_planner():
     test_messages = [
         "I want to buy a laptop under $1500",
         "Track my order #12345",
-        # "What's the best smartphone for photography?",
-        # "I need to return a defective product",
-        # "Show me gaming laptops with good graphics cards"
+        "What's the best smartphone for photography?",
+        "I need to return a defective product",
+        "Show me gaming laptops with good graphics cards"
     ]
 
     # Start a test session
