@@ -218,7 +218,13 @@ class IntentTracker:
             return self._resolve_continue_current()
 
         elif any(word in response_lower for word in ["switch", "new", "change", "different"]):
-            return self._resolve_switch_intent(new_intent_data)
+            # Execute the switch using the pending analysis type
+            return self._execute_switch_action(
+                pending_analysis.continuity_type,
+                new_intent_data["type"],
+                new_intent_data["entities"],
+                new_intent_data["confidence"]
+            )
 
         elif any(word in response_lower for word in ["both", "add", "also", "too"]):
             return self._resolve_add_intent(new_intent_data)
@@ -489,14 +495,20 @@ Be precise in detecting both intent changes AND target/subject changes.
 
         elif analysis.continuity_type in [ContinuityType.INTENT_SWITCH, ContinuityType.CONTEXT_SWITCH,
                                           ContinuityType.ADDITION]:
-            # All switch types require clarification
-            return {
-                "action": f"clarify_{analysis.continuity_type.value}",
-                "analysis": analysis,
-                "pending_intent_data": {"type": new_intent_type, "entities": new_entities, "confidence": confidence},
-                "message": analysis.suggested_clarification,
-                "requires_clarification": True
-            }
+            # Check if clarification is required (enforced by policy)
+            if analysis.requires_clarification:
+                # Return clarification request with pending data
+                return {
+                    "action": f"clarify_{analysis.continuity_type.value}",
+                    "analysis": analysis,
+                    "pending_intent_data": {"type": new_intent_type, "entities": new_entities,
+                                            "confidence": confidence},
+                    "message": analysis.suggested_clarification,
+                    "requires_clarification": True
+                }
+            else:
+                # Execute switch immediately (though this won't happen with our enforced policy)
+                return self._execute_switch_action(analysis.continuity_type, new_intent_type, new_entities, confidence)
 
         else:  # UNCLEAR
             return {
@@ -505,6 +517,42 @@ Be precise in detecting both intent changes AND target/subject changes.
                 "pending_intent_data": {"type": new_intent_type, "entities": new_entities, "confidence": confidence},
                 "message": analysis.suggested_clarification or "I'm not sure how this relates to what we were discussing. Could you clarify?",
                 "requires_clarification": True
+            }
+
+    def _execute_switch_action(self, switch_type: ContinuityType, new_intent_type: str,
+                               new_entities: Dict[str, Any], confidence: float) -> Dict[str, Any]:
+        """
+        Execute the actual switch action after clarification is resolved.
+
+        Args:
+            switch_type: Type of switch (INTENT_SWITCH, CONTEXT_SWITCH, ADDITION)
+            new_intent_type: New intent type
+            new_entities: New entities
+            confidence: Confidence score
+
+        Returns:
+            Result of switch execution
+        """
+        if switch_type == ContinuityType.INTENT_SWITCH:
+            return self._resolve_switch_intent(
+                {"type": new_intent_type, "entities": new_entities, "confidence": confidence})
+
+        elif switch_type == ContinuityType.CONTEXT_SWITCH:
+            # For context switch, we can either replace or treat as new target
+            # Default behavior: replace current intent with new target
+            return self._resolve_switch_intent(
+                {"type": new_intent_type, "entities": new_entities, "confidence": confidence})
+
+        elif switch_type == ContinuityType.ADDITION:
+            return self._resolve_add_intent(
+                {"type": new_intent_type, "entities": new_entities, "confidence": confidence})
+
+        else:
+            # Fallback - shouldn't reach here
+            return {
+                "action": "error",
+                "message": f"Unknown switch type: {switch_type}",
+                "requires_clarification": False
             }
 
     def _resolve_continue_current(self) -> Dict[str, Any]:
