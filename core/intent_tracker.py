@@ -4,19 +4,18 @@ Intent Tracker with LLM-Powered Continuity Analysis
 
 Purpose: Tracks user intents throughout the conversation and uses LLM intelligence
 to determine if new user messages represent intent continuation, switching, or addition.
-This module handles the complex decision of whether user behavior represents
-graceful intent evolution or requires clarification.
+Handles two types of switches: INTENT_SWITCH (different intent types) and
+CONTEXT_SWITCH (same intent, different target/subject).
 
 Key Responsibilities:
 - Track active, suspended, and completed intents
-- LLM-powered intent continuity analysis (CONTINUATION/SWITCH/ADDITION/UNCLEAR)
-- Generate appropriate clarification questions when needed
-- Manage intent transitions and resolution
+- LLM-powered intent continuity analysis (CONTINUATION/INTENT_SWITCH/CONTEXT_SWITCH/ADDITION/UNCLEAR)
+- ALWAYS require clarification for any type of switch
+- Generate appropriate clarification questions for each switch type
 
-Uses LLM to understand nuanced cases like:
-- "I want laptop" → "Actually gaming laptop" (CONTINUATION - refinement)
-- "I want laptop" → "I want to return phone" (SWITCH - different goal)
-- "Show me laptops" → "Also, when do returns expire?" (ADDITION - keeping both)
+Switch Types:
+- INTENT_SWITCH: Different intent types (BUY → RETURN, ORDER → RECOMMEND)
+- CONTEXT_SWITCH: Same intent, different target (Buy laptop → Buy cupboard, Return order1 → Return order2)
 """
 
 import json
@@ -38,7 +37,8 @@ class IntentStatus(Enum):
 class ContinuityType(Enum):
     """Types of intent continuity relationships."""
     CONTINUATION = "continuation"  # Same intent, refinement/clarification
-    SWITCH = "switch"  # Completely different intent
+    INTENT_SWITCH = "intent_switch"  # Different intent types (BUY → RETURN)
+    CONTEXT_SWITCH = "context_switch"  # Same intent, different target (Buy laptop → Buy cupboard)
     ADDITION = "addition"  # New intent while keeping previous
     UNCLEAR = "unclear"  # Ambiguous, needs user clarification
 
@@ -61,6 +61,8 @@ class TrackedIntent:
             entity_summary.append(f"category: {self.entities['category']}")
         if self.entities.get('product'):
             entity_summary.append(f"product: {self.entities['product']}")
+        if self.entities.get('subcategory'):
+            entity_summary.append(f"subcategory: {self.entities['subcategory']}")
         if self.entities.get('order_id'):
             entity_summary.append(f"order: {self.entities['order_id']}")
 
@@ -85,8 +87,8 @@ class IntentTracker:
     Manages intent tracking with LLM-powered continuity analysis.
 
     This class maintains conversation state and uses LLM intelligence to
-    determine how new user messages relate to previous intents, enabling
-    graceful conversation flow and appropriate conflict resolution.
+    determine how new user messages relate to previous intents. It enforces
+    that ANY type of switch (intent or context) requires user clarification.
     """
 
     def __init__(self, llm_client: Optional[LLMClient] = None):
@@ -105,6 +107,7 @@ class IntentTracker:
                                   conversation_context: List[Dict]) -> ContinuityAnalysis:
         """
         Use LLM to analyze how new user message relates to previous intent.
+        Enforces that both INTENT_SWITCH and CONTEXT_SWITCH require clarification.
 
         Args:
             previous_intent: The currently active intent
@@ -112,7 +115,7 @@ class IntentTracker:
             conversation_context: Recent conversation messages
 
         Returns:
-            ContinuityAnalysis with relationship type and recommendations
+            ContinuityAnalysis with relationship type and mandatory clarification for switches
         """
         try:
             # Create LLM prompt for continuity analysis
@@ -123,6 +126,9 @@ class IntentTracker:
 
             # Parse response
             analysis = self._parse_continuity_response(llm_response)
+
+            # Enforce clarification policy for switches
+            analysis = self._enforce_clarification_policy(analysis, previous_intent, new_nlu_result)
 
             return analysis
 
@@ -228,7 +234,7 @@ class IntentTracker:
     def _create_continuity_prompt(self, previous_intent: TrackedIntent,
                                   new_nlu_result: Dict[str, Any],
                                   conversation_context: List[Dict]) -> str:
-        """Create LLM prompt for intent continuity analysis."""
+        """Create LLM prompt for intent continuity analysis with switch detection."""
 
         # Format conversation context
         context_str = "\n".join([
@@ -255,27 +261,30 @@ RECENT CONVERSATION:
 ANALYSIS TASK:
 Determine the relationship between the previous intent and new message:
 
-1. CONTINUATION - Same goal, just refining/clarifying (e.g., "laptop" → "gaming laptop")
-2. SWITCH - Completely different goal (e.g., "buy laptop" → "return phone") 
-3. ADDITION - New goal while keeping previous (e.g., "buy laptop" → "also check warranty")
-4. UNCLEAR - Ambiguous, needs user clarification
+1. CONTINUATION - Same goal, just refining/clarifying (e.g., "laptop" → "gaming laptop under $1000")
 
-Consider:
-- Are they talking about the same product/domain?
-- Is it a natural refinement vs complete topic change?
-- Could it be additional information for the same goal?
+2. INTENT_SWITCH - Different intent types (e.g., "buy laptop" → "return phone", "track order" → "get recommendations")
+
+3. CONTEXT_SWITCH - Same intent type but different target/subject (e.g., "buy laptop" → "buy cupboard", "return order A" → "return order B")
+
+4. ADDITION - New goal while keeping previous (e.g., "buy laptop" → "also check return policy")
+
+5. UNCLEAR - Ambiguous, needs clarification
+
+IMPORTANT: 
+- Focus on intent types AND the subject/target of the intent
+- If user switches from one product to another product (even same intent), that's CONTEXT_SWITCH
+- If user switches from one order to another order (even same intent), that's CONTEXT_SWITCH
 
 Return JSON:
 {{
-  "continuity_type": "CONTINUATION|SWITCH|ADDITION|UNCLEAR",
+  "continuity_type": "CONTINUATION|INTENT_SWITCH|CONTEXT_SWITCH|ADDITION|UNCLEAR",
   "confidence": 0.0-1.0,
   "reasoning": "detailed_explanation_of_analysis",
-  "requires_clarification": true/false,
-  "suggested_clarification": "question_to_ask_user_or_null",
-  "recommended_action": "continue|clarify|switch|add"
+  "suggested_clarification": "question_to_ask_user_or_null"
 }}
 
-Be precise in your analysis. Consider context and natural conversation flow.
+Be precise in detecting both intent changes AND target/subject changes.
 """
         return prompt
 
@@ -319,13 +328,82 @@ Be precise in your analysis. Consider context and natural conversation flow.
                 continuity_type=continuity_type,
                 confidence=max(0.0, min(1.0, float(parsed.get("confidence", 0.5)))),
                 reasoning=parsed.get("reasoning", "LLM analysis completed"),
-                requires_clarification=bool(parsed.get("requires_clarification", False)),
-                suggested_clarification=parsed.get("suggested_clarification"),
-                recommended_action=parsed.get("recommended_action", "continue")
+                suggested_clarification=parsed.get("suggested_clarification")
             )
 
         except Exception as e:
             return self._create_fallback_analysis(f"Parse error: {str(e)}")
+
+    def _enforce_clarification_policy(self, analysis: ContinuityAnalysis,
+                                      previous_intent: TrackedIntent,
+                                      new_nlu_result: Dict[str, Any]) -> ContinuityAnalysis:
+        """
+        Enforce policy that ALL switches require clarification.
+
+        Args:
+            analysis: Original analysis from LLM
+            previous_intent: Previous intent for context
+            new_nlu_result: New NLU result
+
+        Returns:
+            Modified analysis with enforced clarification policy
+        """
+        if analysis.continuity_type in [ContinuityType.INTENT_SWITCH, ContinuityType.CONTEXT_SWITCH]:
+            # ALWAYS require clarification for any type of switch
+            analysis.requires_clarification = True
+            analysis.recommended_action = "clarify"
+
+            # Generate appropriate clarification message if not provided
+            if not analysis.suggested_clarification:
+                if analysis.continuity_type == ContinuityType.INTENT_SWITCH:
+                    analysis.suggested_clarification = (
+                        f"I see you were {previous_intent.intent_type.lower()}ing "
+                        f"but now want to {new_nlu_result['intent'].lower()}. "
+                        f"Should I switch to the new request or continue with the current one?"
+                    )
+                else:  # CONTEXT_SWITCH
+                    prev_target = self._extract_target_summary(previous_intent.entities)
+                    new_target = self._extract_target_summary(new_nlu_result.get('entities', {}))
+                    analysis.suggested_clarification = (
+                        f"I see you were working on {prev_target} "
+                        f"but now mention {new_target}. "
+                        f"Should I switch focus or do you want both?"
+                    )
+
+        elif analysis.continuity_type == ContinuityType.ADDITION:
+            # ADDITION might need clarification too for complex cases
+            analysis.requires_clarification = True
+            analysis.recommended_action = "clarify"
+
+            if not analysis.suggested_clarification:
+                analysis.suggested_clarification = (
+                    f"Do you want to handle this new {new_nlu_result['intent'].lower()} request "
+                    f"in addition to your current {previous_intent.intent_type.lower()} request?"
+                )
+
+        elif analysis.continuity_type == ContinuityType.CONTINUATION:
+            # CONTINUATION doesn't need clarification
+            analysis.requires_clarification = False
+            analysis.recommended_action = "continue"
+
+        else:  # UNCLEAR
+            analysis.requires_clarification = True
+            analysis.recommended_action = "clarify"
+
+        return analysis
+
+    def _extract_target_summary(self, entities: Dict[str, Any]) -> str:
+        """Extract a human-readable summary of what the intent targets."""
+        if entities.get('product'):
+            return entities['product']
+        elif entities.get('subcategory'):
+            return entities['subcategory']
+        elif entities.get('category'):
+            return entities['category']
+        elif entities.get('order_id'):
+            return f"order {entities['order_id']}"
+        else:
+            return "your request"
 
     def _fallback_continuity_analysis(self, previous_intent: TrackedIntent,
                                       new_nlu_result: Dict[str, Any],
@@ -335,29 +413,31 @@ Be precise in your analysis. Consider context and natural conversation flow.
         prev_intent_type = previous_intent.intent_type
         new_intent_type = new_nlu_result["intent"]
 
-        # Simple rule-based fallback
-        if prev_intent_type == new_intent_type:
-            # Same intent type - likely continuation
+        # Rule-based fallback with enforced clarification
+        if prev_intent_type != new_intent_type:
+            # Different intent types = INTENT_SWITCH
             return ContinuityAnalysis(
-                continuity_type=ContinuityType.CONTINUATION,
+                continuity_type=ContinuityType.INTENT_SWITCH,
                 confidence=0.7,
-                reasoning=f"Fallback: Same intent type ({prev_intent_type})",
-                requires_clarification=False,
-                recommended_action="continue"
+                reasoning=f"Fallback: Intent type changed ({prev_intent_type} → {new_intent_type})",
+                requires_clarification=True,
+                suggested_clarification=f"Are you switching from {prev_intent_type} to {new_intent_type}?",
+                recommended_action="clarify"
             )
         else:
-            # Different intent types - likely switch, but ask to be safe
+            # Same intent type - could be continuation or context switch
+            # Default to unclear to be safe
             return ContinuityAnalysis(
                 continuity_type=ContinuityType.UNCLEAR,
                 confidence=0.6,
-                reasoning=f"Fallback: Different intent types ({prev_intent_type} → {new_intent_type})",
+                reasoning=f"Fallback: Same intent type but uncertain about target change",
                 requires_clarification=True,
-                suggested_clarification=f"Are you switching from {prev_intent_type} to {new_intent_type}, or do you want both?",
+                suggested_clarification="Could you clarify what you'd like to do?",
                 recommended_action="clarify"
             )
 
     def _create_fallback_analysis(self, reason: str) -> ContinuityAnalysis:
-        """Create basic fallback analysis."""
+        """Create basic fallback analysis with mandatory clarification."""
         return ContinuityAnalysis(
             continuity_type=ContinuityType.UNCLEAR,
             confidence=0.5,
@@ -407,33 +487,16 @@ Be precise in your analysis. Consider context and natural conversation flow.
                 "requires_clarification": False
             }
 
-        elif analysis.continuity_type == ContinuityType.SWITCH:
-            if analysis.requires_clarification:
-                return {
-                    "action": "clarify_switch",
-                    "analysis": analysis,
-                    "pending_intent_data": {"type": new_intent_type, "entities": new_entities,
-                                            "confidence": confidence},
-                    "message": analysis.suggested_clarification or f"Are you switching from {self.get_current_intent().intent_type} to {new_intent_type}?",
-                    "requires_clarification": True
-                }
-            else:
-                return self._resolve_switch_intent(
-                    {"type": new_intent_type, "entities": new_entities, "confidence": confidence})
-
-        elif analysis.continuity_type == ContinuityType.ADDITION:
-            if analysis.requires_clarification:
-                return {
-                    "action": "clarify_addition",
-                    "analysis": analysis,
-                    "pending_intent_data": {"type": new_intent_type, "entities": new_entities,
-                                            "confidence": confidence},
-                    "message": analysis.suggested_clarification or f"Do you want to {new_intent_type.lower()} in addition to your current request?",
-                    "requires_clarification": True
-                }
-            else:
-                return self._resolve_add_intent(
-                    {"type": new_intent_type, "entities": new_entities, "confidence": confidence})
+        elif analysis.continuity_type in [ContinuityType.INTENT_SWITCH, ContinuityType.CONTEXT_SWITCH,
+                                          ContinuityType.ADDITION]:
+            # All switch types require clarification
+            return {
+                "action": f"clarify_{analysis.continuity_type.value}",
+                "analysis": analysis,
+                "pending_intent_data": {"type": new_intent_type, "entities": new_entities, "confidence": confidence},
+                "message": analysis.suggested_clarification,
+                "requires_clarification": True
+            }
 
         else:  # UNCLEAR
             return {
@@ -504,9 +567,9 @@ Be precise in your analysis. Consider context and natural conversation flow.
 
 
 def test_intent_tracker():
-    """Test Intent Tracker functionality with various scenarios."""
-    print("🧪 Testing Intent Tracker")
-    print("=" * 50)
+    """Test Intent Tracker functionality with both types of switches."""
+    print("🧪 Testing Intent Tracker with Switch Types")
+    print("=" * 60)
 
     tracker = IntentTracker()
     conversation_context = []  # Build context progressively
@@ -528,7 +591,6 @@ def test_intent_tracker():
 
     # Test 2: Intent continuation (refinement)
     print("\n2️⃣ Intent continuation - gaming laptop:")
-    # Add system response first
     conversation_context.append({"role": "system", "content": "What type of laptop are you looking for?"})
 
     nlu_result2 = {
@@ -544,11 +606,10 @@ def test_intent_tracker():
         print(
             f"   Analysis: {result2['analysis'].continuity_type.value} (confidence: {result2['analysis'].confidence:.2f})")
 
-    # Add user response to context
     conversation_context.append({"role": "user", "content": "Actually a gaming laptop under $2000"})
 
-    # Test 3: Intent switch (different goal)
-    print("\n3️⃣ Intent switch - RETURN different product:")
+    # Test 3: INTENT_SWITCH (BUY → RETURN)
+    print("\n3️⃣ INTENT_SWITCH - BUY to RETURN:")
     nlu_result3 = {
         "intent": "RETURN",
         "entities": {"order_id": "12345", "return_reason": "defective"},
@@ -558,14 +619,14 @@ def test_intent_tracker():
     result3 = tracker.track_new_intent(nlu_result3, conversation_context)
     print(f"   Action: {result3['action']}")
     print(f"   Requires clarification: {result3['requires_clarification']}")
+    print(f"   Switch type: {result3.get('analysis', {}).continuity_type.value if result3.get('analysis') else 'N/A'}")
     if result3['requires_clarification']:
-        print(f"   Clarification: {result3['message'][:60]}...")
+        print(f"   Clarification: {result3['message'][:80]}...")
 
-    # Add the switch message to context
     conversation_context.append({"role": "user", "content": "Actually I want to return my phone instead"})
 
-    # Test 4: Resolve clarification - switch intent
-    print("\n4️⃣ Resolving clarification - user chooses to switch:")
+    # Test 4: Resolve INTENT_SWITCH
+    print("\n4️⃣ Resolving INTENT_SWITCH - user switches:")
     if result3.get('analysis'):
         resolution = tracker.resolve_clarification(
             "switch to new",
@@ -576,11 +637,23 @@ def test_intent_tracker():
         print(f"   New current intent: {tracker.get_current_intent().get_summary()}")
         print(f"   Previous intent status: {tracker.tracked_intents[0].status.value}")
 
-    # Test 5: Complete intent and check for suspended ones
-    print("\n5️⃣ Complete current intent:")
-    next_intent = tracker.complete_current_intent()
-    print(f"   Current intent completed: {tracker.tracked_intents[-1].status.value}")
-    print(f"   Next active intent: {next_intent.get_summary() if next_intent else 'None'}")
+    conversation_context.append({"role": "user", "content": "switch to new"})
+    conversation_context.append({"role": "system", "content": "I'll help you with return instead."})
+
+    # Test 5: CONTEXT_SWITCH (Return order1 → Return order2)
+    print("\n5️⃣ CONTEXT_SWITCH - same intent, different target:")
+    nlu_result5 = {
+        "intent": "RETURN",
+        "entities": {"order_id": "67890", "return_reason": "wrong size"},
+        "confidence": 0.85
+    }
+
+    result5 = tracker.track_new_intent(nlu_result5, conversation_context)
+    print(f"   Action: {result5['action']}")
+    print(f"   Requires clarification: {result5['requires_clarification']}")
+    print(f"   Switch type: {result5.get('analysis', {}).continuity_type.value if result5.get('analysis') else 'N/A'}")
+    if result5['requires_clarification']:
+        print(f"   Clarification: {result5['message'][:80]}...")
 
     # Test 6: Intent tracking summary
     print("\n6️⃣ Intent tracking summary:")
@@ -590,7 +663,7 @@ def test_intent_tracker():
 
     print(f"   Final conversation length: {len(conversation_context)} messages")
 
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("✅ Intent Tracker Tests Complete!")
 
 
