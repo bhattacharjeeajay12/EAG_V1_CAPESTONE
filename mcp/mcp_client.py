@@ -10,6 +10,10 @@ import queue
 import time
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+# loading environment variables
+load_dotenv()
 
 
 @dataclass

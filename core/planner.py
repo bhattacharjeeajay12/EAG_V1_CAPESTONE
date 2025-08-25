@@ -6,7 +6,6 @@ Includes MCP client integration for tool access across all agents.
 """
 
 import json
-import uuid
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
@@ -16,19 +15,19 @@ from core.nlu import NLUModule
 from memory import SessionMemory
 
 # MCP client import - use the working HTTP-based MCP client
-import sys
 import os
+import sys
 
-# Add dev_docs/mcp_dev to path to import the working MCP client
-mcp_dev_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dev_docs", "mcp_dev")
-if os.path.exists(mcp_dev_path):
-    sys.path.insert(0, mcp_dev_path)
+# Add mcp (directory) to path to import the working MCP client
+mcp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mcp")
+if os.path.exists(mcp_path):
+    sys.path.insert(0, mcp_path)
 
 try:
-    from mcp_test_client import MCPClient
+    from mcp.mcp_client import MCPClient
     MCP_AVAILABLE = True
 except ImportError:
-    print("[WARN] MCP client not available. Check mcp_test_client module in dev_docs/mcp_dev/.")
+    print("[WARN] MCP client not available.")
     MCP_AVAILABLE = False
     MCPClient = None
 
@@ -95,7 +94,7 @@ class PlannerAgent:
                 # Use the working test server
                 server_script = os.path.join(
                     os.path.dirname(os.path.abspath(__file__)), 
-                    "..", "dev_docs", "mcp_dev", "mcp_test_server.py"
+                    "..", "mcp"
                 )
                 self.mcp_client = MCPClient(server_command=["python", server_script])
 
