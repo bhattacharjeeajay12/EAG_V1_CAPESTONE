@@ -422,7 +422,7 @@ class IntentTracker:
         }
 
     def _resolve_context_switch_clarification(self, user_response: str, new_intent_data: Dict[str, Any]) -> Dict[
-str, Any]:
+        str, Any]:
         """Resolve context switch with multiple options."""
 
         response_lower = user_response.lower()
@@ -486,76 +486,6 @@ str, Any]:
                 }
 
             current_target = self._extract_target_summary(current_intent.entities)
-            new_target = self._extract_target_summary(new_intent_data["entities"])
-
-            return {
-                "action": "re_clarify_context_switch",
-                "message": f"For {current_target} vs {new_target}, would you like to:\n"
-                           f"• 'Replace' - switch from {current_target} to {new_target}\n"
-                           f"• 'Add' - include both {current_target} and {new_target}\n"
-                           f"• 'Compare' - compare {current_target} vs {new_target}\n"
-                           f"• 'Separate' - handle {new_target} as a separate request",
-                "requires_clarification": True
-            }
-
-
-    def _resolve_context_switch_clarification(self, user_response: str, new_intent_data: Dict[str, Any]) -> Dict[
-        str, Any]:
-        """Resolve context switch with multiple options."""
-
-        response_lower = user_response.lower()
-
-        if any(word in response_lower for word in ["replace", "switch", "change"]):
-            # Replace current target with new one
-            current_intent = self.get_current_intent()
-            if current_intent:
-                conflicts = current_intent.update_entities(new_intent_data["entities"], "replace")
-
-                return {
-                    "action": "context_replaced",
-                    "intent": current_intent,
-                    "message": f"I've updated your {current_intent.intent_type.lower()} request with the new details.",
-                    "requires_clarification": False,
-                    "entity_conflicts": conflicts
-                }
-
-        elif any(word in response_lower for word in ["add", "both", "include"]):
-            # Add to current intent (expand scope)
-            current_intent = self.get_current_intent()
-            if current_intent:
-                # Smart merge entities
-                conflicts = current_intent.update_entities(new_intent_data["entities"], "merge")
-
-                return {
-                    "action": "context_expanded",
-                    "intent": current_intent,
-                    "message": f"I've expanded your {current_intent.intent_type.lower()} request to include both options.",
-                    "requires_clarification": False,
-                    "entity_conflicts": conflicts
-                }
-
-        elif any(word in response_lower for word in ["compare", "comparison"]):
-            # Add comparison context
-            current_intent = self.get_current_intent()
-            if current_intent:
-                current_intent.entities["comparison_items"] = current_intent.entities.get("comparison_items", [])
-                new_product = self._extract_target_summary(new_intent_data["entities"])
-                current_intent.entities["comparison_items"].append(new_product)
-
-                return {
-                    "action": "comparison_added",
-                    "intent": current_intent,
-                    "message": f"I'll help you compare your options for {current_intent.intent_type.lower()}.",
-                    "requires_clarification": False
-                }
-
-        elif any(word in response_lower for word in ["separate", "different", "new"]):
-            # Handle as separate intent
-            return self._resolve_add_intent(new_intent_data)
-
-        else:
-            # Unclear - provide specific context switch options
-            current_target = self._extract_target_summary(self.get_current_intent().entities)
             new_target = self._extract_target_summary(new_intent_data["entities"])
 
             return {
