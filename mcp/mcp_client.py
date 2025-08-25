@@ -1,13 +1,13 @@
-# mcp_client.py
+# mcp/mcp_http_client.py
 """
-MCP Client for connecting to FastMCP server and calling tools.
+HTTP-based MCP Client for connecting to FastAPI MCP server.
+Designed for AWS/EC2 deployment with network communication.
 """
 
 import json
-import subprocess
-import threading
-import queue
+import requests
 import time
+import os
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -24,170 +24,98 @@ class MCPTool:
     input_schema: Dict[str, Any]
 
 
-class MCPClient:
+class MCPHttpClient:
     """
-    Client for communicating with MCP server via stdio.
+    HTTP-based client for communicating with MCP server via REST API.
+    Perfect for AWS/EC2 deployment scenarios.
     """
 
-    def __init__(self, server_command: List[str]):
+    def __init__(self, server_url: str = None, timeout: int = 30):
         """
-        Initialize MCP client.
+        Initialize MCP HTTP client.
 
         Args:
-            server_command (List[str]): Command to start the MCP server
+            server_url (str): URL of the MCP server (e.g., "http://localhost:8000")
+            timeout (int): Request timeout in seconds
         """
-        self.server_command = server_command
-        self.process = None
+        self.server_url = server_url or os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+        self.timeout = timeout
         self.connected = False
-        self.request_id = 0
         self.available_tools = {}
 
-        # Communication queues
-        self._response_queue = queue.Queue()
-        self._reader_thread = None
-        self._writer_thread = None
+        # Remove trailing slash
+        self.server_url = self.server_url.rstrip('/')
 
     def connect(self) -> bool:
         """
-        Connect to the MCP server.
+        Connect to the MCP server via HTTP.
 
         Returns:
             bool: True if connection successful
         """
         try:
-            # Start the MCP server process
-            self.process = subprocess.Popen(
-                self.server_command,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=0
+            print(f"[INFO] Connecting to MCP server at {self.server_url}")
+
+            # Test connection with health endpoint
+            response = requests.get(
+                f"{self.server_url}/health",
+                timeout=self.timeout
             )
 
-            # Start reader thread
-            self._reader_thread = threading.Thread(
-                target=self._read_responses,
-                daemon=True
-            )
-            self._reader_thread.start()
+            if response.status_code == 200:
+                print("[INFO] Health check passed")
 
-            # Wait a moment for server to start
-            time.sleep(0.5)
-
-            # Initialize connection
-            init_response = self._send_request("initialize", {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {}
-                },
-                "clientInfo": {
-                    "name": "ecommerce-planner",
-                    "version": "1.0.0"
-                }
-            })
-
-            if init_response and init_response.get("result"):
-                self.connected = True
-
-                # Get available tools
+                # Discover available tools
                 self._discover_tools()
 
+                self.connected = True
                 print(f"[INFO] MCP Client connected. Available tools: {list(self.available_tools.keys())}")
                 return True
             else:
-                print("[ERROR] MCP initialization failed")
+                print(f"[ERROR] Health check failed: HTTP {response.status_code}")
                 return False
 
+        except requests.exceptions.ConnectionError:
+            print(f"[ERROR] Cannot connect to MCP server at {self.server_url}")
+            return False
+        except requests.exceptions.Timeout:
+            print(f"[ERROR] Connection timeout to MCP server")
+            return False
         except Exception as e:
             print(f"[ERROR] Failed to connect to MCP server: {e}")
             return False
 
-    def _read_responses(self):
-        """Read responses from MCP server in separate thread."""
-        if not self.process:
-            return
-
-        try:
-            for line in iter(self.process.stdout.readline, ''):
-                if line.strip():
-                    try:
-                        response = json.loads(line.strip())
-                        self._response_queue.put(response)
-                    except json.JSONDecodeError:
-                        print(f"[WARN] Invalid JSON from MCP server: {line}")
-        except Exception as e:
-            print(f"[ERROR] Error reading MCP responses: {e}")
-
-    def _send_request(self, method: str, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Send a request to MCP server and wait for response.
-
-        Args:
-            method (str): RPC method name
-            params (Dict): Method parameters
-
-        Returns:
-            Dict: Response from server or None if failed
-        """
-        if not self.process:
-            return None
-
-        self.request_id += 1
-        request = {
-            "jsonrpc": "2.0",
-            "id": self.request_id,
-            "method": method,
-            "params": params
-        }
-
-        try:
-            # Send request
-            request_json = json.dumps(request) + "\n"
-            self.process.stdin.write(request_json)
-            self.process.stdin.flush()
-
-            # Wait for response (with timeout)
-            timeout = 10.0  # 10 second timeout
-            start_time = time.time()
-
-            while time.time() - start_time < timeout:
-                try:
-                    response = self._response_queue.get(timeout=0.1)
-                    if response.get("id") == self.request_id:
-                        return response
-                    else:
-                        # Put it back if it's not our response
-                        self._response_queue.put(response)
-                except queue.Empty:
-                    continue
-
-            print(f"[WARN] Timeout waiting for MCP response to {method}")
-            return None
-
-        except Exception as e:
-            print(f"[ERROR] Failed to send MCP request: {e}")
-            return None
-
     def _discover_tools(self):
-        """Discover available tools from the MCP server."""
-        response = self._send_request("tools/list", {})
+        """Discover available tools from the HTTP server."""
+        try:
+            response = requests.get(
+                f"{self.server_url}/tools",
+                timeout=self.timeout
+            )
 
-        if response and "result" in response:
-            tools_data = response["result"].get("tools", [])
+            if response.status_code == 200:
+                data = response.json()
+                tools_data = data.get("tools", [])
 
-            for tool_info in tools_data:
-                tool_name = tool_info.get("name")
-                if tool_name:
-                    self.available_tools[tool_name] = MCPTool(
-                        name=tool_name,
-                        description=tool_info.get("description", ""),
-                        input_schema=tool_info.get("inputSchema", {})
-                    )
+                for tool_info in tools_data:
+                    tool_name = tool_info.get("name")
+                    if tool_name:
+                        self.available_tools[tool_name] = MCPTool(
+                            name=tool_name,
+                            description=tool_info.get("description", ""),
+                            input_schema=tool_info.get("inputSchema", {})
+                        )
+
+                print(f"[INFO] Discovered {len(tools_data)} tools")
+            else:
+                print(f"[WARN] Failed to get tools list: HTTP {response.status_code}")
+
+        except Exception as e:
+            print(f"[WARN] Failed to discover tools: {e}")
 
     def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
-        Call an MCP tool.
+        Call an MCP tool via HTTP.
 
         Args:
             tool_name (str): Name of the tool to call
@@ -204,70 +132,78 @@ class MCPClient:
             print(f"[ERROR] Tool '{tool_name}' not available. Available: {list(self.available_tools.keys())}")
             return None
 
-        response = self._send_request("tools/call", {
-            "name": tool_name,
-            "arguments": arguments
-        })
+        try:
+            response = requests.post(
+                f"{self.server_url}/tools/{tool_name}",
+                json=arguments,
+                timeout=self.timeout,
+                headers={"Content-Type": "application/json"}
+            )
 
-        if response and "result" in response:
-            return response["result"]
-        elif response and "error" in response:
-            print(f"[ERROR] MCP tool call failed: {response['error']}")
+            if response.status_code == 200:
+                return response.json()
+            else:
+                error_msg = f"HTTP {response.status_code}"
+                try:
+                    error_detail = response.json().get("detail", "Unknown error")
+                    error_msg += f": {error_detail}"
+                except:
+                    error_msg += f": {response.text}"
+
+                print(f"[ERROR] Tool call failed: {error_msg}")
+                return None
+
+        except requests.exceptions.Timeout:
+            print(f"[ERROR] Tool call timeout for {tool_name}")
             return None
-        else:
-            print(f"[ERROR] No response from MCP tool: {tool_name}")
+        except requests.exceptions.ConnectionError:
+            print(f"[ERROR] Connection lost to MCP server")
+            self.connected = False
+            return None
+        except Exception as e:
+            print(f"[ERROR] Failed to call tool {tool_name}: {e}")
             return None
 
     def get_available_tools(self) -> List[str]:
-        """
-        Get list of available tool names.
-
-        Returns:
-            List[str]: Available tool names
-        """
+        """Get list of available tool names."""
         return list(self.available_tools.keys())
 
     def get_tool_info(self, tool_name: str) -> Optional[MCPTool]:
-        """
-        Get information about a specific tool.
-
-        Args:
-            tool_name (str): Name of the tool
-
-        Returns:
-            MCPTool: Tool information or None if not found
-        """
+        """Get information about a specific tool."""
         return self.available_tools.get(tool_name)
 
     def is_connected(self) -> bool:
         """Check if client is connected to server."""
-        return self.connected and self.process and self.process.poll() is None
+        return self.connected
 
     def disconnect(self):
-        """Disconnect from MCP server."""
+        """Disconnect from MCP server (HTTP client doesn't maintain persistent connections)."""
         self.connected = False
+        print("[INFO] MCP HTTP Client disconnected")
 
-        if self.process:
-            try:
-                self.process.terminate()
-                self.process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-            except Exception as e:
-                print(f"[WARN] Error terminating MCP process: {e}")
-
-            self.process = None
-
-        print("[INFO] MCP Client disconnected")
+    def ping(self) -> bool:
+        """Ping the server to check if it's still alive."""
+        try:
+            response = requests.get(
+                f"{self.server_url}/health",
+                timeout=5
+            )
+            return response.status_code == 200
+        except:
+            return False
 
 
-def test_mcp_client():
-    """Test the MCP client with your server."""
-    print("🧪 Testing MCP Client")
+def test_mcp_http_client():
+    """Test the HTTP MCP client with your server."""
+    print("🧪 Testing HTTP MCP Client")
     print("=" * 50)
 
+    # Check environment variable for server URL
+    server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+    print(f"Server URL: {server_url}")
+
     # Create client
-    client = MCPClient(["python", "mcp_server.py"])
+    client = MCPHttpClient(server_url=server_url)
 
     try:
         # Connect
@@ -287,7 +223,7 @@ def test_mcp_client():
 
             # Test echo tool
             echo_result = client.call_tool("echo", {
-                "data": {"test": "Hello from MCP client!", "number": 42}
+                "data": {"test": "Hello from HTTP MCP client!", "number": 42}
             })
             print(f"   Echo: {echo_result}")
 
@@ -298,14 +234,62 @@ def test_mcp_client():
             })
             print(f"   Sum: {sum_result}")
 
+            # Test product search
+            search_result = client.call_tool("search_products", {
+                "category": "electronics",
+                "subcategory": "laptop",
+                "budget_max": 1000.0,
+                "specifications": ["intel", "8gb"]
+            })
+            print(f"   Product Search: {search_result}")
+
             print("\n✅ All tool tests completed!")
 
         else:
             print("❌ Failed to connect to MCP server")
+            print("💡 Make sure the server is running:")
+            print("   python mcp/mcp_server.py")
 
     finally:
         client.disconnect()
 
 
 if __name__ == "__main__":
-    test_mcp_client()
+    test_mcp_http_client()
+
+"""
+Deployement instruction
+
+1. UPDATE ENVIRONMENT VARIABLES
+# MCP Server Configuration
+MCP_SERVER_URL=http://localhost:8000
+MCP_HOST=0.0.0.0
+MCP_PORT=8000
+
+# For AWS deployment, update to:
+# MCP_SERVER_URL=http://your-ec2-server-ip:8000
+# or
+# MCP_SERVER_URL=https://your-domain.com
+
+2.  For AWS/EC2 Deployment
+When deploying to AWS:
+1. **Server side (EC2 instance hosting the MCP server):**
+``` bash
+# Update server to bind to all interfaces
+export MCP_HOST=0.0.0.0
+export MCP_PORT=8000
+python mcp/mcp_server.py
+```
+1. **Client side (EC2 instance or local machine):**
+``` bash
+# Point to your server's public IP or domain
+export MCP_SERVER_URL=http://your-ec2-public-ip:8000
+python mcp/mcp_http_client.py
+```
+1. **Security Group Configuration:**
+    - Open port 8000 (or your chosen port) in your EC2 security group
+    - Allow HTTP traffic from your client's IP or security group
+
+This HTTP-based approach will work perfectly for your AWS deployment and eliminates the stdio communication issues you were experiencing.
+
+"""

@@ -9,6 +9,8 @@ import json
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
+from dotenv import load_dotenv
+
 from core.llm_client import LLMClient
 from prompts.planner_prompt import PLANNER_SYSTEM_PROMPT, PLANNER_USER_PROMPT_TEMPLATE
 from core.nlu import NLUModule
@@ -17,14 +19,20 @@ from memory import SessionMemory
 # MCP client import - use the working HTTP-based MCP client
 import os
 import sys
+from pathlib import Path
 
-# Add mcp (directory) to path to import the working MCP client
-mcp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mcp")
-if os.path.exists(mcp_path):
-    sys.path.insert(0, mcp_path)
+# load environment variables
+load_dotenv()
+
+# change working directory to project root
+project_root = Path(__file__).parent.parent 
+os.chdir(project_root)
+print(f"Current working directory: {os.getcwd()}")
 
 try:
-    from mcp.mcp_client import MCPClient
+    # from mcp.mcp_client import MCPClient
+    # MCP_AVAILABLE = True
+    from mcp.mcp_client import MCPHttpClient as MCPClient  # Use the correct class name
     MCP_AVAILABLE = True
 except ImportError:
     print("[WARN] MCP client not available.")

@@ -21,13 +21,14 @@ class SessionMemory:
     - One JSON file per session under memory/sessions/{session_id}.json
     """
 
-    def __init__(self, base_memory_dir: Optional[str] = None) -> None:
+    def __init__(self, agent_name: str = "default", base_memory_dir: Optional[str] = None) -> None:
         """
         Initialize session memory for planner.
 
         Args:
             base_memory_dir (str, optional): Base directory for memory storage
         """
+        self.agent_name = agent_name
         self.base_memory_dir = base_memory_dir or _project_path("memory")
         self.sessions_dir = os.path.join(self.base_memory_dir, "sessions")
 
