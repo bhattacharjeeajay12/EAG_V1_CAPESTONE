@@ -1,743 +1,429 @@
 # core/planner.py
 """
-Planner Agent for E-commerce System
-Routes user requests to appropriate specialist agents based on NLU analysis and conversation state.
-Includes MCP client integration for tool access across all agents.
+Graph-based Planner Agent for E-commerce System
+Uses NetworkX to create and manage conversation flow graphs.
+Routes user requests based on state transitions and agent outcomes.
 """
 
-import json
+import networkx as nx
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+import json
 
-from dotenv import load_dotenv
-
-from core.llm_client import LLMClient
-from prompts.planner_prompt import PLANNER_SYSTEM_PROMPT, PLANNER_USER_PROMPT_TEMPLATE
+from core.world_state import WorldState
+from core.schema import make_result
 from core.nlu import NLUModule
-from memory import SessionMemory
-
-# MCP client import - use the working HTTP-based MCP client
-import os
-import sys
-from pathlib import Path
-
-# load environment variables
-load_dotenv()
-
-# change working directory to project root
-project_root = Path(__file__).parent.parent 
-os.chdir(project_root)
-print(f"Current working directory: {os.getcwd()}")
-
-try:
-    # from mcp.mcp_client import MCPClient
-    # MCP_AVAILABLE = True
-    from mcp.mcp_client import MCPHttpClient as MCPClient  # Use the correct class name
-    MCP_AVAILABLE = True
-except ImportError:
-    print("[WARN] MCP client not available.")
-    MCP_AVAILABLE = False
-    MCPClient = None
+from core.llm_client import LLMClient
+from prompts.planner_prompt import PLANNER_SYSTEM_PROMPT
 
 
-class PlannerAgent:
+class Planner:
     """
-    Central coordinator that analyzes user input and routes to appropriate agents.
+    Graph-based planner that orchestrates conversation flow using NetworkX.
 
-    Responsibilities:
-    1. Use NLU to understand user intent
-    2. Maintain session state and conversation history in centralized memory
-    3. Route requests to specialist agents (BUY, ORDER, RECOMMEND, RETURN)
-    4. Coordinate multi-step conversations
-    5. Provide MCP client access to all agents for tool usage
+    Creates a directed graph where:
+    - Nodes represent conversation states/agents
+    - Edges represent valid transitions with conditions
+    - Flow is determined by current state + agent results
     """
 
-    def __init__(self,
-                 llm_client: Optional[LLMClient] = None,
-                 mcp_server_command: Optional[str] = None):
-        """
-        Initialize the Planner Agent with MCP client integration.
-
-        Args:
-            llm_client (LLMClient, optional): LLM client for decision making
-            mcp_server_command (str, optional): Command to start MCP server
-        """
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         self.llm_client = llm_client or LLMClient()
         self.nlu = NLUModule(self.llm_client)
-        self.memory = SessionMemory()
+        self.graph = nx.DiGraph()
+        self.world_state = WorldState()
 
-        # Available agents that can be routed to
-        self.available_agents = ["BUY", "ORDER", "RECOMMEND", "RETURN"]
+        # Agent instances cache
+        self._agents = {}
 
-        # Current session tracking
-        self.current_session_id = None
+        # Build the conversation flow graph
+        self._build_conversation_graph()
 
-        # MCP Client Integration
-        self.mcp_client = None
-        self._initialize_mcp_client(mcp_server_command)
-
-        # Agent instances cache - will be created with MCP client when needed
-        self._agent_instances = {}
-
-    def _initialize_mcp_client(self, server_command: Optional[str] = None):
+    def _build_conversation_graph(self):
         """
-        Initialize the MCP client for tool access.
+        Build the conversation flow graph with nodes and edges.
 
-        Args:
-            server_command (str, optional): Command to start MCP server (ignored, uses HTTP)
+        Nodes represent conversation states:
+        - NLU: Initial intent analysis
+        - RECOMMEND: Product recommendation flow
+        - BUY: Purchase/search flow
+        - ORDER: Order management flow
+        - RETURN: Return/exchange flow
+        - CLARIFY: Clarification needed
+        - DONE: Conversation complete
         """
-        if not MCP_AVAILABLE:
-            print("[INFO] MCP client not available. Agents will run without tool access.")
-            return
-
-        try:
-            # Check for environment variable for remote server
-            server_url = os.environ.get("MCP_SERVER_URL")
-
-            if server_url:
-                print(f"[INFO] Using remote MCP server at {server_url}")
-                self.mcp_client = MCPClient(server_url=server_url)
-            else:
-                print("[INFO] Using local MCP server (will start automatically)")
-                # Use the working test server
-                server_script = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), 
-                    "..", "mcp"
-                )
-                self.mcp_client = MCPClient(server_command=["python", server_script])
-
-            # Test connection
-            if self.mcp_client.connect():
-                print(f"[INFO] MCP client connected. Available tools: {self.mcp_client.get_available_tools()}")
-            else:
-                print("[WARN] Failed to connect to MCP server")
-                self.mcp_client = None
-
-        except Exception as e:
-            print(f"[WARN] Failed to initialize MCP client: {e}")
-            self.mcp_client = None
-
-    def get_mcp_client(self) -> Optional[Any]:
-        """
-        Get the MCP client instance for agents to use.
-
-        Returns:
-            MCP client instance or None if not available
-        """
-        return self.mcp_client
-
-    def _get_or_create_agent(self, agent_type: str) -> Optional[Any]:
-        """
-        Get or create an agent instance with MCP client integration.
-
-        Args:
-            agent_type (str): Type of agent (BUY, ORDER, RECOMMEND, RETURN)
-
-        Returns:
-            Agent instance or None if failed to create
-        """
-        # Return cached instance if exists
-        if agent_type in self._agent_instances:
-            return self._agent_instances[agent_type]
-
-        try:
-            # Import and create agent based on type
-            if agent_type == "BUY":
-                from agents.buy_agent import BuyAgent
-                agent = BuyAgent(verbose=True, mcp_client=self.mcp_client)
-            elif agent_type == "ORDER":
-                from agents.order_agent import OrderAgent
-                agent = OrderAgent(
-                    llm_client=self.llm_client,
-                    mcp_client=self.mcp_client
-                )
-            elif agent_type == "RECOMMEND":
-                from agents.recommendation_agent import RecommendationAgent
-                agent = RecommendationAgent(
-                    llm_client=self.llm_client,
-                    mcp_client=self.mcp_client
-                )
-            elif agent_type == "RETURN":
-                from agents.return_agent import ReturnAgent
-                agent = ReturnAgent(
-                    llm_client=self.llm_client,
-                    mcp_client=self.mcp_client
-                )
-            else:
-                print(f"[ERROR] Unknown agent type: {agent_type}")
-                return None
-
-            # Cache the instance
-            self._agent_instances[agent_type] = agent
-            print(f"[INFO] Created {agent_type} agent with MCP client integration.")
-
-            return agent
-
-        except ImportError as e:
-            print(f"[ERROR] Failed to import {agent_type} agent: {e}")
-            return None
-        except Exception as e:
-            print(f"[ERROR] Failed to create {agent_type} agent: {e}")
-            return None
-
-    def execute_agent_task(self, agent_type: str, task_context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Execute a task using the specified agent with MCP client access.
-
-        Args:
-            agent_type (str): Type of agent to use
-            task_context (Dict): Context and parameters for the task
-
-        Returns:
-            Dict: Agent's response and execution result
-        """
-        # Get or create agent instance
-        agent = self._get_or_create_agent(agent_type)
-
-        if not agent:
-            return {
-                "success": False,
-                "error": f"Failed to create or get {agent_type} agent",
-                "response": None
-            }
-
-        try:
-            # Execute the task with the agent
-            # Assuming agents have a standard 'execute' or 'handle' method
-            if hasattr(agent, 'execute'):
-                result = agent.execute(task_context)
-            elif hasattr(agent, 'handle'):
-                result = agent.handle(task_context)
-            else:
-                # Fallback method
-                result = agent.process(task_context)
-
-            return {
-                "success": True,
-                "agent_type": agent_type,
-                "response": result,
-                "mcp_tools_available": self.mcp_client is not None
-            }
-
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Agent execution failed: {str(e)}",
-                "agent_type": agent_type,
-                "response": None
-            }
-
-    def start_session(self, session_label: Optional[str] = None) -> str:
-        """
-        Start a new planning session.
-
-        Args:
-            session_label (str, optional): Label for the session
-
-        Returns:
-            str: Session ID
-        """
-        # Create new session in memory
-        session_id = self.memory.new_session(
-            session_label=session_label or f"planner_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            config={
-                "planner_version": "1.0",
-                "created_by": "PlannerAgent",
-                "mcp_available": self.mcp_client is not None
-            }
-        )
-
-        self.current_session_id = session_id
-        return session_id
-
-    def process_user_message(self, user_message: str) -> Dict[str, Any]:
-        """
-        Process a user message and determine the next action.
-
-        Args:
-            user_message (str): The user's message
-
-        Returns:
-            Dict containing routing decision and context
-        """
-        # Start session if not already started
-        if not self.current_session_id:
-            self.start_session()
-
-        try:
-            # Step 1: Load current session data
-            session_data = self.memory.load_session() or {}
-            conversation_history = session_data.get("conversation_history", [])
-            session_state = session_data.get("session_state", {})
-
-            # Step 2: Use NLU to understand user intent
-            nlu_result = self.nlu.analyze(user_message, conversation_history)
-
-            # Step 3: Use LLM to make routing decision
-            routing_decision = self._make_routing_decision(nlu_result, session_state, conversation_history)
-
-            # Step 4: Update session state
-            updated_session_state = self._update_session_state(session_state, nlu_result, routing_decision)
-
-            # Step 5: Save to memory
-            self.memory.add_conversation_turn(
-                role="user",
-                content=user_message,
-                nlu_analysis=nlu_result,
-                routing_decision=routing_decision
-            )
-
-            # Save updated session state
-            conversation_history.append({
-                "role": "user",
-                "content": user_message,
-                "timestamp": datetime.now().isoformat()
-            })
-
-            self.memory.save(
-                conversation_history=conversation_history,
-                session_state=updated_session_state,
-                nlu_history=session_data.get("nlu_history", []),
-                routing_history=session_data.get("routing_history", []),
-                config=session_data.get("config", {})
-            )
-
-            # Step 6: Prepare context for agent execution
-            agent_context = self._prepare_agent_context(updated_session_state, nlu_result, routing_decision)
-
-            # Step 7: Prepare response
-            response = {
-                "session_id": self.current_session_id,
-                "routing_decision": routing_decision,
-                "nlu_analysis": nlu_result,
-                "session_state": updated_session_state,
-                "agent_context": agent_context,
-                "mcp_available": self.mcp_client is not None,
-                "success": True
-            }
-
-            return response
-
-        except Exception as e:
-            # Error handling
-            error_response = {
-                "session_id": self.current_session_id,
-                "error": str(e),
-                "routing_decision": {
-                    "next_agent": "CLARIFY",
-                    "confidence": 0.0,
-                    "reasoning": f"Error occurred during processing: {str(e)}",
-                    "priority_actions": ["handle_error", "ask_for_clarification"],
-                    "context_transfer": {}
-                },
-                "success": False
-            }
-
-            return error_response
-
-    def _prepare_agent_context(self, session_state: Dict, nlu_result: Dict, routing_decision: Dict) -> Dict[str, Any]:
-        """
-        Prepare context for agent execution including MCP client access.
-
-        Args:
-            session_state (Dict): Current session state
-            nlu_result (Dict): NLU analysis
-            routing_decision (Dict): Routing decision
-
-        Returns:
-            Dict: Complete context for agent execution
-        """
-        return {
-            "session_id": self.current_session_id,
-            "entities": session_state.get("entities", {}),
-            "user_journey": session_state.get("user_journey"),
-            "nlu_analysis": nlu_result,
-            "priority_actions": routing_decision.get("priority_actions", []),
-            "context_transfer": routing_decision.get("context_transfer", {}),
-            "conversation_history": self.memory.get_context_for_agent(
-                routing_decision.get("next_agent", "BUY")
-            ).get("conversation_history", []),
-            "mcp_client_available": self.mcp_client is not None
-        }
-
-    def get_agent_context(self, agent_type: str) -> Dict[str, Any]:
-        """
-        Get context for a specific agent to execute, including MCP client.
-
-        Args:
-            agent_type (str): Type of agent (BUY, ORDER, RECOMMEND, RETURN)
-
-        Returns:
-            Dict: Context data for the agent
-        """
-        base_context = self.memory.get_context_for_agent(agent_type)
-        base_context["mcp_client_available"] = self.mcp_client is not None
-        return base_context
-
-    def add_agent_response(self, agent_type: str, response: str) -> None:
-        """
-        Add agent response to conversation history.
-
-        Args:
-            agent_type (str): Type of agent that responded
-            response (str): Agent's response
-        """
-        self.memory.add_conversation_turn(
-            role="agent",
-            content=f"[{agent_type}] {response}"
-        )
-
-    def cleanup(self):
-        """
-        Clean up resources including MCP client connection.
-        """
-        if self.mcp_client:
-            try:
-                if hasattr(self.mcp_client, 'disconnect'):
-                    self.mcp_client.disconnect()
-                elif hasattr(self.mcp_client, 'close'):
-                    self.mcp_client.close()
-                print("[INFO] MCP client disconnected.")
-            except Exception as e:
-                print(f"[WARN] Error disconnecting MCP client: {e}")
-
-    # ... (keeping all the existing methods unchanged)
-
-    def _make_routing_decision(self, nlu_result: Dict[str, Any],
-                               session_state: Dict[str, Any],
-                               conversation_history: List[Dict]) -> Dict[str, Any]:
-        """
-        Use LLM to make intelligent routing decisions.
-
-        Args:
-            nlu_result (Dict): NLU analysis of user message
-            session_state (Dict): Current session state
-            conversation_history (List): Conversation history
-
-        Returns:
-            Dict: Routing decision with agent choice and reasoning
-        """
-        # Prepare context for LLM
-        recent_conversation = self._format_recent_conversation(conversation_history)
-        session_state_summary = self._summarize_session_state(session_state)
-
-        # Create prompt for LLM
-        user_prompt = PLANNER_USER_PROMPT_TEMPLATE.format(
-            nlu_result=json.dumps(nlu_result, indent=2),
-            session_state=session_state_summary,
-            recent_conversation=recent_conversation
-        )
-
-        # Combine system and user prompts
-        full_prompt = f"{PLANNER_SYSTEM_PROMPT}\n\n{user_prompt}"
-
-        # Get LLM response
-        llm_response = self.llm_client.generate(full_prompt)
-
-        # Parse LLM response
-        try:
-            routing_decision = self._parse_routing_response(llm_response, nlu_result)
-        except Exception as e:
-            # Fallback to simple intent-based routing
-            routing_decision = self._fallback_routing(nlu_result)
-
-        return routing_decision
-
-    def _parse_routing_response(self, llm_response: str, nlu_result: Dict) -> Dict[str, Any]:
-        """
-        Parse the LLM routing response into structured data.
-
-        Args:
-            llm_response (str): Raw LLM response
-            nlu_result (Dict): Original NLU result for fallback
-
-        Returns:
-            Dict: Parsed routing decision
-        """
-        # Handle fallback responses
-        if llm_response.startswith("[LLM-FALLBACK]"):
-            return self._fallback_routing(nlu_result)
-
-        try:
-            # Clean response and extract JSON
-            response = llm_response.strip()
-
-            if response.startswith('```json'):
-                response = response[7:]
-            elif response.startswith('```'):
-                response = response[3:]
-
-            if response.endswith('```'):
-                response = response[:-3]
-
-            response = response.strip()
-
-            # Find JSON
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-
-            if json_start == -1:
-                raise ValueError("No JSON found in response")
-
-            json_str = response[json_start:json_end]
-            decision = json.loads(json_str)
-
-            # Validate decision structure
-            return self._validate_routing_decision(decision)
-
-        except Exception as e:
-            # If parsing fails, use fallback
-            return self._fallback_routing(nlu_result)
-
-    def _validate_routing_decision(self, decision: Dict) -> Dict[str, Any]:
-        """
-        Validate and clean routing decision from LLM.
-
-        Args:
-            decision (Dict): Raw decision from LLM
-
-        Returns:
-            Dict: Validated routing decision
-        """
-        # Ensure required fields exist
-        validated = {}
-
-        # Validate next_agent
-        next_agent = decision.get("next_agent", "CLARIFY")
-        valid_agents = self.available_agents + ["CLARIFY"]
-        validated["next_agent"] = next_agent if next_agent in valid_agents else "CLARIFY"
-
-        # Validate confidence
-        confidence = decision.get("confidence", 0.5)
-        try:
-            validated["confidence"] = max(0.0, min(1.0, float(confidence)))
-        except (ValueError, TypeError):
-            validated["confidence"] = 0.5
-
-        # Other fields
-        validated["reasoning"] = decision.get("reasoning", "Routing decision made")
-        validated["priority_actions"] = decision.get("priority_actions", []) if isinstance(
-            decision.get("priority_actions"), list) else []
-        validated["context_transfer"] = decision.get("context_transfer", {}) if isinstance(
-            decision.get("context_transfer"), dict) else {}
-
-        return validated
-
-    def _fallback_routing(self, nlu_result: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Simple fallback routing based on NLU intent when LLM fails.
-
-        Args:
-            nlu_result (Dict): NLU analysis result
-
-        Returns:
-            Dict: Basic routing decision
-        """
-        intent = nlu_result.get("intent", "BUY")
-        confidence = nlu_result.get("confidence", 0.5)
-
-        # Map intent to agent
-        agent_mapping = {
-            "BUY": "BUY",
-            "ORDER": "ORDER",
-            "RECOMMEND": "RECOMMEND",
-            "RETURN": "RETURN"
-        }
-
-        next_agent = agent_mapping.get(intent, "BUY")
-
-        return {
-            "next_agent": next_agent,
-            "confidence": confidence * 0.8,  # Lower confidence for fallback
-            "reasoning": f"Fallback routing based on NLU intent: {intent}",
-            "priority_actions": [f"handle_{intent.lower()}_request"],
-            "context_transfer": {
-                "key_entities": nlu_result.get("entities", {}),
-                "user_state": f"fallback_routing_for_{intent.lower()}"
-            }
-        }
-
-    def _update_session_state(self, current_state: Dict[str, Any],
-                              nlu_result: Dict, routing_decision: Dict) -> Dict[str, Any]:
-        """
-        Update the session state with new information.
-
-        Args:
-            current_state (Dict): Current session state
-            nlu_result (Dict): NLU analysis
-            routing_decision (Dict): Routing decision made
-
-        Returns:
-            Dict: Updated session state
-        """
-        # Create updated state
-        updated_state = current_state.copy()
-
-        # Update current agent
-        updated_state["current_agent"] = routing_decision["next_agent"]
-        updated_state["last_update"] = datetime.now().isoformat()
-
-        # Merge entities from NLU
-        current_entities = updated_state.get("entities", {})
-        new_entities = nlu_result.get("entities", {})
-
-        for key, value in new_entities.items():
-            if value is not None:
-                current_entities[key] = value
-
-        updated_state["entities"] = current_entities
-
-        # Update user journey based on agent
-        journey_mapping = {
-            "BUY": "product_search",
-            "ORDER": "order_management",
-            "RECOMMEND": "getting_recommendations",
-            "RETURN": "return_process",
-            "CLARIFY": "needs_clarification"
-        }
-
-        updated_state["user_journey"] = journey_mapping.get(
-            routing_decision["next_agent"],
-            "unknown"
-        )
-
-        return updated_state
-
-    def _format_recent_conversation(self, conversation_history: List[Dict], max_entries: int = 6) -> str:
-        """
-        Format recent conversation history for LLM context.
-
-        Args:
-            conversation_history (List): Complete conversation history
-            max_entries (int): Maximum number of conversation entries to include
-
-        Returns:
-            str: Formatted conversation history
-        """
-        if not conversation_history:
-            return "No previous conversation in this session."
-
-        recent = conversation_history[-max_entries:]
-        formatted = []
-
-        for entry in recent:
-            role = entry.get("role", "unknown")
-            content = entry.get("content", "")
-            formatted.append(f"{role}: {content}")
-
-        return "\n".join(formatted)
-
-    def _summarize_session_state(self, session_state: Dict[str, Any]) -> str:
-        """
-        Create a concise summary of current session state.
-
-        Args:
-            session_state (Dict): Current session state
-
-        Returns:
-            str: Session state summary
-        """
-        summary_parts = [
-            f"Session ID: {session_state.get('session_id', 'unknown')}",
-            f"Current Agent: {session_state.get('current_agent', 'none')}",
-            f"User Journey: {session_state.get('user_journey', 'initial')}",
-            f"Status: {session_state.get('completion_status', 'active')}"
+        # Add nodes with their properties
+        nodes = [
+            ("NLU", {"kind": "system", "description": "Intent analysis"}),
+            ("RECOMMEND", {"agent": "RecommendationAgent", "description": "Product recommendations"}),
+            ("BUY", {"agent": "BuyAgent", "description": "Product search and purchase"}),
+            ("ORDER", {"agent": "OrderAgent", "description": "Order tracking and management"}),
+            ("RETURN", {"agent": "ReturnAgent", "description": "Returns and exchanges"}),
+            ("CLARIFY", {"kind": "system", "description": "Request clarification"}),
+            ("DONE", {"kind": "terminal", "description": "Conversation complete"})
         ]
 
-        # Add key entities if present
-        entities = session_state.get("entities", {})
-        non_null_entities = {k: v for k, v in entities.items() if v is not None}
-        if non_null_entities:
-            summary_parts.append(f"Key Entities: {json.dumps(non_null_entities)}")
+        for node_id, attrs in nodes:
+            self.graph.add_node(node_id, **attrs)
 
-        return "\n".join(summary_parts)
+        # Add edges with transition conditions
+        edges = [
+            # From NLU - initial routing based on intent
+            ("NLU", "RECOMMEND", {"condition": "intent_recommend", "priority": 1}),
+            ("NLU", "BUY", {"condition": "intent_buy", "priority": 1}),
+            ("NLU", "ORDER", {"condition": "intent_order", "priority": 1}),
+            ("NLU", "RETURN", {"condition": "intent_return", "priority": 1}),
+            ("NLU", "CLARIFY", {"condition": "intent_unclear", "priority": 0}),
 
-    def get_session_info(self) -> Dict[str, Any]:
+            # From RECOMMEND
+            ("RECOMMEND", "BUY", {"condition": "wants_to_buy", "priority": 2}),
+            ("RECOMMEND", "CLARIFY", {"condition": "needs_more_info", "priority": 1}),
+            ("RECOMMEND", "DONE", {"condition": "satisfied_with_recommendations", "priority": 1}),
+
+            # From BUY
+            ("BUY", "ORDER", {"condition": "purchase_initiated", "priority": 2}),
+            ("BUY", "RECOMMEND", {"condition": "needs_recommendations", "priority": 1}),
+            ("BUY", "CLARIFY", {"condition": "missing_requirements", "priority": 1}),
+            ("BUY", "DONE", {"condition": "purchase_complete", "priority": 2}),
+
+            # From ORDER
+            ("ORDER", "RETURN", {"condition": "wants_return", "priority": 2}),
+            ("ORDER", "BUY", {"condition": "wants_more_items", "priority": 1}),
+            ("ORDER", "CLARIFY", {"condition": "missing_order_info", "priority": 1}),
+            ("ORDER", "DONE", {"condition": "order_resolved", "priority": 2}),
+
+            # From RETURN
+            ("RETURN", "BUY", {"condition": "wants_replacement", "priority": 1}),
+            ("RETURN", "CLARIFY", {"condition": "missing_return_info", "priority": 1}),
+            ("RETURN", "DONE", {"condition": "return_complete", "priority": 2}),
+
+            # From CLARIFY - can go anywhere based on clarification
+            ("CLARIFY", "BUY", {"condition": "clarified_buy", "priority": 1}),
+            ("CLARIFY", "ORDER", {"condition": "clarified_order", "priority": 1}),
+            ("CLARIFY", "RETURN", {"condition": "clarified_return", "priority": 1}),
+            ("CLARIFY", "RECOMMEND", {"condition": "clarified_recommend", "priority": 1}),
+            ("CLARIFY", "DONE", {"condition": "user_done", "priority": 1})
+        ]
+
+        for src, dst, attrs in edges:
+            self.graph.add_edge(src, dst, **attrs)
+
+    def _get_or_create_agent(self, agent_type: str):
+        """Get or create agent instance."""
+        if agent_type in self._agents:
+            return self._agents[agent_type]
+
+        try:
+            if agent_type == "BuyAgent":
+                from agents.buy_agent import BuyAgent
+                agent = BuyAgent(verbose=True)
+            elif agent_type == "OrderAgent":
+                from agents.order_agent import OrderAgent
+                agent = OrderAgent(llm_client=self.llm_client)
+            elif agent_type == "RecommendationAgent":
+                from agents.recommendation_agent import RecommendationAgent
+                agent = RecommendationAgent(llm_client=self.llm_client)
+            elif agent_type == "ReturnAgent":
+                from agents.return_agent import ReturnAgent
+                agent = ReturnAgent(llm_client=self.llm_client)
+            else:
+                return None
+
+            self._agents[agent_type] = agent
+            return agent
+
+        except ImportError:
+            print(f"[WARN] Could not import {agent_type}")
+            return None
+
+    def route_from_nlu(self, world_state: WorldState) -> str:
         """
-        Get current session information.
+        Determine initial routing based on NLU intent.
+
+        Args:
+            world_state: Current world state with NLU analysis
 
         Returns:
-            Dict: Current session info
+            Next node to transition to
         """
-        if not self.current_session_id:
-            return {"error": "No active session"}
+        intent = world_state.get("intent", "").upper()
+        confidence = world_state.get("confidence", 0.0)
 
-        session_data = self.memory.load_session()
-        if not session_data:
-            return {"error": "Session data not found"}
+        # Low confidence means unclear intent
+        if confidence < 0.6:
+            return "CLARIFY"
 
-        session_state = session_data.get("session_state", {})
-        conversation_history = session_data.get("conversation_history", [])
-
-        return {
-            "session_id": self.current_session_id,
-            "session_state": session_state,
-            "conversation_length": len(conversation_history),
-            "current_agent": session_state.get("current_agent"),
-            "user_journey": session_state.get("user_journey"),
-            "mcp_available": self.mcp_client is not None
+        # Map intents to nodes
+        intent_mapping = {
+            "BUY": "BUY",
+            "PURCHASE": "BUY",
+            "SEARCH": "BUY",
+            "ORDER": "ORDER",
+            "TRACK": "ORDER",
+            "STATUS": "ORDER",
+            "RECOMMEND": "RECOMMEND",
+            "SUGGESTION": "RECOMMEND",
+            "RETURN": "RETURN",
+            "EXCHANGE": "RETURN",
+            "REFUND": "RETURN"
         }
 
+        return intent_mapping.get(intent, "CLARIFY")
 
-def test_planner_with_mcp():
-    """
-    Test the Planner Agent with MCP client integration.
-    """
-    print("🧪 Testing Planner Agent with MCP Integration")
-    print("=" * 50)
+    def evaluate_transition_condition(self, condition: str,
+                                      last_result: Dict[str, Any],
+                                      world_state: WorldState) -> bool:
+        """
+        Evaluate whether a transition condition is met.
 
-    # Initialize planner with MCP client (server_command is ignored for HTTP client)
-    planner = PlannerAgent()
+        Args:
+            condition: Condition string to evaluate
+            last_result: Result from last agent execution
+            world_state: Current world state
 
-    test_messages = [
-        "I want to buy a laptop under $1500",
-        "What tools do you have available?",  # This could use MCP tools
-        "Track my order #12345"
-    ]
+        Returns:
+            True if condition is met
+        """
+        agent_status = last_result.get("status", "UNKNOWN")
+        proposed_next = last_result.get("proposed_next", [])
 
-    try:
-        # Start a test session
-        session_id = planner.start_session("test_session_with_mcp")
-        print(f"Started session: {session_id}")
+        # Map conditions to boolean logic
+        condition_map = {
+            # Intent-based conditions (from NLU)
+            "intent_buy": world_state.get("intent", "").upper() in ["BUY", "PURCHASE", "SEARCH"],
+            "intent_order": world_state.get("intent", "").upper() in ["ORDER", "TRACK", "STATUS"],
+            "intent_return": world_state.get("intent", "").upper() in ["RETURN", "EXCHANGE", "REFUND"],
+            "intent_recommend": world_state.get("intent", "").upper() in ["RECOMMEND", "SUGGESTION"],
+            "intent_unclear": world_state.get("confidence", 1.0) < 0.6,
 
-        for i, message in enumerate(test_messages, 1):
-            print(f"\n🔍 Test {i}: {message}")
+            # Agent result-based conditions
+            "wants_to_buy": "BUY" in proposed_next,
+            "needs_more_info": "CLARIFY" in proposed_next or agent_status == "NEEDS_INFO",
+            "satisfied_with_recommendations": "DONE" in proposed_next,
+            "purchase_initiated": "ORDER" in proposed_next or world_state.get("purchase_started", False),
+            "needs_recommendations": "RECOMMEND" in proposed_next,
+            "missing_requirements": "CLARIFY" in proposed_next,
+            "purchase_complete": "DONE" in proposed_next or world_state.get("purchase_complete", False),
+            "wants_return": "RETURN" in proposed_next,
+            "wants_more_items": "BUY" in proposed_next,
+            "missing_order_info": "CLARIFY" in proposed_next,
+            "order_resolved": "DONE" in proposed_next,
+            "wants_replacement": "BUY" in proposed_next,
+            "missing_return_info": "CLARIFY" in proposed_next,
+            "return_complete": "DONE" in proposed_next,
+            "user_done": "DONE" in proposed_next,
 
-            result = planner.process_user_message(message)
+            # Clarification conditions
+            "clarified_buy": "BUY" in proposed_next,
+            "clarified_order": "ORDER" in proposed_next,
+            "clarified_return": "RETURN" in proposed_next,
+            "clarified_recommend": "RECOMMEND" in proposed_next,
+        }
 
-            if result["success"]:
-                routing = result["routing_decision"]
-                print(f"   Next Agent: {routing['next_agent']}")
-                print(f"   Confidence: {routing['confidence']:.2f}")
-                print(f"   MCP Available: {result['mcp_available']}")
-                print(f"   Reasoning: {routing['reasoning']}")
+        return condition_map.get(condition, False)
 
-                # Test agent execution with MCP access
-                if routing["next_agent"] != "CLARIFY":
-                    agent_context = result["agent_context"]
-                    execution_result = planner.execute_agent_task(
-                        routing["next_agent"],
-                        agent_context
-                    )
-                    print(f"   Agent Execution Success: {execution_result['success']}")
-                    if execution_result["success"]:
-                        print(f"   MCP Tools Available to Agent: {execution_result['mcp_tools_available']}")
+    def step(self, node_name: str, world_state: WorldState) -> Dict[str, Any]:
+        """
+        Execute a single step in the conversation graph.
+
+        Args:
+            node_name: Current node to execute
+            world_state: Current world state
+
+        Returns:
+            Result dictionary with status and proposed next steps
+        """
+        node_attrs = self.graph.nodes[node_name]
+
+        # Terminal node
+        if node_name == "DONE":
+            return make_result("Planner", "SUCCESS", proposed_next=["DONE"], changes={})
+
+        # System nodes
+        if node_attrs.get("kind") == "system":
+            if node_name == "NLU":
+                next_node = self.route_from_nlu(world_state)
+                return make_result("Planner", "SUCCESS",
+                                   proposed_next=[next_node], changes={})
+            elif node_name == "CLARIFY":
+                return make_result("Planner", "NEEDS_INFO",
+                                   proposed_next=["CLARIFY"],
+                                   changes={"message": "Could you please clarify what you'd like to do?"})
+
+        # Agent nodes
+        agent_type = node_attrs.get("agent")
+        if agent_type:
+            agent = self._get_or_create_agent(agent_type)
+            if agent:
+                try:
+                    # Execute agent with world state
+                    if hasattr(agent, 'execute'):
+                        result = agent.execute(world_state.to_dict())
+                    elif hasattr(agent, 'handle'):
+                        # For BuyAgent compatibility
+                        user_message = world_state.get("user_message", "")
+                        result = agent.handle(user_message)
+                        # Convert to standard format
+                        result = make_result(agent_type, "SUCCESS",
+                                             proposed_next=["DONE"], changes={})
+                    else:
+                        result = make_result(agent_type, "ERROR",
+                                             proposed_next=["CLARIFY"],
+                                             changes={},
+                                             error="Agent has no execute/handle method")
+                    return result
+                except Exception as e:
+                    return make_result(agent_type, "FAILED",
+                                       proposed_next=["CLARIFY"],
+                                       changes={},
+                                       error=str(e))
             else:
-                print(f"   Error: {result['error']}")
+                return make_result("Planner", "FAILED",
+                                   proposed_next=["CLARIFY"],
+                                   changes={},
+                                   error=f"Could not create {agent_type}")
 
-        # Show session summary
-        session_info = planner.get_session_info()
-        print(f"\n📊 Session Summary:")
-        print(f"   Current Agent: {session_info['current_agent']}")
-        print(f"   User Journey: {session_info['user_journey']}")
-        print(f"   MCP Available: {session_info['mcp_available']}")
+        # Fallback
+        return make_result("Planner", "ERROR",
+                           proposed_next=["CLARIFY"],
+                           changes={},
+                           error=f"Unknown node type: {node_name}")
 
-    finally:
-        # Clean up
-        planner.cleanup()
+    def next_node(self, current_node: str, last_result: Dict[str, Any],
+                  world_state: WorldState) -> str:
+        """
+        Determine the next node based on current state and last result.
 
-    print("\n✅ Planner Agent with MCP Testing Complete!")
+        Args:
+            current_node: Current node name
+            last_result: Result from executing current node
+            world_state: Current world state
 
+        Returns:
+            Next node name to transition to
+        """
+        # Get all possible transitions from current node
+        possible_transitions = []
 
-if __name__ == "__main__":
-    test_planner_with_mcp()
+        for _, dst_node, edge_attrs in self.graph.out_edges(current_node, data=True):
+            condition = edge_attrs.get("condition", "")
+            priority = edge_attrs.get("priority", 0)
+
+            if self.evaluate_transition_condition(condition, last_result, world_state):
+                possible_transitions.append((dst_node, priority))
+
+        # Choose highest priority transition
+        if possible_transitions:
+            possible_transitions.sort(key=lambda x: x[1], reverse=True)
+            return possible_transitions[0][0]
+
+        # Fallback to DONE if no valid transitions
+        return "DONE"
+
+    def run_plan(self, user_message: str) -> Dict[str, Any]:
+        """
+        Execute a complete planning cycle for a user message.
+
+        Args:
+            user_message: User's input message
+
+        Returns:
+            Complete execution result with steps and final state
+        """
+        # Reset world state for new conversation
+        self.world_state = WorldState()
+        self.world_state.set("user_message", user_message)
+
+        # Step 1: NLU Analysis
+        try:
+            nlu_result = self.nlu.analyze(user_message, [])
+            self.world_state.merge({
+                "intent": nlu_result.get("intent", ""),
+                "confidence": nlu_result.get("confidence", 0.0),
+                "entities": nlu_result.get("entities", {}),
+                "nlu_analysis": nlu_result
+            })
+        except Exception as e:
+            print(f"[WARN] NLU analysis failed: {e}")
+            self.world_state.merge({
+                "intent": "CLARIFY",
+                "confidence": 0.0,
+                "entities": {},
+                "nlu_analysis": {"error": str(e)}
+            })
+
+        # Step 2: Execute graph traversal
+        current_node = "NLU"
+        steps = []
+        safety_counter = 0
+
+        while current_node != "DONE" and safety_counter < 12:
+            safety_counter += 1
+
+            # Execute current node
+            result = self.step(current_node, self.world_state)
+
+            # Merge changes into world state
+            changes = result.get("changes", {})
+            self.world_state.merge(changes)
+
+            # Record step
+            steps.append({
+                "node": current_node,
+                "result": result,
+                "world_state_snapshot": dict(self.world_state)
+            })
+
+            # Check for failure
+            if result.get("status") == "FAILED":
+                print(f"[ERROR] Step failed at {current_node}: {result.get('error', 'Unknown error')}")
+                break
+
+            # Determine next node
+            current_node = self.next_node(current_node, result, self.world_state)
+
+        # Add terminal step
+        if current_node == "DONE":
+            terminal_result = make_result("Planner", "SUCCESS",
+                                          proposed_next=["DONE"], changes={})
+            steps.append({
+                "node": "DONE",
+                "result": terminal_result,
+                "world_state_snapshot": dict(self.world_state)
+            })
+
+        # Determine final goal/outcome
+        goal = self._infer_conversation_goal(self.world_state, safety_counter >= 12)
+
+        return {
+            "steps": steps,
+            "final_state": dict(self.world_state),
+            "goal": goal,
+            "success": safety_counter < 12,
+            "total_steps": len(steps)
+        }
+
+    def _infer_conversation_goal(self, world_state: WorldState, aborted: bool) -> str:
+        """Infer the final conversation goal based on world state."""
+        if aborted:
+            return "aborted_max_steps"
+
+        if world_state.get("purchase_complete"):
+            return "purchase_completed"
+        elif world_state.get("order_resolved"):
+            return "order_resolved"
+        elif world_state.get("return_complete"):
+            return "return_completed"
+        elif world_state.get("recommendations_provided"):
+            return "recommendations_provided"
+        else:
+            return "conversation_ended"
+
+    def get_graph_info(self) -> Dict[str, Any]:
+        """Get information about the conversation graph."""
+        return {
+            "total_nodes": len(self.graph.nodes),
+            "total_edges": len(self.graph.edges),
+            "nodes": list(self.graph.nodes(data=True)),
+            "edges": list(self.graph.edges(data=True))
+        }
