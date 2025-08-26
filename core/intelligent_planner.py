@@ -177,7 +177,7 @@ class IntelligentPlanner:
             "status": "gathering_specifications",
             "action": "continue_gathering",
             "specifications_needed": missing_specs,
-            "specifications_gathered": self.spec_handler.gathered_specs,
+            "specifications_gathered": self.spec_handler.gathered_specs,  # FIX: Always include current specs
             "goal_progress": min(0.7, len([s for s in self.spec_handler.required_specs.values() if s]) / len(
                 self.spec_handler.required_specs))
         }
@@ -192,7 +192,7 @@ class IntelligentPlanner:
             "status": "gathering_specifications",
             "action": "clarify_specs",
             "specifications_needed": missing_specs,
-            "specifications_gathered": self.spec_handler.gathered_specs
+            "specifications_gathered": self.spec_handler.gathered_specs  # FIX: Always include current specs
         }
 
     def _move_to_confirmation(self) -> Dict[str, Any]:

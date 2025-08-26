@@ -78,9 +78,12 @@ class SessionManager:
         """Increment conversation turns counter."""
         self.conversation_turns += 1
 
-    def get_session_info(self, intent_tracker) -> Dict[str, Any]:
+    def get_session_info(self, intent_tracker=None) -> Dict[str, Any]:
         """Get comprehensive session information with enhanced goal tracking."""
-        current_intent = intent_tracker.get_current_intent()
+        current_intent = None
+        if intent_tracker:
+            current_intent = intent_tracker.get_current_intent()
+
         context_summary = self.context_manager.get_context_summary()
 
         goal_info = None
@@ -140,6 +143,6 @@ class SessionManager:
             "status": "conversation_ended",
             "reason": reason,
             "business_outcome": business_outcome,
-            "session_summary": self.get_session_info(None),  # Will need intent_tracker if called
+            "session_summary": self.get_session_info(),  # Now works without intent_tracker
             "final_satisfaction_level": "high" if self.satisfaction_signals_detected > 1 else "moderate"
         }

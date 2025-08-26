@@ -89,7 +89,7 @@ class SpecificationHandler:
                     self.required_specs[spec_name] = "flexible"
                     self.gathered_specs[spec_name] = "flexible"
                     context_manager.add_fact(spec_name, "flexible", "user")
-            return {"all_specs_flexible": True}
+            return {"all_specs_flexible": True, "missing_specs": []}
 
         # Map NLU entities to standard specification names
         mapped_entities = SpecificationSchema.map_entities_to_specs(nlu_entities)
@@ -107,10 +107,14 @@ class SpecificationHandler:
                 context_manager.add_fact(spec_name, value, "user")
                 specs_updated = True
 
+        missing_specs = [spec for spec, value in self.required_specs.items() if not value]
+
         return {
             "specs_updated": specs_updated,
-            "missing_specs": [spec for spec, value in self.required_specs.items() if not value]
+            "missing_specs": missing_specs,
+            "gathered_specs": self.gathered_specs.copy()  # FIX: Include current specs in response
         }
+
 
     def generate_specification_questions(self, needed_specs: List[str]) -> str:
         """Generate intelligent, business-aware questions for needed specifications using schema."""

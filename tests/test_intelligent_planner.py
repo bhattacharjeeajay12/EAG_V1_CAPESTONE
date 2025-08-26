@@ -34,7 +34,10 @@ def test_enhanced_specification_handling():
     print(f"User Message: {user_message}")
     response2 = planner.process_user_message(user_message)
     print(f"   Status: {response2['status']}")
-    print(f"   Specs Gathered: {response2.get('specifications_gathered', {})}")
+
+    # FIX: Get specs from the spec_handler directly instead of response
+    current_specs = planner.spec_handler.gathered_specs
+    print(f"   Specs Gathered: {current_specs}")
     print(f"   Remaining Specs: {response2.get('specifications_needed', [])}")
 
     # Test 4: User says "no preference" for remaining specs
@@ -44,8 +47,10 @@ def test_enhanced_specification_handling():
     response3 = planner.process_user_message(user_message)
     print(f"   Status: {response3['status']}")
     print(f"   Action: {response3.get('action')}")
-    if response3.get('gathered_specifications'):
-        print(f"   Final Specs: {response3['gathered_specifications']}")
+
+    # FIX: Get final specs from spec_handler
+    final_specs = planner.spec_handler.gathered_specs
+    print(f"   Final Specs: {final_specs}")
 
     # Test 5: Schema validation test
     print("\n5️⃣ Testing specification schema:")
@@ -124,6 +129,9 @@ def test_intelligent_planner():
     print(f"   Action: {response2.get('action')}")
     print(f"   Goal Progress: {response2.get('goal_progress', 0):.1f}")
     print(f"   Satisfaction Signals: {planner.session_manager.satisfaction_signals_detected}")
+
+    # FIX: Show actual gathered specs
+    print(f"   Specs Gathered: {planner.spec_handler.gathered_specs}")
 
     # Test 4: User confirms requirements
     print("\n4️⃣ User confirms requirements:")
