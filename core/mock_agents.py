@@ -1,22 +1,21 @@
 # core/mock_agents.py
 """
-Mock Agent Manager - Realistic Agent Simulations
+Mock Agent Manager - Realistic Agent Simulations with Discovery Agent
 
-Purpose: Provides realistic mock implementations of all agents that will be used
-by the Intelligent Planner. These mocks return exactly the same structure and
-data types that real agents would return, making integration seamless.
+Purpose: Provides realistic mock implementations of all agents including the new
+Discovery Agent. The Discovery Agent uses dual-mode logic to provide both
+search and recommendation capabilities based on user specificity.
 
 Available Agents:
-- BuyAgent: Product search, recommendations, purchase processing
-- RecommendAgent: Personalized product suggestions and comparisons
+- DiscoveryAgent: Dual-mode product discovery (search-first vs recommend-first)
 - OrderAgent: Order tracking, status updates, modification handling
 - ReturnAgent: Return processing, refund handling, exchange management
 """
 
-import json
 import random
 from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
+from agents.discovery_agent import DiscoveryAgent, DiscoveryRequest, UserSpecificity
 
 
 class MockAgentManager:
@@ -28,6 +27,9 @@ class MockAgentManager:
         """Initialize mock agent manager with sample data."""
         self.sample_products = self._initialize_sample_products()
         self.sample_orders = self._initialize_sample_orders()
+
+        # Initialize Discovery Agent with product database
+        self.discovery_agent = DiscoveryAgent(self.sample_products)
 
     def call_agent(self, agent_type: str, params: Dict[str, Any],
                    context: Dict[str, Any]) -> Dict[str, Any]:
@@ -43,8 +45,7 @@ class MockAgentManager:
             Agent response exactly as real agent would return
         """
         agent_methods = {
-            "BuyAgent": self._mock_buy_agent,
-            "RecommendAgent": self._mock_recommend_agent,
+            "DiscoveryAgent": self._mock_discovery_agent,
             "OrderAgent": self._mock_order_agent,
             "ReturnAgent": self._mock_return_agent
         }
@@ -57,79 +58,68 @@ class MockAgentManager:
         except Exception as e:
             return self._create_error_response(f"Agent {agent_type} error: {str(e)}")
 
-    def _mock_buy_agent(self, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Mock Buy Agent - handles product search and purchase processing."""
+    def _mock_discovery_agent(self, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Mock Discovery Agent - handles dual-mode product discovery."""
 
-        query = params.get("query", "")
+        # Extract parameters
         category = params.get("category", "electronics")
+        subcategory = params.get("subcategory", "")
+        specifications = params.get("specifications", {})
         budget = params.get("budget")
-        specifications = params.get("specifications", [])
+        user_message = params.get("user_message", "")
+        discovery_mode = params.get("discovery_mode", "auto")
 
-        # Determine search context from query and conversation context
-        search_context = self._extract_search_context(query, context)
-
-        # Find matching products
-        matching_products = self._find_matching_products(search_context, category, budget)
-
-        if not matching_products:
+        if not subcategory:
             return {
-                "status": "no_results",
-                "products_found": 0,
-                "message": "No products found matching your criteria",
-                "user_message": "I couldn't find any products matching your requirements. Could you try broadening your search criteria?",
-                "search_performed": True,
-                "suggestions": ["Try a higher budget", "Consider different brands", "Look at alternative categories"]
+                "status": "missing_info",
+                "user_message": "I need to know what specific product category you're interested in. Could you be more specific?",
+                "discovery_performed": False,
+                "required_info": ["subcategory"]
             }
 
-        # Select top recommendations
-        top_products = matching_products[:3]
+        # Determine user specificity and discovery mode if auto
+        if discovery_mode == "auto":
+            user_specificity, determined_mode = self.discovery_agent.determine_user_specificity(
+                {"specifications": specifications, "budget": budget},
+                user_message
+            )
+        else:
+            user_specificity = UserSpecificity.MODERATE
+            determined_mode = discovery_mode
 
+        # Create discovery request
+        discovery_request = DiscoveryRequest(
+            category=category,
+            subcategory=subcategory,
+            specifications=specifications,
+            budget=budget,
+            user_specificity=user_specificity,
+            discovery_mode=determined_mode,
+            use_case=params.get("use_case"),
+            preferences=params.get("preferences", [])
+        )
+
+        # Execute discovery
+        discovery_result = self.discovery_agent.discover_products(discovery_request)
+
+        # Format response for planner
         return {
-            "status": "success",
-            "products_found": len(matching_products),
-            "top_recommendations": top_products,
-            "search_query": search_context,
-            "category_searched": category,
-            "price_range_found": f"${min(p['price'] for p in matching_products)}-${max(p['price'] for p in matching_products)}",
-            "user_message": self._create_product_presentation_message(top_products, search_context),
-            "search_performed": True,
-            "filter_applied": {
-                "budget": budget,
-                "specifications": specifications,
-                "category": category
-            }
-        }
-
-    def _mock_recommend_agent(self, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Mock Recommend Agent - provides personalized recommendations."""
-
-        category = params.get("category", "general")
-        user_preferences = params.get("preferences", [])
-        comparison_mode = params.get("comparison", False)
-
-        # Get personalized recommendations based on context
-        recommendations = self._generate_personalized_recommendations(category, user_preferences, context)
-
-        if not recommendations:
-            return {
-                "status": "insufficient_data",
-                "recommendations": [],
-                "user_message": "I need more information about your preferences to provide good recommendations. What features are most important to you?",
-                "recommendation_performed": True
-            }
-
-        return {
-            "status": "success",
-            "recommendations": recommendations,
-            "recommendation_criteria": {
+            "status": discovery_result.status,
+            "discovery_mode": discovery_result.discovery_mode.value,
+            "user_specificity": user_specificity.value,
+            "products_found": discovery_result.total_found,
+            "search_results": discovery_result.search_results,
+            "recommendations": discovery_result.recommendations,
+            "user_message": discovery_result.user_message,
+            "next_actions": discovery_result.next_actions,
+            "refinement_suggestions": discovery_result.refinement_suggestions or [],
+            "discovery_performed": True,
+            "search_criteria": {
                 "category": category,
-                "user_preferences": user_preferences,
-                "personalization_applied": True
-            },
-            "comparison_available": len(recommendations) > 1,
-            "user_message": self._create_recommendation_message(recommendations, category),
-            "recommendation_performed": True,
-            "confidence_score": random.uniform(0.8, 0.95)
+                "subcategory": subcategory,
+                "specifications": specifications,
+                "budget": budget
+            }
         }
 
     def _mock_order_agent(self, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
@@ -139,12 +129,26 @@ class MockAgentManager:
         action = params.get("action", "track")  # track, modify, cancel
 
         if not order_id:
-            return {
-                "status": "missing_info",
-                "error": "Order ID required",
-                "user_message": "I need your order ID to help you. Could you provide your order number?",
-                "order_lookup_performed": False
-            }
+            # Try to extract from user context or show recent orders
+            user_orders = self._get_user_recent_orders(context)
+            if user_orders:
+                return {
+                    "status": "order_selection",
+                    "recent_orders": user_orders,
+                    "user_message": "I found your recent orders. Which one are you asking about?\n" +
+                                    "\n".join([
+                                                  f"• Order {order['order_id']} - {order['items'][0]['name']} (${order['total_amount']})"
+                                                  for order in user_orders[:5]]),
+                    "order_lookup_performed": True,
+                    "requires_selection": True
+                }
+            else:
+                return {
+                    "status": "missing_info",
+                    "error": "Order ID required",
+                    "user_message": "I need your order ID to help you. Could you provide your order number?",
+                    "order_lookup_performed": False
+                }
 
         # Simulate order lookup
         order_info = self._lookup_mock_order(order_id)
@@ -199,12 +203,27 @@ class MockAgentManager:
         items_to_return = params.get("items", [])
 
         if not order_id:
-            return {
-                "status": "missing_info",
-                "user_message": "I need your order ID to process the return. What's your order number?",
-                "return_initiated": False,
-                "required_info": ["order_id", "return_reason"]
-            }
+            # Show user's returnable orders
+            returnable_orders = self._get_returnable_orders(context)
+            if returnable_orders:
+                return {
+                    "status": "order_selection",
+                    "returnable_orders": returnable_orders,
+                    "user_message": "Here are your recent orders that can be returned:\n" +
+                                    "\n".join([f"• Order {order['order_id']} - {order['items'][0]['name']} "
+                                               f"(Ordered: {order['order_date']})"
+                                               for order in returnable_orders[:5]]) +
+                                    "\n\nWhich order would you like to return?",
+                    "return_initiated": False,
+                    "requires_selection": True
+                }
+            else:
+                return {
+                    "status": "missing_info",
+                    "user_message": "I need your order ID to process the return. What's your order number?",
+                    "return_initiated": False,
+                    "required_info": ["order_id", "return_reason"]
+                }
 
         # Look up order for return eligibility
         order_info = self._lookup_mock_order(order_id)
@@ -272,6 +291,18 @@ class MockAgentManager:
                 "description": "Professional laptop with Apple M3 chip"
             },
             {
+                "id": "laptop_003",
+                "name": "HP Pavilion Business Laptop",
+                "category": "electronics",
+                "subcategory": "laptop",
+                "price": 899,
+                "brand": "HP",
+                "specifications": ["business", "intel_i5", "8gb_ram", "lightweight"],
+                "rating": 4.2,
+                "in_stock": True,
+                "description": "Reliable business laptop with long battery life"
+            },
+            {
                 "id": "phone_001",
                 "name": "iPhone 15 Pro",
                 "category": "electronics",
@@ -282,6 +313,18 @@ class MockAgentManager:
                 "rating": 4.7,
                 "in_stock": True,
                 "description": "Latest iPhone with advanced camera system"
+            },
+            {
+                "id": "phone_002",
+                "name": "Samsung Galaxy S24",
+                "category": "electronics",
+                "subcategory": "smartphone",
+                "price": 899,
+                "brand": "Samsung",
+                "specifications": ["photography", "ai_features", "5g", "fast_charging"],
+                "rating": 4.6,
+                "in_stock": True,
+                "description": "Android flagship with AI photography"
             },
             {
                 "id": "headphones_001",
@@ -326,96 +369,35 @@ class MockAgentManager:
                 "total_amount": 399,
                 "order_date": "2024-12-25",
                 "estimated_delivery": "2024-12-30"
+            },
+            {
+                "order_id": "ORD456",
+                "status": "delivered",
+                "items": [{"name": "MacBook Pro M3", "quantity": 1, "price": 1999}],
+                "total_amount": 1999,
+                "order_date": "2024-12-10",
+                "delivery_date": "2024-12-18",
+                "tracking_number": "TRK111222333"
             }
         ]
 
-    def _extract_search_context(self, query: str, context: Dict[str, Any]) -> str:
-        """Extract meaningful search context from query and conversation."""
-        # Use query as primary context, enhance with conversation facts
-        search_terms = []
+    def _get_user_recent_orders(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Get user's recent orders from context or mock data."""
+        # In real implementation, this would fetch from user's order history
+        # For mock, return sample orders
+        return self.sample_orders[-3:]  # Return 3 most recent orders
 
-        if query:
-            search_terms.append(query.lower())
-
-        # Add context from conversation facts
-        facts = context.get("facts_by_source", {})
-        user_facts = facts.get("user", {})
-        nlu_facts = facts.get("nlu", {})
-
-        for fact_dict in [user_facts, nlu_facts]:
-            for key, value in fact_dict.items():
-                if key in ["category", "subcategory", "product", "brand"]:
-                    if value and str(value).lower() not in " ".join(search_terms):
-                        search_terms.append(str(value).lower())
-
-        return " ".join(search_terms) if search_terms else "general search"
-
-    def _find_matching_products(self, search_context: str, category: str, budget: Optional[str]) -> List[
-        Dict[str, Any]]:
-        """Find products matching search criteria."""
-        matching = []
-
-        # Extract budget number if provided
-        budget_limit = None
-        if budget:
-            import re
-            budget_numbers = re.findall(r'\d+', budget)
-            if budget_numbers:
-                budget_limit = int(budget_numbers[0])
-
-        for product in self.sample_products:
-            score = 0
-
-            # Category matching
-            if category.lower() in [product["category"].lower(), product["subcategory"].lower()]:
-                score += 2
-
-            # Search term matching
-            search_terms = search_context.lower().split()
-            product_text = f"{product['name']} {product['description']} {' '.join(product['specifications'])}".lower()
-
-            for term in search_terms:
-                if term in product_text:
-                    score += 1
-
-            # Budget filtering
-            if budget_limit and product["price"] > budget_limit:
-                continue
-
-            if score > 0:
-                product_copy = product.copy()
-                product_copy["match_score"] = score
-                matching.append(product_copy)
-
-        # Sort by match score
-        matching.sort(key=lambda x: x["match_score"], reverse=True)
-        return matching
-
-    def _generate_personalized_recommendations(self, category: str, preferences: List[str],
-                                               context: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Generate personalized product recommendations."""
-
-        # Filter products by category if specified
-        if category != "general":
-            candidates = [p for p in self.sample_products
-                          if category.lower() in [p["category"].lower(), p["subcategory"].lower()]]
-        else:
-            candidates = self.sample_products.copy()
-
-        # Score based on preferences
-        for product in candidates:
-            score = product.get("rating", 4.0)
-
-            # Boost score for preference matches
-            for pref in preferences:
-                if pref.lower() in " ".join(product["specifications"]).lower():
-                    score += 0.5
-
-            product["recommendation_score"] = score
-
-        # Sort and return top recommendations
-        candidates.sort(key=lambda x: x.get("recommendation_score", 0), reverse=True)
-        return candidates[:3]
+    def _get_returnable_orders(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Get user's orders eligible for return."""
+        # Filter orders that can be returned (delivered within return window)
+        returnable = []
+        for order in self.sample_orders:
+            if order["status"] == "delivered":
+                order_date = datetime.strptime(order["order_date"], "%Y-%m-%d")
+                days_since = (datetime.now() - order_date).days
+                if days_since <= 30:  # 30-day return window
+                    returnable.append(order)
+        return returnable
 
     def _lookup_mock_order(self, order_id: str) -> Optional[Dict[str, Any]]:
         """Look up order in mock database."""
@@ -471,44 +453,6 @@ class MockAgentManager:
                 "Track return progress online"
             ]
         }
-
-    def _create_product_presentation_message(self, products: List[Dict[str, Any]], search_context: str) -> str:
-        """Create user-friendly product presentation message."""
-
-        if len(products) == 1:
-            product = products[0]
-            return (f"I found a great option for you: {product['name']} by {product['brand']} "
-                    f"for ${product['price']}. It has {product['rating']}/5 stars and "
-                    f"includes {', '.join(product['specifications'][:3])}. Would you like more details?")
-
-        else:
-            product_list = []
-            for i, product in enumerate(products, 1):
-                product_list.append(f"{i}. {product['name']} - ${product['price']} ({product['rating']}/5 stars)")
-
-            return (f"I found {len(products)} great options for your search:\n\n" +
-                    "\n".join(product_list) +
-                    "\n\nWould you like more details about any of these, or shall I refine the search?")
-
-    def _create_recommendation_message(self, recommendations: List[Dict[str, Any]], category: str) -> str:
-        """Create user-friendly recommendation message."""
-
-        if not recommendations:
-            return f"I need more information about your preferences for {category} to provide good recommendations."
-
-        if len(recommendations) == 1:
-            rec = recommendations[0]
-            return (f"Based on your preferences, I recommend the {rec['name']} by {rec['brand']}. "
-                    f"It's ${rec['price']} and has excellent {rec['rating']}/5 star ratings. "
-                    f"It's perfect for {', '.join(rec['specifications'][:2])}.")
-
-        rec_list = []
-        for i, rec in enumerate(recommendations, 1):
-            rec_list.append(f"{i}. {rec['name']} - ${rec['price']} (Excellent for {rec['specifications'][0]})")
-
-        return (f"Here are my top recommendations for {category}:\n\n" +
-                "\n".join(rec_list) +
-                "\n\nEach of these matches your preferences well. Would you like detailed comparisons?")
 
     def _create_order_status_message(self, order_info: Dict[str, Any]) -> str:
         """Create user-friendly order status message."""
@@ -570,8 +514,8 @@ class MockAgentManager:
 
 def test_mock_agents():
     """Test all mock agents with various scenarios."""
-    print("🧪 Testing Mock Agent Manager")
-    print("=" * 60)
+    print("🧪 Testing Mock Agent Manager with Discovery Agent")
+    print("=" * 70)
 
     agent_manager = MockAgentManager()
 
@@ -584,25 +528,35 @@ def test_mock_agents():
         }
     }
 
-    # Test 1: Buy Agent
-    print("1️⃣ Testing BuyAgent:")
-    buy_result = agent_manager.call_agent("BuyAgent",
-                                          {"query": "gaming laptop", "budget": "under $1500"},
-                                          sample_context)
-    print(f"   Status: {buy_result['status']}")
-    print(f"   Products Found: {buy_result.get('products_found', 0)}")
-    if buy_result.get('top_recommendations'):
-        print(f"   Top Product: {buy_result['top_recommendations'][0]['name']}")
+    # Test 1: Discovery Agent - Specific user
+    print("1️⃣ Testing DiscoveryAgent (Specific User):")
+    discovery_result = agent_manager.call_agent("DiscoveryAgent",
+                                                {"category": "electronics",
+                                                 "subcategory": "laptop",
+                                                 "specifications": {"graphics": "rtx", "ram": "16gb"},
+                                                 "budget": "under $1500",
+                                                 "user_message": "Show me gaming laptops with RTX graphics and 16GB RAM under $1500"},
+                                                sample_context)
+    print(f"   Status: {discovery_result['status']}")
+    print(f"   Discovery Mode: {discovery_result['discovery_mode']}")
+    print(f"   User Specificity: {discovery_result['user_specificity']}")
+    print(f"   Products Found: {discovery_result.get('products_found', 0)}")
 
-    # Test 2: Recommend Agent
-    print("\n2️⃣ Testing RecommendAgent:")
-    rec_result = agent_manager.call_agent("RecommendAgent",
-                                          {"category": "smartphone", "preferences": ["photography"]},
-                                          sample_context)
-    print(f"   Status: {rec_result['status']}")
-    print(f"   Recommendations: {len(rec_result.get('recommendations', []))}")
+    # Test 2: Discovery Agent - Vague user
+    print("\n2️⃣ Testing DiscoveryAgent (Vague User):")
+    vague_result = agent_manager.call_agent("DiscoveryAgent",
+                                            {"category": "electronics",
+                                             "subcategory": "laptop",
+                                             "specifications": {},
+                                             "user_message": "I need a good laptop, can you recommend something?",
+                                             "use_case": "general use"},
+                                            sample_context)
+    print(f"   Status: {vague_result['status']}")
+    print(f"   Discovery Mode: {vague_result['discovery_mode']}")
+    print(f"   User Specificity: {vague_result['user_specificity']}")
+    print(f"   Recommendations: {len(vague_result.get('recommendations', []))}")
 
-    # Test 3: Order Agent
+    # Test 3: Order Agent - with order ID
     print("\n3️⃣ Testing OrderAgent:")
     order_result = agent_manager.call_agent("OrderAgent",
                                             {"order_id": "12345", "action": "track"},
@@ -610,21 +564,44 @@ def test_mock_agents():
     print(f"   Status: {order_result['status']}")
     print(f"   Order Status: {order_result.get('order_info', {}).get('status', 'N/A')}")
 
-    # Test 4: Return Agent
-    print("\n4️⃣ Testing ReturnAgent:")
+    # Test 4: Order Agent - without order ID (should show recent orders)
+    print("\n4️⃣ Testing OrderAgent (No Order ID):")
+    no_order_result = agent_manager.call_agent("OrderAgent",
+                                               {"action": "track"},
+                                               sample_context)
+    print(f"   Status: {no_order_result['status']}")
+    print(f"   Requires Selection: {no_order_result.get('requires_selection', False)}")
+    print(f"   Recent Orders: {len(no_order_result.get('recent_orders', []))}")
+
+    # Test 5: Return Agent - with order ID
+    print("\n5️⃣ Testing ReturnAgent:")
     return_result = agent_manager.call_agent("ReturnAgent",
                                              {"order_id": "67890", "return_reason": "defective"},
                                              sample_context)
     print(f"   Status: {return_result['status']}")
     print(f"   Return Initiated: {return_result.get('return_initiated', False)}")
 
-    # Test 5: Error handling
-    print("\n5️⃣ Testing error handling:")
+    # Test 6: Return Agent - without order ID (should show returnable orders)
+    print("\n6️⃣ Testing ReturnAgent (No Order ID):")
+    no_return_result = agent_manager.call_agent("ReturnAgent",
+                                                {"return_reason": "not satisfied"},
+                                                sample_context)
+    print(f"   Status: {no_return_result['status']}")
+    print(f"   Requires Selection: {no_return_result.get('requires_selection', False)}")
+    print(f"   Returnable Orders: {len(no_return_result.get('returnable_orders', []))}")
+
+    # Test 7: Error handling
+    print("\n7️⃣ Testing error handling:")
     error_result = agent_manager.call_agent("InvalidAgent", {}, sample_context)
     print(f"   Error handled: {error_result['status'] == 'error'}")
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
     print("✅ Mock Agent Tests Complete!")
+    print("\nKey Features Demonstrated:")
+    print("🔍 Dual-mode Discovery Agent (search-first vs recommend-first)")
+    print("📦 Smart order lookup without requiring order ID")
+    print("↩️ Intelligent return processing with order selection")
+    print("🎯 Context-aware agent responses")
 
 
 if __name__ == "__main__":

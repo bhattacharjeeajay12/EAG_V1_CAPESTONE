@@ -1,386 +1,706 @@
-import os, json, re
-from typing import List, Dict, Any, Optional, Tuple
+# core/return_agent.py
+"""
+Return Agent - Comprehensive Return and Refund Management
+
+Purpose: Handles all return-related operations including return initiation,
+eligibility checking, return processing, refund management, and exchange
+handling. Provides intelligent order lookup when users don't remember order IDs.
+
+Key Features:
+- Smart return eligibility checking
+- Return reason analysis and validation
+- Multiple return types (refund, exchange, store credit)
+- Automatic return label generation
+- Return tracking and status updates
+- Integration with order management system
+- Customer service escalation
+"""
+
+from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass
+from enum import Enum
 from datetime import datetime, timedelta
-
-import google.generativeai as genai
-from perceptions.return_perception import extract_return_details
-from memory import SessionMemory
+import random
 
 
-def _project_path(*parts: str) -> str:
-    base = os.path.dirname(os.path.abspath(__file__))
-    return os.path.normpath(os.path.join(base, "..", *parts))
+class ReturnReason(Enum):
+    """Return reason categories."""
+    DEFECTIVE = "defective"
+    WRONG_ITEM = "wrong_item"
+    DAMAGED_SHIPPING = "damaged_shipping"
+    NOT_AS_DESCRIBED = "not_as_described"
+    CHANGED_MIND = "changed_mind"
+    SIZE_ISSUE = "size_issue"
+    QUALITY_ISSUE = "quality_issue"
+    LATE_DELIVERY = "late_delivery"
+    OTHER = "other"
 
 
-def _load_return_agent_prompt() -> str:
-    path = _project_path("prompts", "return_prompt.py")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read()
-        # Try to extract triple-quoted string assigned to RETURN_AGENT_PROMPT
-        m = re.search(r'RETURN_AGENT_PROMPT\s*=\s*"""(.*?)"""', content, re.S)
-        if m:
-            return m.group(1).strip()
-        return content.strip()
-    except Exception as e:
-        print(f"[WARN] Could not load return agent prompt from {path}: {e}")
-        return "You are a helpful e-commerce return agent. Respond conversationally and then output a JSON state as specified."
+class ReturnType(Enum):
+    """Types of returns."""
+    REFUND = "refund"
+    EXCHANGE = "exchange"
+    STORE_CREDIT = "store_credit"
+    REPAIR = "repair"
 
 
-def _merge_perceptions(base: Dict[str, Any], latest: Dict[str, Any]) -> Dict[str, Any]:
-    merged = dict(base or {})
-    # Simple merge rules: last mention wins for most fields
-    for k, v in latest.items():
-        if v is None or v == "" or v == {}:
-            continue
-        merged[k] = v
-    return merged
+class ReturnStatus(Enum):
+    """Return processing status."""
+    INITIATED = "initiated"
+    APPROVED = "approved"
+    LABEL_SENT = "label_sent"
+    IN_TRANSIT = "in_transit"
+    RECEIVED = "received"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    REJECTED = "rejected"
 
 
-def _ready_for_eligibility_check(state: Dict[str, Any]) -> bool:
-    # Check if we have enough information to check return eligibility
-    return (state.get("product_id") or state.get("product_name")) and state.get("purchase_date")
+@dataclass
+class ReturnItem:
+    """Item being returned."""
+    product_id: str
+    name: str
+    quantity: int
+    original_price: float
+    return_reason: ReturnReason
+    condition: str = "good"
+    photos_provided: bool = False
 
 
-def _extract_last_json(s: str) -> Optional[Tuple[str, Dict[str, Any]]]:
-    # Find last JSON object in the text and return (text_before_json, json_obj)
-    last_open = s.rfind("{")
-    if last_open == -1:
-        return None
-    json_text = s[last_open:]
-    # Trim trailing non-json characters (e.g., accidental markdown)
-    # Try to find a matching closing brace by scanning
-    depth = 0
-    end_index = None
-    for i, ch in enumerate(json_text):
-        if ch == '{':
-            depth += 1
-        elif ch == '}':
-            depth -= 1
-            if depth == 0:
-                end_index = i + 1
-                break
-    if end_index is None:
-        return None
-    candidate = json_text[:end_index]
-    try:
-        obj = json.loads(candidate)
-        prefix = s[:last_open].rstrip()
-        return prefix, obj
-    except Exception:
-        return None
+@dataclass
+class ReturnRequest:
+    """Complete return request information."""
+    return_id: str
+    order_id: str
+    items: List[ReturnItem]
+    return_type: ReturnType
+    total_refund_amount: float
+    return_reason: ReturnReason
+    customer_notes: str = ""
+    status: ReturnStatus = ReturnStatus.INITIATED
+    created_at: str = None
+    estimated_processing_time: str = "5-7 business days"
+
+
+@dataclass
+class ReturnEligibility:
+    """Return eligibility assessment."""
+    eligible: bool
+    reason: str
+    conditions: List[str]
+    time_remaining: Optional[str] = None
+    alternatives: List[str] = None
 
 
 class ReturnAgent:
-    def __init__(self):
-        # Conversation state (store oldest-first for convenience internally)
-        self.chat_history: List[Dict[str, str]] = []  # {role: 'user'|'agent', content: str}
-        self.perceptions_history: List[Dict[str, Any]] = []  # list of {message, perception}
-        self.perceptions: Dict[str, Any] = {
-            "has_packaging": True,
-            "has_receipt": False,
-            "image_provided": False
-        }
+    """
+    Comprehensive return management agent that handles return initiation,
+    processing, tracking, and customer service.
+    """
 
-        # Shared session memory manager (reusable across agents)
-        self.memory = SessionMemory(agent_name="return")
-        self._last_state: Dict[str, Any] = {}
+    def __init__(self, order_database: List[Dict[str, Any]] = None):
+        """Initialize Return Agent with order database."""
+        self.order_database = order_database or []
+        self.return_policies = self._initialize_return_policies()
+        self.return_database = []  # Track processed returns
 
-        # LLM setup
-        self.prompt_text: str = _load_return_agent_prompt()
-        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        self.model = None
-        if self.gemini_api_key:
-            try:
-                genai.configure(api_key=self.gemini_api_key)
-                self.model = genai.GenerativeModel(self.model_name)
-            except Exception as e:
-                print("[WARN] Failed to initialize Gemini model:", e)
-                self.model = None
+    def process_return_request(self, request_params: Dict[str, Any],
+                               context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main return processing method.
 
-    # ---------- Session & Memory Management ----------
-    def new_session(self, label: Optional[str] = None):
-        """Start a new conversation session and reset state using shared memory manager."""
-        # Initialize chat_history and perceptions_history as empty lists
-        # We'll insert new messages at position 0 to maintain newest-first internally
-        self.chat_history = []
-        self.perceptions_history = []
-        self.perceptions = {
-            "has_packaging": True,
-            "has_receipt": False,
-            "image_provided": False
-        }
-        self._last_state = {}
-        # Initialize memory session and persist an initial shell
-        self.memory.new_session(label=label, config={"model": self.model_name})
+        Args:
+            request_params: Return request parameters
+            context: Current conversation context
 
-    # ---------- Payload for LLM ----------
-    def _build_input_payload(self, latest_message: str, latest_perception: Dict[str, Any]) -> Dict[str, Any]:
-        # Chat history and perceptions history are already in chronological order (oldest first)
-        return {
-            "chat_history": self.chat_history,
-            "perceptions_history": self.perceptions_history,
-            "perceptions": self.perceptions,
-            "latest_message": latest_message,
-            "latest_perception": latest_perception,
-        }
-
-    def _fallback_response(self, latest_message: str) -> Tuple[str, Dict[str, Any]]:
-        # Craft a simple conversational reply based on what is missing
-        missing = []
-        if not self.perceptions.get("product_name") and not self.perceptions.get("product_id"):
-            missing.append("the product you want to return")
-        if not self.perceptions.get("order_id"):
-            missing.append("your order ID")
-        if not self.perceptions.get("purchase_date"):
-            missing.append("when you purchased the item")
-        if not self.perceptions.get("return_reason"):
-            missing.append("why you want to return it")
-
-        if missing:
-            ask = "; ".join(missing)
-            reply = (
-                f"I'd be happy to help with your return request. Could you please provide {ask}? "
-                f"This will help me check if your return is eligible."
-            )
-        else:
-            reply = (
-                "Thank you for providing the details. I'll check if your return is eligible. "
-                "Could you also send a photo of the product so we can verify its condition?"
-            )
-
-        state = {
-            "product_id": self.perceptions.get("product_id"),
-            "product_name": self.perceptions.get("product_name"),
-            "order_id": self.perceptions.get("order_id"),
-            "purchase_date": self.perceptions.get("purchase_date"),
-            "return_reason": self.perceptions.get("return_reason"),
-            "condition": self.perceptions.get("condition"),
-            "has_packaging": self.perceptions.get("has_packaging", True),
-            "has_receipt": self.perceptions.get("has_receipt", False),
-            "image_provided": self.perceptions.get("image_provided", False),
-            "image_quality": self.perceptions.get("image_quality"),
-            "eligibility_checked": False,
-            "is_eligible": False,
-            "return_window_open": False,
-            "customer_exception_granted": False,
-            "image_verified": False,
-            "return_status": "pending"
-        }
-        return reply, state
-
-    def _llm_response(self, payload: Dict[str, Any]) -> Optional[Tuple[str, Dict[str, Any]]]:
-        if not self.model:
-            return None
+        Returns:
+            Comprehensive return processing result
+        """
         try:
-            input_block = json.dumps(payload, ensure_ascii=False, indent=2)
-            full_prompt = (
-                self.prompt_text
-                + "\n\nINPUT START\n"
-                + input_block
-                + "\nINPUT END\n\nPlease produce your response as specified above."
-            )
-            resp = self.model.generate_content(
-                full_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    response_mime_type="text/plain"
-                ),
-            )
-            text = (resp.text or "").strip()
-            extracted = _extract_last_json(text)
-            if not extracted:
-                return None
-            reply_text, state = extracted
-            return reply_text.strip(), state
+            # Extract request details
+            order_id = request_params.get("order_id")
+            return_reason = request_params.get("return_reason", "not_specified")
+            items_to_return = request_params.get("items", [])
+            return_type = request_params.get("return_type", ReturnType.REFUND.value)
+
+            # Handle no order ID scenario
+            if not order_id:
+                return self._handle_missing_order_id(request_params.get("user_query", ""), context)
+
+            # Lookup and validate order
+            order_info = self._lookup_order(order_id)
+            if not order_info:
+                return self._handle_order_not_found(order_id)
+
+            # Check return eligibility
+            eligibility = self._check_return_eligibility(order_info)
+            if not eligibility.eligible:
+                return self._handle_ineligible_return(order_info, eligibility)
+
+            # Process return based on current state
+            existing_return = self._find_existing_return(order_id)
+            if existing_return:
+                return self._handle_existing_return(existing_return, request_params)
+
+            # Create new return request
+            return self._create_return_request(order_info, return_reason, items_to_return, return_type)
+
         except Exception as e:
-            print("[WARN] LLM generation failed:", e)
-            return None
+            return self._create_error_response(f"Return processing error: {str(e)}")
 
-    def _check_eligibility(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Checks return eligibility based on product information and purchase date.
-        This is a simplified example - in a real system, this would query your database.
-        """
-        # For demonstration purposes only - in a real system, you'd query your actual database
-        product_id = state.get("product_id", "unknown")
-        product_name = state.get("product_name", "unknown")
-        purchase_date_str = state.get("purchase_date", "")
+    def _handle_missing_order_id(self, user_query: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle return requests without order ID by showing returnable orders."""
 
-        # Parse purchase date - this is simplistic, real code would handle various formats
-        try:
-            # Try to parse date in format YYYY-MM-DD
-            purchase_date = datetime.strptime(purchase_date_str, "%Y-%m-%d")
-        except ValueError:
-            try:
-                # Try to parse date in format MM/DD/YYYY
-                purchase_date = datetime.strptime(purchase_date_str, "%m/%d/%Y")
-            except ValueError:
-                # Default to 20 days ago if we can't parse the date
-                purchase_date = datetime.now() - timedelta(days=20)
+        # Get user's returnable orders
+        returnable_orders = self._get_returnable_orders(context)
 
-        # Calculate days since purchase
-        days_since_purchase = (datetime.now() - purchase_date).days
+        if not returnable_orders:
+            return {
+                "success": False,
+                "status": "no_returnable_orders",
+                "user_message": "I couldn't find any recent orders that are eligible for return. Returns must be initiated within our return window. Would you like me to check a specific order?",
+                "next_actions": ["provide_order_id", "check_return_policy", "contact_support"],
+                "return_lookup_performed": True
+            }
 
-        # Mock product lookup - you'd replace this with database query
-        return_window = 15  # Default return window of 15 days
+        # Filter orders based on user query if provided
+        relevant_orders = self._filter_returnable_orders(returnable_orders, user_query)
 
-        # In a real implementation, you would look up the actual return window from product data
-        # For example:
-        # product_data = database.get_product(product_id)
-        # return_window = product_data.return_window
+        if len(relevant_orders) == 1:
+            # Single matching order - show return options
+            order = relevant_orders[0]
+            return self._show_return_options_for_order(order)
 
-        result = {
-            "eligibility_checked": True,
-            "days_since_purchase": days_since_purchase,
-            "return_window": return_window
+        else:
+            # Multiple orders - show selection
+            order_list = []
+            for order in relevant_orders[:5]:  # Show top 5
+                items_summary = self._create_items_summary(order["items"])
+                days_since_delivery = self._calculate_days_since_delivery(order)
+                order_list.append(
+                    f"• Order {order['order_id']} - {items_summary} "
+                    f"(Delivered {days_since_delivery} days ago)"
+                )
+
+            return {
+                "success": True,
+                "status": "order_selection_required",
+                "returnable_orders": relevant_orders,
+                "user_message": "Here are your recent orders that can be returned:\n\n" +
+                                "\n".join(order_list) +
+                                "\n\nWhich order would you like to return?",
+                "next_actions": ["select_order", "provide_order_id"],
+                "return_lookup_performed": True,
+                "requires_selection": True
+            }
+
+    def _show_return_options_for_order(self, order: Dict[str, Any]) -> Dict[str, Any]:
+        """Show return options for a specific order."""
+
+        eligibility = self._check_return_eligibility(order)
+        items_summary = self._create_items_summary(order["items"])
+
+        return {
+            "success": True,
+            "status": "return_options_available",
+            "order_info": order,
+            "eligibility": eligibility.__dict__,
+            "user_message": f"I can help you return order {order['order_id']} ({items_summary}). "
+                            f"What's the reason for the return?\n\n"
+                            f"Common reasons:\n"
+                            f"• Item is defective or damaged\n"
+                            f"• Wrong item received\n"
+                            f"• Item not as described\n"
+                            f"• Changed my mind\n"
+                            f"• Size/fit issue\n"
+                            f"• Other reason",
+            "return_reasons": [reason.value for reason in ReturnReason],
+            "next_actions": ["specify_return_reason", "select_items"],
+            "return_lookup_performed": True
         }
 
-        if days_since_purchase <= return_window:
-            # Return is within window
-            result["is_eligible"] = True
-            result["return_window_open"] = True
-        else:
-            # Return window has passed
-            result["is_eligible"] = False
-            result["return_window_open"] = False
+    def _create_return_request(self, order_info: Dict[str, Any], return_reason: str,
+                               items_to_return: List[str], return_type: str) -> Dict[str, Any]:
+        """Create a new return request."""
 
-            # Mock customer history check - in a real system, this would query customer database
-            # For demonstration, we'll randomly grant exceptions based on product ID
-            # In reality, this would be based on customer purchase history, loyalty, etc.
-            exception_granted = hash(product_id) % 3 == 0  # Simple pseudo-random decision
-            result["customer_exception_granted"] = exception_granted
-            if exception_granted:
-                result["is_eligible"] = True
+        # Generate return ID
+        return_id = f"RET{random.randint(100000, 999999)}"
 
-        return result
+        # Process return items
+        return_items = self._process_return_items(order_info["items"], items_to_return, return_reason)
 
-    def handle(self, query: str):
-        print("[ReturnAgent] Processing return query...")
-        # Update chat with user message
-        self.chat_history.append({"role": "user", "content": query})
+        # Calculate refund amount
+        refund_calculation = self._calculate_refund_amount(return_items, return_type)
 
-        # Extract perceptions
-        result = extract_return_details(query)
-        latest_perception = result.model_dump()
-        self.perceptions_history.append({"message": query, "perception": latest_perception})
-        # Merge cumulative perceptions
-        self.perceptions = _merge_perceptions(self.perceptions, latest_perception)
-
-        # Check if we have enough info to check eligibility
-        if _ready_for_eligibility_check(self.perceptions) and not self.perceptions.get("eligibility_checked"):
-            eligibility_result = self._check_eligibility(self.perceptions)
-            self.perceptions.update(eligibility_result)
-
-        # Build payload for the agent prompt
-        payload = self._build_input_payload(query, latest_perception)
-
-        # Get agent response via LLM, fallback if needed
-        out = self._llm_response(payload)
-        if out is None:
-            reply_text, state = self._fallback_response(query)
-        else:
-            reply_text, state = out
-
-        # Print and record agent reply
-        print(f"Agent: {reply_text}")
-        print("[ReturnAgent] State:", state)
-        self.chat_history.append({"role": "agent", "content": reply_text})
-        # Cache last state and persist session memory
-        self._last_state = state
-        # Save memory with chat history in chronological order (oldest first)
-        # No need to reverse as we're already storing it in chronological order
-        self.memory.save(
-            chat_history=self.chat_history,
-            perceptions_history=self.perceptions_history,
-            perceptions=self.perceptions,
-            last_agent_state=self._last_state,
-            config={"model": self.model_name},
+        # Create return request
+        return_request = ReturnRequest(
+            return_id=return_id,
+            order_id=order_info["order_id"],
+            items=return_items,
+            return_type=ReturnType(return_type),
+            total_refund_amount=refund_calculation["total_refund"],
+            return_reason=ReturnReason(return_reason) if return_reason != "not_specified" else ReturnReason.OTHER,
+            created_at=datetime.now().isoformat()
         )
 
-        return result
+        # Store return request
+        self.return_database.append(return_request)
+
+        # Generate return label and instructions
+        return_label = self._generate_return_label(return_request, order_info)
+
+        # Create comprehensive response
+        return {
+            "success": True,
+            "status": "return_initiated",
+            "return_info": {
+                "return_id": return_id,
+                "order_id": order_info["order_id"],
+                "items_returned": [item.name for item in return_items],
+                "return_reason": return_reason,
+                "return_type": return_type,
+                "refund_amount": refund_calculation["total_refund"],
+                "processing_fee": refund_calculation.get("processing_fee", 0),
+                "estimated_processing_time": return_request.estimated_processing_time
+            },
+            "return_label": return_label,
+            "refund_breakdown": refund_calculation,
+            "user_message": self._create_return_confirmation_message(return_request, refund_calculation, return_label),
+            "next_steps": [
+                "Package items securely",
+                "Print return label",
+                "Drop off at shipping location",
+                "Track return progress"
+            ],
+            "next_actions": ["track_return", "modify_return", "contact_support"],
+            "return_initiated": True
+        }
+
+    def _check_return_eligibility(self, order_info: Dict[str, Any]) -> ReturnEligibility:
+        """Check if order is eligible for return."""
+
+        order_status = order_info.get("status", "")
+        order_date = order_info.get("order_date", "")
+        delivery_date = order_info.get("delivery_date") or order_info.get("actual_delivery")
+
+        # Order must be delivered to be returned
+        if order_status != "delivered":
+            if order_status in ["processing", "shipped"]:
+                return ReturnEligibility(
+                    eligible=True,
+                    reason="Order can be cancelled before delivery",
+                    conditions=["Cancellation may incur fees if already shipped"],
+                    alternatives=["cancel_order"]
+                )
+            else:
+                return ReturnEligibility(
+                    eligible=False,
+                    reason=f"Orders with status '{order_status}' cannot be returned",
+                    conditions=[],
+                    alternatives=["contact_support"]
+                )
+
+        # Check return window
+        if delivery_date:
+            try:
+                delivered = datetime.strptime(delivery_date, "%Y-%m-%d")
+                days_since_delivery = (datetime.now() - delivered).days
+                return_window = self.return_policies["return_window_days"]
+
+                if days_since_delivery <= return_window:
+                    remaining_days = return_window - days_since_delivery
+                    return ReturnEligibility(
+                        eligible=True,
+                        reason=f"Within return window ({remaining_days} days remaining)",
+                        conditions=[
+                            "Items must be in original condition",
+                            "Original packaging preferred",
+                            "Return shipping label will be provided"
+                        ],
+                        time_remaining=f"{remaining_days} days"
+                    )
+                else:
+                    return ReturnEligibility(
+                        eligible=False,
+                        reason=f"Return window expired ({days_since_delivery} days since delivery)",
+                        conditions=[],
+                        alternatives=["contact_support", "check_warranty"]
+                    )
+
+            except ValueError:
+                # Invalid date format
+                pass
+
+        # Fallback - assume eligible with conditions
+        return ReturnEligibility(
+            eligible=True,
+            reason="Eligibility needs verification",
+            conditions=["Return eligibility will be verified during processing"],
+            alternatives=[]
+        )
+
+    def _get_returnable_orders(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Get user's orders that are eligible for return."""
+
+        returnable = []
+        for order in self.order_database:
+            eligibility = self._check_return_eligibility(order)
+            if eligibility.eligible:
+                returnable.append(order)
+
+        # Sort by delivery date (most recent first)
+        returnable.sort(key=lambda x: x.get("delivery_date", x.get("order_date", "")), reverse=True)
+        return returnable
+
+    def _filter_returnable_orders(self, orders: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
+        """Filter returnable orders based on user query."""
+
+        if not query:
+            return orders
+
+        query_lower = query.lower()
+        filtered = []
+
+        for order in orders:
+            # Check if query matches product names
+            items_text = " ".join([item.get("name", "") for item in order.get("items", [])]).lower()
+
+            if any(keyword in query_lower for keyword in ["laptop", "phone", "headphones", "tablet"]):
+                if any(keyword in items_text for keyword in ["laptop", "phone", "headphones", "tablet"]):
+                    filtered.append(order)
+            elif any(keyword in query_lower for keyword in ["recent", "latest", "last"]):
+                filtered.append(order)  # Include recent orders
+            else:
+                filtered.append(order)  # Include all if no specific filter
+
+        return filtered or orders
+
+    def _process_return_items(self, order_items: List[Dict[str, Any]],
+                              items_to_return: List[str], return_reason: str) -> List[ReturnItem]:
+        """Process items to be returned."""
+
+        return_items = []
+
+        if not items_to_return:
+            # Return all items if none specified
+            items_to_return = ["all"]
+
+        for order_item in order_items:
+            if "all" in items_to_return or order_item.get("name", "") in items_to_return:
+                return_item = ReturnItem(
+                    product_id=order_item.get("product_id", ""),
+                    name=order_item.get("name", ""),
+                    quantity=order_item.get("quantity", 1),
+                    original_price=order_item.get("price", 0),
+                    return_reason=ReturnReason(
+                        return_reason) if return_reason != "not_specified" else ReturnReason.OTHER
+                )
+                return_items.append(return_item)
+
+        return return_items
+
+    def _calculate_refund_amount(self, return_items: List[ReturnItem], return_type: str) -> Dict[str, Any]:
+        """Calculate refund amount and breakdown."""
+
+        subtotal = sum(item.original_price * item.quantity for item in return_items)
+
+        # Calculate fees and adjustments
+        processing_fee = 0
+        restocking_fee = 0
+
+        # Apply processing fee for certain return reasons
+        if any(item.return_reason == ReturnReason.CHANGED_MIND for item in return_items):
+            processing_fee = min(subtotal * 0.1, 25.0)  # 10% up to $25
+
+        # Apply restocking fee for opened electronics
+        electronic_items = [item for item in return_items if
+                            "laptop" in item.name.lower() or "phone" in item.name.lower()]
+        if electronic_items:
+            restocking_fee = min(sum(item.original_price * 0.05 for item in electronic_items), 50.0)
+
+        # Calculate final refund
+        total_refund = subtotal - processing_fee - restocking_fee
+
+        return {
+            "subtotal": subtotal,
+            "processing_fee": processing_fee,
+            "restocking_fee": restocking_fee,
+            "total_refund": max(0, total_refund),
+            "refund_method": "Original payment method",
+            "estimated_timeline": "5-7 business days after we receive your return"
+        }
+
+    def _generate_return_label(self, return_request: ReturnRequest, order_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate return shipping label and instructions."""
+
+        return {
+            "label_generated": True,
+            "tracking_number": f"RTN{random.randint(1000000000, 9999999999)}",
+            "carrier": "UPS",
+            "return_address": {
+                "name": "Returns Processing Center",
+                "address": "123 Return Lane",
+                "city": "Processing City",
+                "state": "PC",
+                "zip": "12345"
+            },
+            "label_url": f"https://returns.example.com/label/{return_request.return_id}",
+            "instructions": [
+                "Package all items securely in original packaging if available",
+                "Include all accessories and documentation",
+                "Print and attach the return label",
+                "Drop off at any UPS location or schedule pickup"
+            ],
+            "estimated_transit_time": "2-3 business days"
+        }
+
+    def _create_return_confirmation_message(self, return_request: ReturnRequest,
+                                            refund_calculation: Dict[str, Any],
+                                            return_label: Dict[str, Any]) -> str:
+        """Create user-friendly return confirmation message."""
+
+        items_list = ", ".join([item.name for item in return_request.items])
+
+        message = f"✅ Return Request Confirmed!\n\n"
+        message += f"Return ID: {return_request.return_id}\n"
+        message += f"Order: {return_request.order_id}\n"
+        message += f"Items: {items_list}\n\n"
+
+        # Refund information
+        message += f"💰 Refund Information:\n"
+        if refund_calculation.get("processing_fee", 0) > 0:
+            message += f"Subtotal: ${refund_calculation['subtotal']:.2f}\n"
+            message += f"Processing fee: -${refund_calculation['processing_fee']:.2f}\n"
+            message += f"Final refund: ${refund_calculation['total_refund']:.2f}\n"
+        else:
+            message += f"Refund amount: ${refund_calculation['total_refund']:.2f}\n"
+
+        message += f"Refund timeline: {refund_calculation['estimated_timeline']}\n\n"
+
+        # Return instructions
+        message += f"📦 Next Steps:\n"
+        message += f"1. A return label has been sent to your email\n"
+        message += f"2. Package the items securely\n"
+        message += f"3. Attach the return label\n"
+        message += f"4. Drop off at any {return_label['carrier']} location\n\n"
+
+        message += f"Track your return: RTN-{return_request.return_id}"
+
+        return message
+
+    def _handle_ineligible_return(self, order_info: Dict[str, Any],
+                                  eligibility: ReturnEligibility) -> Dict[str, Any]:
+        """Handle cases where return is not eligible."""
+
+        return {
+            "success": False,
+            "status": "return_not_eligible",
+            "order_info": order_info,
+            "eligibility_info": eligibility.__dict__,
+            "user_message": f"Unfortunately, order {order_info['order_id']} is not eligible for return. {eligibility.reason}",
+            "alternatives": eligibility.alternatives or ["contact_support"],
+            "next_actions": eligibility.alternatives or ["contact_support", "check_warranty"],
+            "return_initiated": False
+        }
+
+    def _handle_existing_return(self, existing_return: ReturnRequest,
+                                request_params: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle case where return already exists for this order."""
+
+        return {
+            "success": True,
+            "status": "existing_return_found",
+            "return_info": {
+                "return_id": existing_return.return_id,
+                "status": existing_return.status.value,
+                "items_returned": [item.name for item in existing_return.items],
+                "refund_amount": existing_return.total_refund_amount
+            },
+            "user_message": f"I found an existing return request (ID: {existing_return.return_id}) for this order. "
+                            f"Status: {existing_return.status.value}. Would you like to check the status or modify this return?",
+            "next_actions": ["check_return_status", "modify_return", "create_new_return"],
+            "return_initiated": False
+        }
+
+    def _find_existing_return(self, order_id: str) -> Optional[ReturnRequest]:
+        """Find existing return for an order."""
+
+        for return_req in self.return_database:
+            if return_req.order_id == order_id and return_req.status not in [ReturnStatus.COMPLETED,
+                                                                             ReturnStatus.REJECTED]:
+                return return_req
+        return None
+
+    def _lookup_order(self, order_id: str) -> Optional[Dict[str, Any]]:
+        """Look up order by ID."""
+
+        for order in self.order_database:
+            if order.get("order_id") == order_id:
+                return order
+        return None
+
+    def _handle_order_not_found(self, order_id: str) -> Dict[str, Any]:
+        """Handle case when order is not found."""
+
+        return {
+            "success": False,
+            "status": "order_not_found",
+            "user_message": f"I couldn't find order {order_id}. Please check the order number, or let me show you your recent orders that can be returned.",
+            "suggestions": [
+                "Double-check the order number",
+                "Check your email confirmation",
+                "Look for the order in your account"
+            ],
+            "next_actions": ["show_returnable_orders", "provide_correct_id", "contact_support"],
+            "return_lookup_performed": True
+        }
+
+    def _create_items_summary(self, items: List[Dict[str, Any]]) -> str:
+        """Create a summary of order items."""
+
+        if not items:
+            return "No items"
+        if len(items) == 1:
+            return items[0].get("name", "Unknown item")
+        else:
+            return f"{len(items)} items including {items[0].get('name', 'Unknown item')}"
+
+    def _calculate_days_since_delivery(self, order: Dict[str, Any]) -> int:
+        """Calculate days since delivery."""
+
+        delivery_date = order.get("delivery_date") or order.get("actual_delivery")
+        if delivery_date:
+            try:
+                delivered = datetime.strptime(delivery_date, "%Y-%m-%d")
+                return (datetime.now() - delivered).days
+            except ValueError:
+                pass
+        return 0
+
+    def _initialize_return_policies(self) -> Dict[str, Any]:
+        """Initialize return policies and rules."""
+
+        return {
+            "return_window_days": 30,
+            "processing_time_days": 7,
+            "refund_timeline_days": 7,
+            "restocking_fee_categories": ["electronics"],
+            "no_return_categories": ["software", "digital"],
+            "free_return_reasons": ["defective", "wrong_item", "damaged_shipping"],
+            "fee_return_reasons": ["changed_mind", "size_issue"]
+        }
+
+    def _create_error_response(self, error_message: str) -> Dict[str, Any]:
+        """Create standardized error response."""
+
+        return {
+            "success": False,
+            "status": "error",
+            "error": error_message,
+            "user_message": "I encountered an issue while processing your return request. Please try again or contact customer support.",
+            "next_actions": ["try_again", "contact_support"],
+            "return_lookup_performed": False
+        }
 
 
-def run_examples(agent: ReturnAgent) -> List[Dict[str, Any]]:
-    scenarios = [
-        # scenario 1: Return within window
-        [
-            "I want to return my headphones that I bought last week.",
-            "They're not working properly. I have the original packaging."
-        ],
+def test_return_agent():
+    """Test Return Agent with various scenarios."""
+    print("🧪 Testing Return Agent")
+    print("=" * 60)
 
-        # scenario 2: Return outside window
-        [
-            "I bought a laptop 3 months ago and it's starting to have issues.",
-            "The battery doesn't last more than an hour now. Can I return it?"
-        ]
+    # Sample order database
+    sample_orders = [
+        {
+            "order_id": "12345",
+            "status": "delivered",
+            "items": [{"name": "Dell Gaming Laptop G15", "quantity": 1, "price": 1299, "product_id": "laptop_001"}],
+            "total_amount": 1299,
+            "order_date": "2024-12-15",
+            "delivery_date": "2024-12-22"
+        },
+        {
+            "order_id": "67890",
+            "status": "delivered",
+            "items": [{"name": "iPhone 15 Pro", "quantity": 1, "price": 999, "product_id": "phone_001"}],
+            "total_amount": 999,
+            "order_date": "2024-12-10",
+            "delivery_date": "2024-12-18"
+        },
+        {
+            "order_id": "OLD123",
+            "status": "delivered",
+            "items": [{"name": "Old Product", "quantity": 1, "price": 500, "product_id": "old_001"}],
+            "total_amount": 500,
+            "order_date": "2024-10-15",
+            "delivery_date": "2024-10-22"  # Too old for return
+        }
     ]
 
-    print("\n=== Running example scenarios ===")
-    perception_list = []
-    for i, scenario in enumerate(scenarios, start=1):
-        print(f"\n--- Scenario {i} ---")
-        # Start a new session per scenario
-        agent.new_session(label=f"example-scenario-{i}")
-        perception = []
-        for query in scenario:
-            print(f"User: {query}")
-            result = agent.handle(query)
-            perception.append({"query": query, "result": result.model_dump()})
-        # Ensure final memory save at scenario end
-        # Reverse before saving to get oldest at the top (newest at the bottom)
-        reversed_chat_history = list(reversed(agent.chat_history))
-        reversed_perception_history = list(reversed(agent.perceptions_history))
-        agent.memory.save(
-            chat_history=reversed_chat_history,  # Reverse to get oldest at top
-            perceptions_history=reversed_perception_history,  # Reverse to get oldest at top
-            perceptions=agent.perceptions,
-            last_agent_state=agent._last_state,
-            config={"model": agent.model_name},
-        )
-        perception_list.append(perception)
-    print("=== Examples complete ===\n")
-    return perception_list
+    return_agent = ReturnAgent(sample_orders)
+    sample_context = {"user_id": "user123"}
 
+    # Test 1: Return with order ID
+    print("1️⃣ Return with order ID:")
+    result1 = return_agent.process_return_request(
+        {"order_id": "12345", "return_reason": "defective"},
+        sample_context
+    )
+    print(f"   Success: {result1['success']}")
+    print(f"   Status: {result1['status']}")
+    if result1.get('return_info'):
+        print(f"   Return ID: {result1['return_info']['return_id']}")
+        print(f"   Refund Amount: ${result1['return_info']['refund_amount']}")
 
-def interactive_loop(agent: ReturnAgent) -> None:
-    print("Enter your return queries. Type 'exit' to quit.")
-    # Lazy-start a session only when the user actually sends a message
-    session_started = False
-    while True:
-        try:
-            user_in = input("You: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nExiting.")
-            break
-        if user_in.lower() in {"exit", "quit", "q"}:
-            print("Goodbye!")
-            break
-        if not user_in:
-            continue
-        if not session_started:
-            agent.new_session(label="interactive")
-            session_started = True
-        agent.handle(user_in)
-    # Save memory on exit only if a session was started (i.e., at least one user message was handled)
-    if session_started:
-        # Reverse before saving to get oldest at the top (newest at the bottom)
-        reversed_chat_history = list(reversed(agent.chat_history))
-        reversed_perception_history = list(reversed(agent.perceptions_history))
-        agent.memory.save(
-            chat_history=reversed_chat_history,  # Reverse to get oldest at top
-            perceptions_history=reversed_perception_history,  # Reverse to get oldest at top
-            perceptions=agent.perceptions,
-            last_agent_state=agent._last_state,
-            config={"model": agent.model_name},
-        )
+    # Test 2: Return without order ID (should show returnable orders)
+    print("\n2️⃣ Return without order ID:")
+    result2 = return_agent.process_return_request(
+        {"user_query": "I want to return my laptop"},
+        sample_context
+    )
+    print(f"   Success: {result2['success']}")
+    print(f"   Status: {result2['status']}")
+    print(f"   Requires Selection: {result2.get('requires_selection', False)}")
+    print(f"   Returnable Orders Found: {len(result2.get('returnable_orders', []))}")
+
+    # Test 3: Return with expired window
+    print("\n3️⃣ Return with expired window:")
+    result3 = return_agent.process_return_request(
+        {"order_id": "OLD123", "return_reason": "changed_mind"},
+        sample_context
+    )
+    print(f"   Success: {result3['success']}")
+    print(f"   Status: {result3['status']}")
+    if result3.get('eligibility_info'):
+        print(f"   Eligible: {result3['eligibility_info']['eligible']}")
+        print(f"   Reason: {result3['eligibility_info']['reason']}")
+
+    # Test 4: Return with processing fee
+    print("\n4️⃣ Return with processing fee (changed mind):")
+    result4 = return_agent.process_return_request(
+        {"order_id": "67890", "return_reason": "changed_mind"},
+        sample_context
+    )
+    print(f"   Success: {result4['success']}")
+    if result4.get('refund_breakdown'):
+        breakdown = result4['refund_breakdown']
+        print(f"   Subtotal: ${breakdown['subtotal']}")
+        print(f"   Processing Fee: ${breakdown.get('processing_fee', 0)}")
+        print(f"   Final Refund: ${breakdown['total_refund']}")
+
+    # Test 5: Order not found
+    print("\n5️⃣ Order not found:")
+    result5 = return_agent.process_return_request(
+        {"order_id": "NOTFOUND", "return_reason": "defective"},
+        sample_context
+    )
+    print(f"   Success: {result5['success']}")
+    print(f"   Status: {result5['status']}")
+    print(f"   Suggestions: {len(result5.get('suggestions', []))}")
+
+    print("\n" + "=" * 60)
+    print("✅ Return Agent Tests Complete!")
 
 
 if __name__ == "__main__":
-    agent = ReturnAgent()
-
-    # 1) Run the provided scenarios as examples
-    _ = run_examples(agent)
-
-    # 2) Start interactive input loop
-    interactive_loop(agent)
+    test_return_agent()
