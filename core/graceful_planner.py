@@ -17,7 +17,7 @@ Key Responsibilities:
 
 Flow: User Message → NLU → Intent Tracker → Plan Decision → Action Execution
 """
-
+from dataclasses import dataclass
 from typing import Dict, List, Any, Optional
 from enum import Enum
 from core.enhanced_nlu import EnhancedNLU

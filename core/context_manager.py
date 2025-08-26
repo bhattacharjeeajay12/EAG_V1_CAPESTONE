@@ -264,9 +264,9 @@ class ContextManager:
 
             return {
                 "goal": goal,
-                "ready": len(missing) == 0,
-                "missing_facts": missing,
-                "available_facts": available,
+                "ready": len(missing) == 0, # Can we proceed?
+                "missing_facts": missing, # What's missing?
+                "available_facts": available, # What do we have?
                 "readiness_score": len(available) / len(required_facts) if required_facts else 1.0
             }
 
