@@ -15,7 +15,7 @@ Key Features:
 
 from typing import Dict, Any, Callable
 from datetime import datetime, timedelta
-from cleaning.intelligent_planner import IntelligentPlanner, PlannerStatus
+from core.intelligent_planner import IntelligentPlanner, PlannerStatus
 import uuid
 
 class ConversationOrchestrator:

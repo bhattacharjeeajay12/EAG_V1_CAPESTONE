@@ -102,9 +102,14 @@ class IntelligentPlanner:
 
     def _execute_planner_decision(self, decision: PlannerDecision) -> Dict[str, Any]:
         """Execute the decision made by the planner LLM."""
-        # Update goal progress if applicable
+        # Update goal progress if applicable (never decrease)
         if self.session_manager.current_goal and decision.goal_progress_score > 0:
-            self.session_manager.current_goal.progress_score = decision.goal_progress_score
+            # Ensure progress never goes backwards
+            new_progress = max(
+                decision.goal_progress_score,
+                self.session_manager.current_goal.progress_score
+            )
+            self.session_manager.current_goal.progress_score = new_progress
             self.session_manager.current_goal.updated_at = datetime.now().isoformat()
 
         # Update goal based on LLM evaluation
@@ -113,7 +118,8 @@ class IntelligentPlanner:
                 decision.goal_description,
                 decision.goal_category or "general",
                 decision.goal_status,
-                decision.goal_progress_score
+                max(decision.goal_progress_score,
+                    self.session_manager.current_goal.progress_score if self.session_manager.current_goal else 0)
             )
 
         # Route to appropriate handler
@@ -128,6 +134,79 @@ class IntelligentPlanner:
 
         handler = action_map.get(decision.action, self.action_handlers.handle_unknown_action)
         return handler(decision)
+
+    def _execute_agent_call(self, decision: PlannerDecision) -> Dict[str, Any]:
+        """Execute agent call with goal achievement evaluation."""
+        self.session_manager.status = PlannerStatus.EXECUTING_AGENT
+
+        try:
+            # Call agent and process results
+            agent_result = self.mock_agents.call_agent(
+                decision.agent_type, decision.agent_params, self.context_manager.get_context_summary()
+            )
+
+            self.context_manager.store_agent_result(decision.agent_type, agent_result)
+            self.session_manager.increment_agent_calls()
+
+            if agent_result.get("user_message"):
+                self.context_manager.add_message("system", agent_result["user_message"])
+
+            # Evaluate goal BEFORE any state changes
+            goal_evaluation = self.decision_engine.evaluate_post_agent_goal_status(
+                agent_result, decision, self.session_manager.current_goal
+            )
+
+            # IMMEDIATELY update session manager's current goal with evaluation results
+            if self.session_manager.current_goal:
+                # Apply goal progress update immediately
+                self.session_manager.current_goal.progress_score = goal_evaluation["progress_score"]
+
+                if goal_evaluation["achieved"]:
+                    self.session_manager.current_goal.status = "completed"
+                    self.session_manager.current_goal.progress_score = 1.0
+                else:
+                    self.session_manager.current_goal.status = "in_progress"
+
+                self.session_manager.current_goal.updated_at = datetime.now().isoformat()
+
+                # Update context manager facts immediately
+                self.context_manager.add_fact("goal_progress", str(self.session_manager.current_goal.progress_score),
+                                              "planner")
+                self.context_manager.add_fact("goal_status", self.session_manager.current_goal.status, "planner")
+
+            # Reset only specification state, not session state
+            self.spec_handler.reset_specifications()
+
+            response = {
+                "response": agent_result.get("user_message",
+                                             "I've processed your request successfully and found great options for you."),
+                "status": "agent_executed",
+                "action": "agent_call",
+                "agent_type": decision.agent_type,
+                "agent_result": agent_result,
+                "goal_status": goal_evaluation["status"],
+                "goal_achieved": goal_evaluation["achieved"],
+                "goal_progress": goal_evaluation["progress_score"],  # This should match session info now
+                "goal_evaluation": {
+                    "reasoning": goal_evaluation["reasoning"],
+                    "criteria_met": goal_evaluation["criteria_met"],
+                    "satisfaction_signals": goal_evaluation["satisfaction_signals"],
+                    "business_value": goal_evaluation["business_value"]
+                }
+            }
+
+            # Update planner status based on goal evaluation
+            if goal_evaluation["achieved"]:
+                self.session_manager.status = PlannerStatus.GOAL_ACHIEVED
+                response["session_complete"] = True
+            else:
+                self.session_manager.status = PlannerStatus.READY
+
+            return response
+
+        except Exception as e:
+            return self.action_handlers.handle_error(f"Agent execution error: {str(e)}", "agent_call",
+                                                     self.spec_handler)
 
     def _start_specification_gathering(self, decision: PlannerDecision) -> Dict[str, Any]:
         """Start specification gathering process."""
@@ -283,11 +362,11 @@ class IntelligentPlanner:
         if current_intent and current_intent.intent_type in ["BUY", "RECOMMEND"]:
             return "DiscoveryAgent", {
                 "category": self.spec_handler.gathered_specs.get("category", "electronics"),
-                "subcategory": self.spec_handler.gathered_specs.get("subcategory", ""),
+                "subcategory": self.spec_handler.gathered_specs.get("subcategory") or "laptop",  # ADD: or "laptop"
                 "specifications": {k: v for k, v in self.spec_handler.gathered_specs.items()
                                    if k not in ["category", "subcategory", "budget"]},
                 "budget": self.spec_handler.gathered_specs.get("budget"),
-                "user_message": f"Looking for {self.spec_handler.gathered_specs.get('subcategory', 'products')} based on confirmed requirements",
+                "user_message": f"Looking for {self.spec_handler.gathered_specs.get('subcategory') or 'laptop'} based on confirmed requirements",
                 "discovery_mode": "auto",
                 "quality_focus": True
             }

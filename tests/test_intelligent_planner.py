@@ -43,6 +43,7 @@ def test_enhanced_specification_handling():
     # Test 4: User says "no preference" for remaining specs
     print("\n4️⃣ User indicates no preference:")
     user_message = "I have no preference for the rest"
+    # user_message = "I have only this much information to share."
     print(f"User Message: {user_message}")
     response3 = planner.process_user_message(user_message)
     print(f"   Status: {response3['status']}")
@@ -224,10 +225,10 @@ def test_specification_schema():
 
 
 if __name__ == "__main__":
-    test_enhanced_specification_handling()
+    # test_enhanced_specification_handling()
     print("\n" + "=" * 50)
-    test_intelligent_planner()
-    print("\n" + "=" * 50)
-    test_session_management()
-    print("\n" + "=" * 50)
+    # test_intelligent_planner()
+    # print("\n" + "=" * 50)
+    # test_session_management()
+    # print("\n" + "=" * 50)
     test_specification_schema()

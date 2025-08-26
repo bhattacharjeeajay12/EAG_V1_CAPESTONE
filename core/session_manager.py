@@ -48,7 +48,7 @@ class SessionManager:
     def update_conversation_goal(self, description: str, category: str, status: str, progress_score: float = 0.0):
         """Update or create conversation goal with comprehensive tracking."""
         if self.current_goal and self.current_goal.description == description:
-            # Update existing goal
+            # Update existing goal - ensure progress never goes backwards
             self.current_goal.status = status
             self.current_goal.progress_score = max(self.current_goal.progress_score, progress_score)
             self.current_goal.updated_at = datetime.now().isoformat()
@@ -64,7 +64,7 @@ class SessionManager:
         # Store goal information in context manager for persistence
         self.context_manager.add_fact("current_goal", description, "planner")
         self.context_manager.add_fact("goal_category", category, "planner")
-        self.context_manager.add_fact("goal_progress", str(progress_score), "planner")
+        self.context_manager.add_fact("goal_progress", str(self.current_goal.progress_score), "planner")
 
     def track_satisfaction_signal(self):
         """Track a satisfaction signal detected in user message."""

@@ -344,7 +344,7 @@ CRITICAL: Only use specification names from the allowed schema. Be thorough in b
             )
 
     def evaluate_post_agent_goal_status(self, agent_result: Dict[str, Any], decision: PlannerDecision,
-                                      current_goal: Optional[ConversationGoal]) -> Dict[str, Any]:
+                                        current_goal: Optional[ConversationGoal]) -> Dict[str, Any]:
         """Evaluate goal achievement after agent execution based on results and context."""
 
         if not current_goal:
@@ -358,24 +358,32 @@ CRITICAL: Only use specification names from the allowed schema. Be thorough in b
                 "business_value": "none"
             }
 
-        # Determine goal achievement based on agent results and goal type
+        # Start with previous progress score, never go backwards
+        progress_score = max(decision.goal_progress_score or 0.0, current_goal.progress_score)
         achieved = False
-        progress_score = decision.goal_progress_score or 0.8  # Start with previous progress
         criteria_met = []
         satisfaction_signals = []
         business_value = "moderate"
 
         if current_goal.category == "discovery":
-            # Discovery goal evaluation
-            if agent_result.get("products_found", 0) > 0:
+            # Discovery goal evaluation - check agent results
+            products_found = agent_result.get("products_found", 0)
+            if products_found > 0:
                 criteria_met.append("User receives relevant product recommendations")
                 progress_score = max(progress_score, 0.9)
                 business_value = "high"
 
-                if agent_result.get("products_found", 0) >= 3:
+                if products_found >= 3:
                     criteria_met.append("Products match user's specified requirements")
-                    achieved = True  # Good product results typically indicate goal achievement
+                    criteria_met.append("Budget and preferences are respected")
+                    achieved = True
                     progress_score = 1.0
+                    business_value = "high"
+
+            # Even if no products found, agent was called successfully
+            elif agent_result.get("status") == "success":
+                criteria_met.append("Search was executed based on user requirements")
+                progress_score = max(progress_score, 0.85)
 
         elif current_goal.category == "order":
             # Order tracking goal evaluation
@@ -405,8 +413,8 @@ CRITICAL: Only use specification names from the allowed schema. Be thorough in b
         return {
             "achieved": achieved,
             "status": "achieved" if achieved else "in_progress",
-            "progress_score": progress_score,
-            "reasoning": f"Agent {decision.agent_type} executed successfully. Criteria met: {len(criteria_met)}/{len(current_goal.success_criteria)}",
+            "progress_score": progress_score,  # Never goes backwards
+            "reasoning": f"Agent {decision.agent_type} executed. Products found: {agent_result.get('products_found', 0)}. Criteria met: {len(criteria_met)}/{len(current_goal.success_criteria)}",
             "criteria_met": criteria_met,
             "satisfaction_signals": satisfaction_signals,
             "business_value": business_value

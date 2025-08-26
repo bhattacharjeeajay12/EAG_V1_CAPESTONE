@@ -109,12 +109,20 @@ class SpecificationHandler:
 
         missing_specs = [spec for spec, value in self.required_specs.items() if not value]
 
+        # If we have essential specs (use_case + budget), mark remaining as flexible
+        has_essentials = self.gathered_specs.get("use_case") and self.gathered_specs.get("budget")
+        if has_essentials and missing_specs:
+            # Mark remaining as flexible to trigger confirmation
+            for spec in missing_specs:
+                self.required_specs[spec] = "flexible"
+                self.gathered_specs[spec] = "flexible"
+            missing_specs = []
+
         return {
             "specs_updated": specs_updated,
             "missing_specs": missing_specs,
-            "gathered_specs": self.gathered_specs.copy()  # FIX: Include current specs in response
+            "gathered_specs": self.gathered_specs.copy()
         }
-
 
     def generate_specification_questions(self, needed_specs: List[str]) -> str:
         """Generate intelligent, business-aware questions for needed specifications using schema."""
