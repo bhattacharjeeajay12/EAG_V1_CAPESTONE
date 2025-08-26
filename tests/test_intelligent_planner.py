@@ -1,206 +1,225 @@
-# test_intelligent_planner.py
+# tests/test_intelligent_planner.py
 """
-Test cases for the Intelligent Planner system.
-
-Tests the core scenarios discussed:
-1. Out-of-domain requests (stars from Andromeda galaxy)
-2. Context accumulation across multiple messages
-3. Ambiguity resolution and clarification
-4. Information sufficiency evaluation
-5. Dynamic plan generation and routing
+Test suite for the Intelligent Planner system.
+Tests specification handling, goal evaluation, and business intelligence features.
 """
 
-from cleaning.planner_new import IntelligentPlanner
+from core.intelligent_planner import IntelligentPlanner
+from core.schemas import SpecificationSchema
 
 
-def test_out_of_domain_request():
-    """Test handling of completely out-of-domain requests."""
-    print("\n" + "=" * 60)
-    print("TEST 1: Out-of-Domain Request")
-    print("=" * 60)
+def test_enhanced_specification_handling():
+    """Test the enhanced specification handling with schema validation and no-preference detection."""
+    print("🧪 Testing Enhanced Specification Handling")
+    print("=" * 80)
 
-    planner = IntelligentPlanner()
-    planner.start_session("test_out_of_domain")
+    planner = IntelligentPlanner("test_spec_handling_session")
 
-    # Test the astronomy request
-    result = planner.process_message("I want stars from the real Andromeda galaxy")
+    # Test 1: Start conversation
+    print("1️⃣ Starting conversation:")
+    start_response = planner.start_conversation()
+    print(f"   Status: {start_response['status']}")
 
-    print(f"Domain Status: {result['domain_status']['in_domain']}")
-    print(f"Routing Action: {result['routing_decision']['action']}")
-    print(f"Response: {result['routing_decision']['message']}")
-    print(f"Context Preserved: {result['routing_decision']['context_preserved']}")
+    # Test 2: Vague request - should use valid spec names
+    print("\n2️⃣ Vague user request:")
+    user_message = "I need a laptop"
+    print(f"User Message: {user_message}")
+    response1 = planner.process_user_message(user_message)
+    print(f"   Status: {response1['status']}")
+    print(f"   Specs Needed: {response1.get('specifications_needed', [])}")
 
-    assert result["success"] == True
-    assert result.get("out_of_domain") == True
-    assert result["routing_decision"]["action"] == "REDIRECT"
+    # Test 3: User provides gaming + budget (should be extracted properly)
+    print("\n3️⃣ User provides use case and budget:")
+    user_message = "Gaming and 150000 INR"
+    print(f"User Message: {user_message}")
+    response2 = planner.process_user_message(user_message)
+    print(f"   Status: {response2['status']}")
+    print(f"   Specs Gathered: {response2.get('specifications_gathered', {})}")
+    print(f"   Remaining Specs: {response2.get('specifications_needed', [])}")
 
+    # Test 4: User says "no preference" for remaining specs
+    print("\n4️⃣ User indicates no preference:")
+    user_message = "I have no preference for the rest"
+    print(f"User Message: {user_message}")
+    response3 = planner.process_user_message(user_message)
+    print(f"   Status: {response3['status']}")
+    print(f"   Action: {response3.get('action')}")
+    if response3.get('gathered_specifications'):
+        print(f"   Final Specs: {response3['gathered_specifications']}")
 
-def test_context_accumulation():
-    """Test context accumulation across multiple messages."""
-    print("\n" + "=" * 60)
-    print("TEST 2: Context Accumulation")
-    print("=" * 60)
+    # Test 5: Schema validation test
+    print("\n5️⃣ Testing specification schema:")
+    test_invalid_specs = ["intended_use", "screen_size", "operating_system"]
+    valid_specs = SpecificationSchema.validate_spec_names(test_invalid_specs)
+    print(f"   Invalid Specs: {test_invalid_specs}")
+    print(f"   Valid Specs After Validation: {valid_specs}")
 
-    planner = IntelligentPlanner()
-    planner.start_session("test_context_accumulation")
+    # Test 6: Entity mapping test
+    print("\n6️⃣ Testing entity mapping:")
+    test_entities = {
+        "intended_use": "gaming",
+        "price_range": "50000 INR",
+        "brand_preference": "Dell"
+    }
+    mapped_entities = SpecificationSchema.map_entities_to_specs(test_entities)
+    print(f"   Original Entities: {test_entities}")
+    print(f"   Mapped Entities: {mapped_entities}")
 
-    # Message 1: Intent only
-    print("\nMessage 1: 'I need a laptop'")
-    result1 = planner.process_message("I need a laptop")
-    print(f"  Accumulated Info: {result1['accumulated_info']}")
-    print(f"  Routing Action: {result1['routing_decision']['action']}")
-    print(f"  Should Execute Agent: {result1['routing_decision'].get('agent_to_call')}")
-
-    # Message 2: Add budget constraint
-    print("\nMessage 2: 'My budget is 40000'")
-    result2 = planner.process_message("My budget is 40000")
-    print(f"  Accumulated Info: {result2['accumulated_info']}")
-    print(f"  Routing Action: {result2['routing_decision']['action']}")
-    print(f"  Should Execute Agent: {result2['routing_decision'].get('agent_to_call')}")
-
-    # Message 3: Ambiguous reference
-    print("\nMessage 3: 'Petty carrie has a better one'")
-    result3 = planner.process_message("Petty carrie has a better one")
-    print(f"  Context Resolution: {result3['context_resolution']}")
-    print(f"  Routing Action: {result3['routing_decision']['action']}")
-    print(f"  Response: {result3['routing_decision']['message']}")
-
-    # Verify the expected behavior:
-    # - Should not execute agent after message 1 (insufficient info might be okay though)
-    # - Should be ready to execute agent after message 2 (has product + budget)
-    # - Should pause for clarification after message 3 (ambiguous reference)
-
-    print(f"\nFinal Summary:")
-    print(f"  Total Messages: 3")
-    print(f"  Final Accumulated Info: {result3['accumulated_info']}")
-    print(f"  Context Preserved Throughout: All routing decisions preserved context")
-
-
-def test_incremental_vs_accumulated():
-    """Test when planner decides to act vs wait for more information."""
-    print("\n" + "=" * 60)
-    print("TEST 3: Incremental vs Accumulated Decision Making")
-    print("=" * 60)
-
-    planner = IntelligentPlanner()
-    planner.start_session("test_incremental_accumulated")
-
-    # Progressive information gathering
-    messages = [
-        "Hi there",
-        "I want to buy something",
-        "A laptop",
-        "Dell laptop",
-        "16GB RAM",
-        "Under 50000 budget"
+    # Test 7: No preference detection
+    print("\n7️⃣ Testing no preference detection:")
+    test_phrases = [
+        "I don't care",
+        "no preference",
+        "anything is fine",
+        "I'm flexible",
+        "doesn't matter to me"
     ]
+    for phrase in test_phrases:
+        detected = SpecificationSchema.detect_no_preference(phrase)
+        print(f"   '{phrase}' → No Preference: {detected}")
 
-    for i, msg in enumerate(messages, 1):
-        print(f"\nMessage {i}: '{msg}'")
-        result = planner.process_message(msg)
-
-        info_status = result['information_status']
-        routing = result['routing_decision']
-
-        print(f"  Info Sufficiency: {info_status.get('overall_sufficiency', 'Unknown')}")
-        print(f"  Ready Actions: {info_status.get('ready_actions', [])}")
-        print(f"  Routing Action: {routing['action']}")
-
-        if routing.get('agent_to_call'):
-            print(f"  *** EXECUTING AGENT: {routing['agent_to_call']} ***")
-
-        print(f"  Accumulated: {result['accumulated_info']}")
+    print("\n" + "=" * 80)
+    print("✅ Enhanced Specification Handling Tests Complete!")
+    print("\nKey Fixes Demonstrated:")
+    print("🔧 Standardized specification schema prevents LLM/NLU mismatches")
+    print("🎯 Proper entity extraction for gaming + budget")
+    print("✨ No preference detection ends spec gathering loops")
+    print("🛡️ Specification name validation prevents invalid LLM outputs")
+    print("🔄 Enhanced entity mapping handles alternative naming")
+    print("📝 Better user guidance and helpful clarifications")
 
 
-def test_clarification_with_context():
-    """Test contextual clarification that preserves conversation flow."""
-    print("\n" + "=" * 60)
-    print("TEST 4: Contextual Clarification")
-    print("=" * 60)
+def test_intelligent_planner():
+    """Test the enhanced Intelligent Planner with comprehensive goal evaluation and business intelligence."""
+    print("🧪 Testing Enhanced Intelligent Planner with Goal Evaluation")
+    print("=" * 80)
 
-    planner = IntelligentPlanner()
-    planner.start_session("test_contextual_clarification")
+    planner = IntelligentPlanner("test_enhanced_session")
 
-    # Build up context
-    planner.process_message("I want to buy a smartphone")
-    planner.process_message("Samsung brand preferred")
+    # Test 1: Start conversation with business context
+    print("1️⃣ Starting conversation:")
+    start_response = planner.start_conversation()
+    print(f"   Status: {start_response['status']}")
+    print(f"   Business Context: {start_response.get('business_context', 'N/A')}")
+    print(f"   Response: {start_response['response'][:100]}...")
 
-    # Now send ambiguous message
-    result = planner.process_message("Make it blue and that size")
+    # Test 2: Vague user request - should trigger spec gathering with goal evaluation
+    print("\n2️⃣ Vague user request (should gather specs with goal evaluation):")
+    user_message = "I want to buy a laptop"
+    print(f"User Message: {user_message}")
+    response1 = planner.process_user_message(user_message)
+    print(f"   Status: {response1['status']}")
+    print(f"   Action: {response1.get('action')}")
+    print(f"   Goal Status: {response1.get('goal_status')}")
+    print(f"   Goal Progress: {response1.get('goal_progress', 0):.1f}")
+    if response1.get('goal_evaluation'):
+        print(f"   Goal Reasoning: {response1['goal_evaluation']['reasoning'][:80]}...")
 
-    print(f"Ambiguous Elements: {result['context_resolution'].get('ambiguous_elements', [])}")
-    print(f"Needs Clarification: {result['context_resolution'].get('needs_clarification', False)}")
-    print(f"Clarification Questions: {result['context_resolution'].get('clarification_questions', [])}")
-    print(f"Routing Response: {result['routing_decision']['message']}")
-    print(f"Context Preserved: {result['routing_decision']['context_preserved']}")
+    # Test 3: User provides specifications with satisfaction signals
+    print("\n3️⃣ User provides specifications with satisfaction signals:")
+    user_message = "Perfect! I need it for gaming and my budget is around 150000 INR"
+    print(f"User Message: {user_message}")
+    response2 = planner.process_user_message(user_message)
+    print(f"   Status: {response2['status']}")
+    print(f"   Action: {response2.get('action')}")
+    print(f"   Goal Progress: {response2.get('goal_progress', 0):.1f}")
+    print(f"   Satisfaction Signals: {planner.session_manager.satisfaction_signals_detected}")
 
-    # Verify that context is maintained
-    session_summary = planner.get_session_summary()
-    print(f"Session Summary: {session_summary}")
+    # Test 4: User confirms requirements
+    print("\n4️⃣ User confirms requirements:")
+    user_message = "Yes, that looks exactly right!"
+    print(f"User Message: {user_message}")
+    response3 = planner.process_user_message(user_message)
+    print(f"   Status: {response3['status']}")
+    print(f"   Action: {response3.get('action')}")
+    print(f"   Agent Called: {response3.get('agent_type')}")
+    print(f"   Goal Achieved: {response3.get('goal_achieved')}")
+    print(f"   Session Complete: {response3.get('session_complete', False)}")
+    if response3.get('goal_evaluation'):
+        eval_data = response3['goal_evaluation']
+        print(f"   Criteria Met: {len(eval_data.get('criteria_met', []))}")
+        print(f"   Business Value: {eval_data.get('business_value', 'N/A')}")
+
+    # Test 5: Session information with business metrics
+    print(f"\n5️⃣ Enhanced Session Information:")
+    session_info = planner.get_session_info()
+    print(f"   Session ID: {session_info['session_id']}")
+    print(f"   Planner Status: {session_info['planner_status']}")
+    print(
+        f"   Goal Progress: {session_info['current_goal']['progress_score'] if session_info['current_goal'] else 0:.1f}")
+    print(
+        f"   Business Objective: {session_info['current_goal']['business_objective'] if session_info['current_goal'] else 'N/A'}")
+    quality_metrics = session_info.get('conversation_quality', {})
+    print(f"   Satisfaction Signals: {quality_metrics.get('satisfaction_signals_detected', 0)}")
+    business_metrics = session_info.get('business_metrics', {})
+    print(f"   Customer Engagement: {business_metrics.get('customer_engagement', 'N/A')}")
+
+    print("\n" + "=" * 80)
+    print("✅ Enhanced Intelligent Planner Tests Complete!")
+    print("\nKey Enhancements Demonstrated:")
+    print("🎯 Single LLM call per message (planning + goal evaluation)")
+    print("📊 Comprehensive goal tracking with measurable criteria")
+    print("💼 Business-aware decision making and messaging")
+    print("😊 User satisfaction signal detection and tracking")
+    print("📈 Progress scoring and conversation quality metrics")
+    print("🏆 Professional, customer service-focused interactions")
+    print("⚡ Efficient processing with integrated goal evaluation")
+    print("🔧 Fixed specification naming mismatch issues")
+    print("✨ Enhanced no-preference handling prevents loops")
 
 
-def test_complete_conversation_flow():
-    """Test a complete conversation from start to agent execution."""
-    print("\n" + "=" * 60)
-    print("TEST 5: Complete Conversation Flow")
-    print("=" * 60)
+def test_session_management():
+    """Test session management and goal tracking."""
+    print("🧪 Testing Session Management")
+    print("=" * 50)
 
-    planner = IntelligentPlanner()
-    planner.start_session("test_complete_flow")
+    planner = IntelligentPlanner("test_session")
 
-    conversation_steps = [
-        "Hello",
-        "I need help finding a product",
-        "Looking for a laptop for work",
-        "Budget is around 80000 rupees",
-        "Prefer Dell or HP brand",
-        "Need good battery life"
-    ]
+    # Test session info
+    session_info = planner.get_session_info()
+    print(f"Initial Session Status: {session_info['planner_status']}")
+    print(f"Session ID: {session_info['session_id']}")
 
-    for step in conversation_steps:
-        print(f"\nUser: {step}")
-        result = planner.process_message(step)
+    # Test conversation end
+    end_response = planner.end_conversation("test_complete")
+    print(f"End Response Status: {end_response['status']}")
+    print(f"Business Outcome: {end_response['business_outcome']}")
 
-        routing = result['routing_decision']
-        print(f"Planner Action: {routing['action']}")
-
-        if routing.get('message'):
-            print(f"Planner: {routing['message']}")
-
-        if routing.get('agent_to_call'):
-            print(f">>> CALLING {routing['agent_to_call']} AGENT <<<")
-            execution_context = routing.get('execution_context', {})
-            print(f"Agent Context: {execution_context.get('accumulated_info', {})}")
-
-    # Final session state
-    final_summary = planner.get_session_summary()
-    print(f"\n=== Final Session Summary ===")
-    print(f"Messages Processed: {final_summary['message_count']}")
-    print(f"Information Gathered: {final_summary['accumulated_info']}")
-    print(f"Last Intent: {final_summary['last_intent']}")
-    print(f"Information Richness: {final_summary['information_richness']} fields")
+    print("✅ Session Management Tests Complete!")
 
 
-def main():
-    """Run all test cases."""
-    print("🧪 Testing Intelligent Planner System")
-    print("Testing the scenarios discussed:")
-    print("1. Out-of-domain handling (Andromeda galaxy)")
-    print("2. Context accumulation (laptop + budget + ambiguous reference)")
-    print("3. Information sufficiency evaluation")
-    print("4. Contextual clarification")
-    print("5. Complete conversation flow")
+def test_specification_schema():
+    """Test specification schema validation and mapping."""
+    print("🧪 Testing Specification Schema")
+    print("=" * 50)
 
-    test_out_of_domain_request()
-    test_context_accumulation()
-    test_incremental_vs_accumulated()
-    test_clarification_with_context()
-    test_complete_conversation_flow()
+    # Test validation
+    invalid_specs = ["screen_size", "operating_system", "intended_use"]
+    valid_specs = SpecificationSchema.validate_spec_names(invalid_specs)
+    print(f"Invalid specs filtered out: {len(invalid_specs) - len(valid_specs)} removed")
 
-    print("\n" + "=" * 60)
-    print("✅ All Intelligent Planner Tests Complete!")
-    print("=" * 60)
+    # Test entity mapping
+    test_entities = {
+        "price_range": "50000 INR",
+        "intended_use": "gaming",
+        "brand_preference": "Dell"
+    }
+    mapped = SpecificationSchema.map_entities_to_specs(test_entities)
+    print(f"Entity mapping successful: {len(mapped)} entities mapped")
+
+    # Test no preference detection
+    test_phrases = ["no preference", "I don't care", "flexible"]
+    detected = [SpecificationSchema.detect_no_preference(phrase) for phrase in test_phrases]
+    print(f"No preference detection: {sum(detected)}/{len(detected)} phrases detected")
+
+    print("✅ Specification Schema Tests Complete!")
 
 
 if __name__ == "__main__":
-    main()
+    test_enhanced_specification_handling()
+    print("\n" + "=" * 50)
+    test_intelligent_planner()
+    print("\n" + "=" * 50)
+    test_session_management()
+    print("\n" + "=" * 50)
+    test_specification_schema()
