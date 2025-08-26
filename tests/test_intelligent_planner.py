@@ -10,7 +10,7 @@ Tests the core scenarios discussed:
 5. Dynamic plan generation and routing
 """
 
-from core.planner_new import IntelligentPlanner
+from cleaning.planner_new import IntelligentPlanner
 
 
 def test_out_of_domain_request():

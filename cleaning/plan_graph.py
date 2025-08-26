@@ -4,8 +4,8 @@ NetworkX-based Plan Graph Implementation
 """
 
 import networkx as nx
-from typing import Dict, List, Any, Optional, Set
-from .plan_templates import PlanTemplates
+from typing import Dict, List, Any
+from cleaning.plan_templates import PlanTemplates
 
 
 class PlanGraph:

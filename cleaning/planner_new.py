@@ -4,11 +4,11 @@ Main Planner/Orchestrator - Coordinates all components
 """
 
 from typing import Dict, Any, Optional
-from core.context import Context, OrchestratorState
-from core.conversation_manager import ConversationManager
-from core.plan_graph import PlanGraph
-from core.execution_controller import ExecutionController
-from core.agent_contracts import AgentInvoker
+from cleaning.context import Context, OrchestratorState
+from cleaning.conversation_manager import ConversationManager
+from cleaning.plan_graph import PlanGraph
+from cleaning.execution_controller import ExecutionController
+from cleaning.agent_contracts import AgentInvoker
 from nlu.nlu import NLUModule
 
 

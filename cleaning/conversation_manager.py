@@ -4,7 +4,7 @@ Conversation Management and Orchestration
 """
 
 from typing import Dict, List, Any, Optional, Callable
-from .context import Context, OrchestratorState, ConversationMessage
+from cleaning.context import Context, ConversationMessage
 import uuid
 from datetime import datetime
 
@@ -297,7 +297,7 @@ def test_conversation_manager():
     print("🤖 System: Great! I can help you find a laptop. What's your budget?")
 
     # Test clarification request
-    from .context import Context
+    from cleaning.context import Context
     context = Context()
     context.merge({"intent": "BUY", "category": "electronics"})
 

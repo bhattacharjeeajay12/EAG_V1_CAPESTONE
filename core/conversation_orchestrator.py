@@ -17,7 +17,7 @@ import time
 from typing import Dict, Any, Optional, Callable
 from datetime import datetime, timedelta
 from core.intelligent_planner import IntelligentPlanner, PlannerStatus
-
+import uuid
 
 class ConversationOrchestrator:
     """
@@ -282,7 +282,9 @@ def cli_example():
     """Example of how to use orchestrator for CLI."""
     print("Starting CLI conversation (type 'exit' to end)...")
 
-    orchestrator = ConversationOrchestrator("cli_session")
+    # Generate a random UUID (UUID4)
+    unique_id = str(uuid.uuid4())
+    orchestrator = ConversationOrchestrator("cli_session_" +str(unique_id))
 
     def get_user_input():
         return input("You: ")
@@ -299,6 +301,7 @@ def cli_example():
 
 
 if __name__ == "__main__":
-    test_conversation_orchestrator()
-    print("\n" + "=" * 50)
-    print("To run CLI example, call: cli_example()")
+    # test_conversation_orchestrator()
+    # print("\n" + "=" * 50)
+    # print("To run CLI example, call: cli_example()")
+    cli_example()

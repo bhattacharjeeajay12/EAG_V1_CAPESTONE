@@ -3,10 +3,9 @@
 Test cases for the graph-based planner system.
 """
 
-import pytest
-from core.planner import Planner
-from core.world_state import WorldState
-from core.schema import make_result
+from cleaning.planner import Planner
+from cleaning.world_state import WorldState
+from cleaning.schema import make_result
 
 
 class TestPlanner:

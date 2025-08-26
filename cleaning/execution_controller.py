@@ -3,11 +3,11 @@
 Plan Execution Controller with Need-vs-Have Analysis
 """
 
-from typing import Dict, List, Any, Optional, Tuple
-from .context import Context, OrchestratorState
-from .plan_graph import PlanGraph
-from .adaptation_engine import AdaptationEngine
-from .agent_contracts import AgentRequest, AgentResponse, AgentInvoker
+from typing import Dict, Any, Optional
+from cleaning.context import Context, OrchestratorState
+from cleaning.plan_graph import PlanGraph
+from cleaning.adaptation_engine import AdaptationEngine
+from cleaning.agent_contracts import AgentRequest, AgentInvoker
 
 
 class ExecutionController:
@@ -299,8 +299,6 @@ def test_execution_controller():
     """Test the execution controller with a simple plan."""
     print("🧪 Testing Execution Controller")
     print("=" * 50)
-
-    from .plan_templates import PlanTemplates
 
     # Create a simple test plan
     plan_graph = PlanGraph()
