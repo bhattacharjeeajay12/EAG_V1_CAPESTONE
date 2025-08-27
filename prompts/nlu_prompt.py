@@ -51,12 +51,12 @@ Each intent may optionally have sub_intents for finer granularity.
   - modify → changing order details ("Can I change the delivery address?")
   - cancel → cancelling an order ("Cancel my order")
   - track → tracking shipment ("Track my package")
-     
+
 - **RETURN sub_intents:**
   - initiate → starting a return process ("I want to return this laptop")
   - status → checking return status ("What's the status of my return?")
   - refund_status → checking refund status ("When will I get my refund?")
-  
+
 - **PAYMENT sub_intents:**
   - select_method → choosing payment option ("Can I pay with PayPal?")
   - complete → completing payment ("Process my payment")
@@ -72,13 +72,13 @@ If no clear sub_intent is present, set `"sub_intent": null`.
 - category  
 - subcategory  
 - product  
-- specifications{key:value} (intrinsic product attributes like brand, RAM, color, model, etc.)  
+- specifications (dict of key-value pairs like {{"brand": "Dell", "RAM": "16GB", "color": "black"}})  
 - budget (format: "$X" or "$X-$Y" range, include currency)  
 - quantity  
 - order_id  
 - urgency (values: "low" | "medium" | "high" | "asap")  
-- comparison_items[]  
-- preferences[]  
+- comparison_items (array)  
+- preferences (array)  
 
 ---
 
@@ -144,45 +144,38 @@ Continuity: UNCLEAR
 ---
 
 ### Output JSON
-{
-   "current_turn":{
+{{
+   "current_turn":{{
       "intent":"DISCOVERY|ORDER|RETURN|EXCHANGE|PAYMENT|CHITCHAT|UNKNOWN",
       "sub_intent":"explore|compare|decide|purchase|check_status|modify|cancel|track|initiate|status|refund_status|select_method|complete|resolve_issue|null",
       "confidence":0.0,
-      "entities":{
+      "entities":{{
          "category":null,
          "subcategory":null,
          "product":null,
-         "specifications":{
-            
-         },
+         "specifications":{{}},
          "budget":null,
          "quantity":null,
          "order_id":null,
          "urgency":null,
-         "comparison_items":[
-            
-         ],
-         "preferences":[
-            
-         ]
-      },
+         "comparison_items":[],
+         "preferences":[]
+      }},
       "reasoning":"brief why this intent/entities/sub_intent come ONLY from CURRENT_MESSAGE"
-   },
-   "continuity":{
+   }},
+   "continuity":{{
       "continuity_type":"CONTINUATION|INTENT_SWITCH|CONTEXT_SWITCH|ADDITION|UNCLEAR",
       "confidence":0.0,
       "reasoning":"explain using LAST_INTENT + PAST_3_USER_MESSAGES",
       "context_switch_options":["REPLACE", "ADD", "COMPARE", "SEPARATE"],
-      "suggested_clarification":brief why continuity_type is UNCLEAR,
-      "suggested_clarification":question to ask user if continuity_type is UNCLEAR"
-   },
-   "consistency_checks":{
+      "suggested_clarification":"brief why continuity_type is UNCLEAR or question to ask user if continuity_type is UNCLEAR"
+   }},
+   "consistency_checks":{{
       "entity_conflicts_with_session":[
          "list any keys conflicting with SESSION_ENTITIES_SO_FAR"
       ],
       "notes":"optional brief note"
-   }
-}
+   }}
+}}
 
 """
