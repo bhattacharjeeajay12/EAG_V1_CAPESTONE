@@ -140,6 +140,8 @@ Continuity: UNCLEAR
 4. Always return valid JSON in the exact structure.  
 5. Confidence must be between 0.0 and 1.0.  
 6. Budget format: "INR 100" or "₹500-₹1000", urgency values: "low"/"medium"/"high"/"asap"
+7. suggested_clarification should be a clear, simple question that the user can easily understand and answer.
+8. **IMPORTANT**: context_switch_options should contain ONLY the specific option(s) relevant to this context switch, not all possible options. For example, if user wants to compare, only include ["COMPARE"]. If user wants to replace, only include ["REPLACE"].
 
 ---
 
@@ -167,8 +169,8 @@ Continuity: UNCLEAR
       "continuity_type":"CONTINUATION|INTENT_SWITCH|CONTEXT_SWITCH|ADDITION|UNCLEAR",
       "confidence":0.0,
       "reasoning":"explain using LAST_INTENT + PAST_3_USER_MESSAGES",
-      "context_switch_options":["REPLACE", "ADD", "COMPARE", "SEPARATE"],
-      "suggested_clarification":"brief why continuity_type is UNCLEAR or question to ask user if continuity_type is UNCLEAR"
+      "context_switch_options":["ONLY include relevant option(s) - REPLACE OR ADD OR COMPARE OR SEPARATE"],
+      "suggested_clarification":"clear question to help user clarify their intent"
    }},
    "consistency_checks":{{
       "entity_conflicts_with_session":[

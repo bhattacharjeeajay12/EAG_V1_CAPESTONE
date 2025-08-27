@@ -9,7 +9,6 @@ from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
 from prompts.nlu_prompt import COMBINED_SYSTEM_PROMPT
 
-
 class EnhancedNLU:
     """Simple NLU module for intent and entity extraction."""
 
@@ -166,33 +165,24 @@ Return JSON: {{"category": null, "subcategory": null, "product": null, "specific
         return confidence >= thresholds.get(intent, 0.5)
 
 if __name__ == "__main__":
+    from tests.nlu.nlu_test_questions import questions
+    import json
+    import os
+
     nlu = EnhancedNLU()
+    answers = []
+    for idx, (key, value) in enumerate(questions.items(), start=1):
+        answer = nlu.analyze_message(str(value))
+        answer['question'] = value["CURRENT_MESSAGE"]
+        answer['question_key'] = key
 
-    ques_1 = {
-                  "CURRENT_MESSAGE": "Show me gaming laptops under $1500",
-                  "PAST_3_USER_MESSAGES": [
-                    "I want to buy a laptop",
-                    "Preferably Dell or HP",
-                    "Make sure it has at least 16GB RAM"
-                  ],
-                  "last_intent": "DISCOVERY",
-                  "session_entities": {
-                    "category": "electronics",
-                    "subcategory": "laptop",
-                    "product": None,
-                    "specifications": {"brand: Dell", "RAM: 16GB"},
-                    "budget": None,
-                    "quantity": 1,
-                    "order_id": None,
-                    "urgency": None,
-                    "comparison_items": [],
-                    "preferences": []
-                  }
-                }
-    ans1 = nlu.analyze_message(str(ques_1))
-    print(ans1)
+        print(f"Question {idx}: is done")
 
-    # ans2 = nlu.analyze_message("I want to buy a laptop with 16GB RAM")
-    # ans3 = nlu.analyze_message("I want to buy a laptop with 16GB RAM and 1TB SSD")
-    # chk=1
+        # OPTIONAL --> Reorder dictionary keys
+        answer = {k: answer[k] for k in ["question_key", "question"] if k in answer} | {
+            k: v for k, v in answer.items() if k not in ("question_key", "question")
+        }
+        answers.append(answer)
 
+    with open(os.path.join("tests", "nlu", "nlu_answers.json"), "w") as f:
+        json.dump(answers, f, indent=2)
