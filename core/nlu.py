@@ -21,7 +21,7 @@ class EnhancedNLU:
         "category": None,
         "subcategory": None,
         "product": None,
-        "specifications": [],
+        "specifications": {},
         "budget": None,
         "quantity": None,
         "order_id": None,
@@ -114,14 +114,29 @@ Return JSON: {json.dumps(self.ENTITY_DEFAULTS)}"""
         )
 
     def _parse_response(self, response: str) -> Dict[str, Any]:
-        """Parse LLM response as JSON."""
-        cleaned = (
-            response.strip()
-            .removeprefix("```json")
-            .removesuffix("```")
-            .strip()
-        )
-        return json.loads(cleaned)
+        """Parse LLM response as JSON (robust to fencing/noise)."""
+        text = response.strip()
+        if text.startswith("```"):
+            # Trim code fencing
+            text = text.strip("`")
+            text = text[text.find("{"): text.rfind("}") + 1]
+        try:
+            return json.loads(text)
+        except Exception:
+            # Fallback: extract first top-level JSON object
+            depth = 0
+            start = None
+            for i, ch in enumerate(text):
+                if ch == "{":
+                    if depth == 0:
+                        start = i
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth == 0 and start is not None:
+                        blob = text[start: i + 1]
+                        return json.loads(blob)
+            raise
 
     def _clean_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Validate and normalize result."""
@@ -129,18 +144,34 @@ Return JSON: {json.dumps(self.ENTITY_DEFAULTS)}"""
         intent = current_turn.get("intent", "").upper()
         current_turn["intent"] = intent if intent in self.VALID_INTENTS else "UNKNOWN"
         current_turn["confidence"] = max(0.0, min(1.0, current_turn.get("confidence", 0.5)))
-        current_turn["entities"] = {**self.ENTITY_DEFAULTS, **current_turn.get("entities", {})}
+
+        # Normalize entities
+        entities = {**self.ENTITY_DEFAULTS, **(current_turn.get("entities", {}) or {})}
+        # Normalize category (singular-ish, lowercase)
+        if isinstance(entities.get("category"), str):
+            entities["category"] = entities["category"].rstrip("s").lower()
+        # Ensure specifications is a dict
+        if isinstance(entities.get("specifications"), list):
+            entities["specifications"] = {}
+        # Normalize budget ("under $1500" → "$1500")
+        if isinstance(entities.get("budget"), str) and entities["budget"].lower().startswith(("under", "below", "<")):
+            import re
+            m = re.search(r"([\₹$€£]\s?\d[\d,\.]*)", entities["budget"])
+            if m:
+                entities["budget"] = m.group(1).replace(" ", "")
+        current_turn["entities"] = entities
 
         continuity = {**{"continuity_type": "UNCLEAR", "confidence": 0.5}, **result.get("continuity", {})}
         continuity["confidence"] = max(0.0, min(1.0, continuity["confidence"]))
 
-        consistency_checks = {**{"entity_conflicts_with_session": []}, **result.get("consistency_checks", {})}
+        # Filter invalid context switch options
+        valid_opts = {"REPLACE", "ADD", "COMPARE", "SEPARATE"}
+        opts = [o for o in (continuity.get("context_switch_options") or []) if o in valid_opts]
+        continuity["context_switch_options"] = list(dict.fromkeys(opts))
 
-        return {
-            "current_turn": current_turn,
-            "continuity": continuity,
-            "consistency_checks": consistency_checks
-        }
+        result["current_turn"] = current_turn
+        result["continuity"] = continuity
+        return result
 
     def _create_error_response(self, error_message: str) -> Dict[str, Any]:
         """Return fallback response in case of failure."""
@@ -178,13 +209,35 @@ if __name__ == "__main__":
     answers = []
 
     for idx, (key, value) in enumerate(questions.items(), start=1):
-        answer = nlu.analyze_message(value["CURRENT_MESSAGE"])
+        # Build conversation context from the test fixture
+        ctx = []
+
+        # Past 3 user messages (oldest → newest)
+        for msg in value.get("PAST_3_USER_MESSAGES", []):
+            ctx.append({"role": "user", "content": msg})
+
+        # A synthetic assistant turn carrying last_intent + session_entities
+        last_intent = value.get("last_intent", "")
+        session_entities = value.get("session_entities", {})
+        ctx.append({
+            "role": "assistant",
+            "nlu_result": {
+                "current_turn": {
+                    "intent": last_intent,
+                    "entities": session_entities
+                }
+            }
+        })
+
+        # Now analyze with context
+        answer = nlu.analyze_message(value["CURRENT_MESSAGE"], conversation_context=ctx)
         answer["question"] = value["CURRENT_MESSAGE"]
         answer["question_key"] = key
         answers.append(nlu._reorder_answer(answer))
         print(f"Question {idx}: is done")
 
-    output_file = Path("tests") / "nlu" / "nlu_answers.json"
-    output_file.parent.mkdir(parents=True, exist_ok=True)  # ensure dir exists
-    with output_file.open("w") as f:
-        json.dump(answers, f, indent=2)
+        output_file = Path("tests") / "nlu" / "nlu_answers.json"
+        output_file.parent.mkdir(parents=True, exist_ok=True)  # ensure dir exists
+        with output_file.open("w") as f:
+            json.dump(answers, f, indent=2)
+

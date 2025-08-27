@@ -1,8 +1,7 @@
-# agents/return_agent.py
+# agents/exchange.py
 """
-ReturnAgent:
-- If neither product nor order_id present, ask for identification.
-- Check eligibility first; if eligible, create RMA.
+ExchangeAgent:
+- Similar to Return but asks for replacement criteria when eligible.
 """
 
 from agents.base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall
@@ -11,7 +10,7 @@ from core.llm_client import LLMClient
 from core.planner import PlannerConfig
 
 
-class ReturnAgent(AgentBase):
+class ExchangeAgent(AgentBase):
     def __init__(self, tools: ToolRegistry, llm: LLMClient, cfg: PlannerConfig):
         self.tools = tools
         self.llm = llm
@@ -22,7 +21,7 @@ class ReturnAgent(AgentBase):
         order_id = slots.get("order_id")
         product = slots.get("product")
         if not order_id and not product:
-            return AgentOutput(action=Ask("Which order or product is this return for?", slot="order_id"))
+            return AgentOutput(action=Ask("Which order or product would you like to exchange?", slot="order_id"))
 
-        eligible_tool = self.tools.get("Returns.check_eligibility")
+        eligible_tool = self.tools.get("Exchanges.check_eligibility")
         return AgentOutput(action=ToolCall(name=eligible_tool.name, params={"order_id": order_id, "product": product}))
