@@ -1,9 +1,9 @@
-# debug_test.py
-from core_1.llm_client import LLMClient
+# test_llm.py
+from core.llm_client import LLMClient
 
 # Test if LLM client works
 llm = LLMClient()
-test_prompt = "What is 2+2? Answer in one word."
+test_prompt = "Who came first chicken or egg? Answer in one word."
 
 try:
     response = llm.generate(test_prompt)

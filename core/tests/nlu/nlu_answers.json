@@ -1,0 +1,280 @@
+[
+  {
+    "question_key": "ques_1",
+    "question": "Show me gaming laptops under $1500",
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "sub_intent": "decide",
+      "confidence": 0.9,
+      "entities": {
+        "category": "laptop",
+        "subcategory": "gaming",
+        "product": null,
+        "specifications": {},
+        "budget": "$1500",
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user's message indicates they are looking for options related to gaming laptops within a specific budget, which aligns with the DISCOVERY intent in the decide sub_intent category."
+    },
+    "continuity": {
+      "continuity_type": "CONTINUATION",
+      "confidence": 0.8,
+      "reasoning": "Since the last intent is unknown and there are no past user messages, we consider this as a new inquiry regarding gaming laptops under $1500, which continues the exploration process.",
+      "context_switch_options": [],
+      "suggested_clarification": "Are you looking for specific brands or features for the gaming laptops?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [
+        ""
+      ],
+      "notes": "No prior entity conflicts exist as SESSION_ENTITIES_SO_FAR is empty."
+    }
+  },
+  {
+    "question_key": "ques_2",
+    "question": "Where is my order?",
+    "current_turn": {
+      "intent": "ORDER",
+      "sub_intent": "check_status",
+      "confidence": 0.9,
+      "entities": {
+        "category": null,
+        "subcategory": null,
+        "product": null,
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The intent is identified as ORDER with a sub_intent of check_status because the user asks 'Where is my order?', which directly relates to checking the status of an order."
+    },
+    "continuity": {
+      "continuity_type": "INTENT_SWITCH",
+      "confidence": 0.8,
+      "reasoning": "The last intent was null, which means the previous conversation did not involve an order or related topic. The user has now switched to asking about their order status, thus an intent switch is recognized.",
+      "context_switch_options": [],
+      "suggested_clarification": "Could you please provide your order ID for tracking?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No previous messages or session entities to conflict with since this is the first message regarding orders."
+    }
+  },
+  {
+    "question_key": "ques_3",
+    "question": "Actually, show me tablets instead.",
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "sub_intent": "explore",
+      "confidence": 0.95,
+      "entities": {
+        "category": "tablets",
+        "subcategory": null,
+        "product": null,
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user explicitly requests to see tablets, indicating an interest in exploring different options in that product category."
+    },
+    "continuity": {
+      "continuity_type": "CONTEXT_SWITCH",
+      "confidence": 0.9,
+      "reasoning": "The last intent was not defined, but given that the user previously showed interest in exploring products (implicitly from the blank past messages), this message proposes a transition to a new category (tablets) instead of laptops or other products.",
+      "context_switch_options": [
+        "REPLACE"
+      ],
+      "suggested_clarification": "Are you looking for specific tablet features or price ranges?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No conflicts exist as there are no previous entities in the session."
+    }
+  },
+  {
+    "question_key": "ques_4",
+    "question": "Also show me smartphones.",
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "sub_intent": "explore",
+      "confidence": 1.0,
+      "entities": {
+        "category": null,
+        "subcategory": null,
+        "product": "smartphone",
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user is requesting to see smartphones, indicating an exploration of available products."
+    },
+    "continuity": {
+      "continuity_type": "ADDITION",
+      "confidence": 1.0,
+      "reasoning": "The last intent is absent, but the user is adding a request to explore another category (smartphones) while showing intent to remain in the discovery phase.",
+      "context_switch_options": [
+        "ADD"
+      ],
+      "suggested_clarification": "Are you looking for specific features in smartphones?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No entities have been defined in the session so far, hence no conflicts."
+    }
+  },
+  {
+    "question_key": "ques_5",
+    "question": "Compare it with HP laptops.",
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "sub_intent": "compare",
+      "confidence": 0.9,
+      "entities": {
+        "category": null,
+        "subcategory": null,
+        "product": null,
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [
+          "HP laptops"
+        ],
+        "preferences": []
+      },
+      "reasoning": "The intent is classified as DISCOVERY because the message indicates a user interest in comparing products, specifically HP laptops, which aligns with the sub_intent of compare."
+    },
+    "continuity": {
+      "continuity_type": "CONTEXT_SWITCH",
+      "confidence": 0.8,
+      "reasoning": "The last intent was not provided, but the context of comparing indicates a shift from possibly exploring or discussing laptops to specifically wanting to compare.",
+      "context_switch_options": [
+        "COMPARE"
+      ],
+      "suggested_clarification": "What specific models or features of HP laptops are you interested in comparing?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No conflicts with session entities, as there are none."
+    }
+  },
+  {
+    "question_key": "ques_6",
+    "question": "Now I also need a blender.",
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "sub_intent": "explore",
+      "confidence": 0.9,
+      "entities": {
+        "category": "kitchen appliances",
+        "subcategory": null,
+        "product": "blender",
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user explicitly states a need for a blender, which indicates exploring options for that type of kitchen appliance."
+    },
+    "continuity": {
+      "continuity_type": "CONTEXT_SWITCH",
+      "confidence": 0.8,
+      "reasoning": "The last intent was unknown, and this message indicates a new area of interest (kitchen appliances) that differs from prior context. However, there is no established ongoing goal to switch from.",
+      "context_switch_options": [
+        "SEPARATE"
+      ],
+      "suggested_clarification": "Are you looking for specific features in a blender?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No conflicts with existing SESSION_ENTITIES_SO_FAR."
+    }
+  },
+  {
+    "question_key": "ques_7",
+    "question": "Also, tell me about the return policy.",
+    "current_turn": {
+      "intent": "CHITCHAT",
+      "sub_intent": null,
+      "confidence": 0.9,
+      "entities": {
+        "category": null,
+        "subcategory": null,
+        "product": null,
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user is asking about the return policy, which is more of a general inquiry rather than a specific action related to a product or service."
+    },
+    "continuity": {
+      "continuity_type": "ADDITION",
+      "confidence": 0.8,
+      "reasoning": "The user's current inquiry about the return policy is an additional question that does not relate directly to a previous specific intent, suggesting they are interested in understanding more about the purchasing process.",
+      "context_switch_options": [
+        "ADD"
+      ],
+      "suggested_clarification": "Are you looking for information on returning a specific item?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No conflicts with session entities, as there are no existing entities."
+    }
+  },
+  {
+    "question_key": "ques_8",
+    "question": "What about that one?",
+    "current_turn": {
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
+      "entities": {
+        "category": null,
+        "subcategory": null,
+        "product": null,
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user's statement 'What about that one?' does not provide enough context to extract clear intent or entities."
+    },
+    "continuity": {
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Given that there are no prior user messages or defined last intent, it's unclear how this message relates to any ongoing goal.",
+      "context_switch_options": [],
+      "suggested_clarification": "Could you please specify what you are referring to?"
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [],
+      "notes": "No session entities provided to check against."
+    }
+  }
+]

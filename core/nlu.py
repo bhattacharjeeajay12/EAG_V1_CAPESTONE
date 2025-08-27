@@ -7,10 +7,11 @@ Purpose: Extract intent and entities from user messages with conversation contex
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-
 from core.llm_client import LLMClient
 from prompts.nlu_prompt import COMBINED_SYSTEM_PROMPT
 
+from dotenv import load_dotenv
+load_dotenv()
 
 class EnhancedNLU:
     """NLU module for intent and entity extraction."""
