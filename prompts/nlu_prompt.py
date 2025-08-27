@@ -72,7 +72,7 @@ If no clear sub_intent is present, set `"sub_intent": null`.
 - category  
 - subcategory  
 - product  
-- specifications[] (intrinsic product attributes like brand, RAM, color, model, etc.)  
+- specifications{key:value} (intrinsic product attributes like brand, RAM, color, model, etc.)  
 - budget (format: "$X" or "$X-$Y" range, include currency)  
 - quantity  
 - order_id  
@@ -153,9 +153,9 @@ Continuity: UNCLEAR
          "category":null,
          "subcategory":null,
          "product":null,
-         "specifications":[
+         "specifications":{
             
-         ],
+         },
          "budget":null,
          "quantity":null,
          "order_id":null,
