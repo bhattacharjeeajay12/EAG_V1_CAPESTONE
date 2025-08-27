@@ -18,8 +18,7 @@ from typing import Dict, Any, List, Optional
 from agents.base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Present
 from tools.registry import ToolRegistry
 from core.llm_client import LLMClient
-from core.planner import PlannerConfig  # reuse settings
-
+from core.config import PlannerConfig  # simple dataclass, no circular deps
 
 MANDATORY_SLOTS = ("category", "subcategory")
 

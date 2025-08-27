@@ -8,7 +8,7 @@ ReturnAgent:
 from agents.base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall
 from tools.registry import ToolRegistry
 from core.llm_client import LLMClient
-from core.planner import PlannerConfig
+from core.config import PlannerConfig
 
 
 class ReturnAgent(AgentBase):

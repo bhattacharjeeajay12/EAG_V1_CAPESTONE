@@ -13,35 +13,26 @@ Responsibilities:
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from nlu import EnhancedNLU  # your existing NLU
-from conversation_history import ConversationHistory
+from core.nlu import EnhancedNLU  # your existing NLU
+from core.conversation_history import ConversationHistory
 from agents.base import (
     AgentBase, Action, Ask, Info, AgentOutput, AgentContext
 )
+
 from agents.discovery import DiscoveryAgent
 from agents.order import OrderAgent
-from bakp.return_agent import ReturnAgent
+from agents.return_agent import ReturnAgent
 from agents.exchange import ExchangeAgent
 from agents.payment import PaymentAgent
+
 from tools.registry import ToolRegistry
 from core.llm_client import LLMClient
+from core.config import PlannerConfig, INTENT_THRESHOLDS
+
+from dotenv import load_dotenv
+load_dotenv()
 
 # --- Planner configuration gates (mirror your NLU thresholds) ---
-INTENT_THRESHOLDS = {
-    "ORDER": 0.7,
-    "PAYMENT": 0.7,
-    "RETURN": 0.6,
-    "EXCHANGE": 0.6,
-    "DISCOVERY": 0.5,
-    "CHITCHAT": 0.3,
-}
-
-
-@dataclass
-class PlannerConfig:
-    top_k_present: int = 5  # how many items to present by default
-
-
 class Planner:
     """
     One planner to rule them all: a single top-level state machine
