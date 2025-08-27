@@ -1,4 +1,4 @@
-# core/intent_tracker.py
+# core_1/intent_tracker.py
 """
 Intent Tracker with LLM-Powered Continuity Analysis and Advanced Features
 
@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
 from datetime import datetime
-from core.llm_client import LLMClient
+from core_1.llm_client import LLMClient
 
 
 class IntentStatus(Enum):

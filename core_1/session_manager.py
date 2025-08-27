@@ -1,4 +1,4 @@
-# core/session_manager.py
+# core_1/session_manager.py
 """
 Session management and conversation lifecycle handling.
 Manages session state, goal tracking, and conversation flow.

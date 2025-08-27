@@ -1,4 +1,4 @@
-# core/specification_handler.py
+# core_1/specification_handler.py
 """
 Handles specification gathering, entity extraction, and requirement confirmation.
 Manages the complete specification collection workflow.

@@ -1,5 +1,5 @@
 # debug_test.py
-from core.llm_client import LLMClient
+from core_1.llm_client import LLMClient
 
 # Test if LLM client works
 llm = LLMClient()

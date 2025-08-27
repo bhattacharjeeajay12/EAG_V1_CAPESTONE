@@ -1,4 +1,4 @@
-# core/conversation_orchestrator.py
+# core_1/conversation_orchestrator.py
 """
 Conversation Orchestrator - Manages complete conversation lifecycle
 
@@ -15,7 +15,7 @@ Key Features:
 
 from typing import Dict, Any, Callable
 from datetime import datetime, timedelta
-from core.intelligent_planner import IntelligentPlanner, PlannerStatus
+from core_1.intelligent_planner import IntelligentPlanner, PlannerStatus
 import uuid
 
 class ConversationOrchestrator:

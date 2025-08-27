@@ -1,4 +1,4 @@
-# core/mock_agents.py
+# core_1/mock_agents.py
 """
 Mock Agent Manager - Realistic Agent Simulations with Discovery Agent
 

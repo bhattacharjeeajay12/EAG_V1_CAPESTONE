@@ -1,4 +1,4 @@
-# core/intelligent_planner.py
+# core_1/intelligent_planner.py
 """
 Intelligent Planner - LLM-Driven Goal-Oriented Conversational AI
 
@@ -14,11 +14,11 @@ Architecture: Composition-based with specialized handlers for different concerns
 from typing import Dict, Any
 from datetime import datetime
 
-from core.enhanced_nlu import EnhancedNLU
-from core.intent_tracker import IntentTracker
-from core.context_manager import ContextManager
-from core.llm_client import LLMClient
-from core.mock_agents import MockAgentManager
+from core_1.enhanced_nlu import EnhancedNLU
+from core_1.intent_tracker import IntentTracker
+from core_1.context_manager import ContextManager
+from core_1.llm_client import LLMClient
+from core_1.mock_agents import MockAgentManager
 
 from .models import PlannerStatus, PlannerDecision
 from .specification_handler import SpecificationHandler

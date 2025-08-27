@@ -1,6 +1,5 @@
 import os, json
 from typing import List, Dict, Any, Optional
-from prompts import buy_prompt
 
 import google.generativeai as genai
 from perceptions.buy_perception import extract_buy_details
@@ -15,7 +14,7 @@ def _project_path(*parts: str) -> str:
 
 def _load_buy_agent_prompt() -> str:
     try:
-        from prompts.buy_prompt import BUY_AGENT_PROMPT
+        from core_1.prompts.buy_prompt import BUY_AGENT_PROMPT
         return BUY_AGENT_PROMPT
     except Exception as e:
         print(f"[WARN] Could not load buy agent prompt from prompts.buy_prompt: {e}")

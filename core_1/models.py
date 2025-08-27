@@ -1,4 +1,4 @@
-# core/models.py
+# core_1/models.py
 """
 Data models and enums for the intelligent planner.
 Contains goal tracking, decision structures, and status definitions.

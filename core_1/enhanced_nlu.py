@@ -1,4 +1,4 @@
-# core/enhanced_nlu.py
+# core_1/enhanced_nlu.py
 """
 Enhanced Natural Language Understanding Module
 
@@ -25,7 +25,7 @@ load_dotenv()
 
 import json
 from typing import Dict, List, Optional, Any
-from core.llm_client import LLMClient
+from core_1.llm_client import LLMClient
 
 
 class EnhancedNLU:

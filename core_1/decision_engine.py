@@ -1,4 +1,4 @@
-# core/decision_engine.py
+# core_1/decision_engine.py
 """
 Core decision engine for LLM-driven planning and goal evaluation.
 Handles comprehensive planning decisions with integrated goal assessment.
@@ -28,7 +28,7 @@ class DecisionEngine:
                                            intent_result: Dict[str, Any], current_goal: Optional[ConversationGoal]) -> PlannerDecision:
         """
         Use single LLM call to make intelligent planning decisions AND evaluate goal achievement.
-        This is the core method that combines planning and goal evaluation for efficiency.
+        This is the core_1 method that combines planning and goal evaluation for efficiency.
         """
         # Create comprehensive prompt that handles both planning and goal evaluation
         prompt = self._create_comprehensive_planning_prompt(user_message, nlu_result, intent_result, current_goal)

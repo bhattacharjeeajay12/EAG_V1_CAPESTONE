@@ -1,4 +1,4 @@
-# core/schemas.py
+# core_1/schemas.py
 """
 Schema definitions and validation for the intelligent planner.
 Handles standardized specification schemas and entity mappings.

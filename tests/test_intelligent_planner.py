@@ -4,8 +4,8 @@ Test suite for the Intelligent Planner system.
 Tests specification handling, goal evaluation, and business intelligence features.
 """
 
-from core.intelligent_planner import IntelligentPlanner
-from core.schemas import SpecificationSchema
+from core_1.intelligent_planner import IntelligentPlanner
+from core_1.schemas import SpecificationSchema
 
 
 def test_enhanced_specification_handling():
