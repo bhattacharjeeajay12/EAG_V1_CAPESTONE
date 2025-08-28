@@ -5,14 +5,10 @@
       "sub_intent": "decide",
       "confidence": 0.9,
       "entities": {
-        "category": "electronics",
+        "category": null,
         "subcategory": "laptop",
-        "product": null,
-        "specifications": {
-          "brand": null,
-          "ram": null,
-          "color": null
-        },
+        "product": "gaming laptop",
+        "specifications": {},
         "budget": "$1500",
         "quantity": null,
         "order_id": null,
@@ -20,19 +16,19 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The intent is to discover gaming laptops with a specific budget, which indicates a decision-making process."
+      "reasoning": "The user is asking to see \"gaming laptops under $1500\", indicating a desire to filter or narrow down options (decide intent) within the laptop subcategory and setting a budget. The presence of 'gaming laptop' indicates a desire for a specific type of laptop."
     },
     "continuity": {
       "continuity_type": "CONTINUATION",
       "confidence": 0.8,
-      "reasoning": "The user continues to explore laptops, specifying gaming laptops under $1500, building on previous messages about wanting a laptop from Dell or HP with at least 16GB RAM.",
+      "reasoning": "The last intent was DISCOVERY, and the current message continues to refine the laptop search by specifying 'gaming' and a budget, building upon the previous turns.",
       "context_switch_options": [],
       "suggested_clarification": null,
       "why_clarification": ""
     },
     "consistency_checks": {
       "entity_conflicts_with_session": [],
-      "notes": ""
+      "notes": "The subcategory 'laptop' is consistent with the session. The budget is new information. The product 'gaming laptop' is more specific and adds more info to previous turns. No conflicts."
     },
     "question": "Show me gaming laptops under $1500",
     "question_key": "ques_1"
@@ -41,7 +37,7 @@
     "current_turn": {
       "intent": "ORDER",
       "sub_intent": "check_status",
-      "confidence": 1.0,
+      "confidence": 0.95,
       "entities": {
         "category": null,
         "subcategory": null,
@@ -54,15 +50,15 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is inquiring about the status of their order, which aligns with the ORDER intent and the check_status sub_intent."
+      "reasoning": "The user is asking about the location of their order. This directly corresponds to checking the status of an order, fitting the ORDER intent and check_status sub-intent. No entities are explicitly mentioned in the current message."
     },
     "continuity": {
       "continuity_type": "INTENT_SWITCH",
-      "confidence": 1.0,
-      "reasoning": "The last intent was DISCOVERY related to laptops, and the current message shifts to checking the status of an order, indicating an intent switch.",
+      "confidence": 0.9,
+      "reasoning": "The last intent was DISCOVERY (browsing laptops), but the current message asks about an order's location. This is a clear switch from product discovery to order management.",
       "context_switch_options": [],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "suggested_clarification": "Could you please provide your order ID?",
+      "why_clarification": "To track the order, we need the order ID."
     },
     "consistency_checks": {
       "entity_conflicts_with_session": [],
@@ -88,12 +84,12 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The CURRENT_MESSAGE indicates a request for tablets, which aligns with the DISCOVERY intent as the user is exploring options other than laptops."
+      "reasoning": "The user is asking to be shown tablets, which falls under the DISCOVERY intent. The sub_intent is explore, as they are looking for options. 'tablets' is extracted as the subcategory."
     },
     "continuity": {
       "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.8,
-      "reasoning": "The user started with a DISCOVERY intent for laptops and is now requesting tablets instead, indicating a shift in focus to a different product category while still within the exploration phase.",
+      "confidence": 0.9,
+      "reasoning": "The user was previously looking for laptops (LAST_INTENT = DISCOVERY, PAST_3_USER_MESSAGES show laptop search). Now the user wants to see tablets instead. This is a switch in the context of the search from laptops to tablets.",
       "context_switch_options": [
         "REPLACE"
       ],
@@ -104,7 +100,7 @@
       "entity_conflicts_with_session": [
         "subcategory"
       ],
-      "notes": "The subcategory conflicts with the existing session entity for laptops."
+      "notes": ""
     },
     "question": "Actually, show me tablets instead.",
     "question_key": "ques_3"
@@ -116,7 +112,7 @@
       "confidence": 0.9,
       "entities": {
         "category": "electronics",
-        "subcategory": "smartphones",
+        "subcategory": "smartphone",
         "product": null,
         "specifications": {},
         "budget": null,
@@ -126,12 +122,12 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is asking for smartphones, which indicates an exploration of product options."
+      "reasoning": "The user is asking to see smartphones, indicating a DISCOVERY intent with the sub-intent explore. The category is electronics, and the subcategory is smartphone."
     },
     "continuity": {
       "continuity_type": "CONTEXT_SWITCH",
       "confidence": 0.8,
-      "reasoning": "The last intent was DISCOVERY focused on laptops, and the current request is to see smartphones, indicating a shift in focus to a different category while still exploring options.",
+      "reasoning": "The user was previously looking for laptops (LAST_INTENT=DISCOVERY, PAST_3_USER_MESSAGES about laptops). Now, the user is asking to see smartphones, indicating a switch in the product they are interested in. This is adding to the scope.",
       "context_switch_options": [
         "ADD"
       ],
@@ -139,8 +135,10 @@
       "why_clarification": ""
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": ""
+      "entity_conflicts_with_session": [
+        "subcategory"
+      ],
+      "notes": "The subcategory has changed from laptop to smartphone."
     },
     "question": "Also show me smartphones.",
     "question_key": "ques_4"
@@ -153,23 +151,23 @@
       "entities": {
         "category": null,
         "subcategory": null,
-        "product": null,
+        "product": "HP laptop",
         "specifications": {},
         "budget": null,
         "quantity": null,
         "order_id": null,
         "urgency": null,
         "comparison_items": [
-          "HP laptops"
+          "HP laptop"
         ],
         "preferences": []
       },
-      "reasoning": "The user is comparing laptops, specifically asking to compare HP laptops with Dell laptops, which aligns with the DISCOVERY intent and the compare sub_intent."
+      "reasoning": "The user is explicitly asking to compare with HP laptops. The intent is DISCOVERY with sub_intent compare. The product is HP laptop and it is added to comparison_items."
     },
     "continuity": {
       "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.8,
-      "reasoning": "The last intent was DISCOVERY about Dell laptops, and now the user is initiating a comparison with HP laptops, indicating a shift in focus within the same goal of exploring laptops.",
+      "confidence": 0.9,
+      "reasoning": "The user was previously looking at Dell laptops with specific screen size and budget. Now they are asking to compare those with HP laptops. This is a CONTEXT_SWITCH from Dell to HP for comparison.",
       "context_switch_options": [
         "COMPARE"
       ],
@@ -177,8 +175,10 @@
       "why_clarification": ""
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": ""
+      "entity_conflicts_with_session": [
+        "product"
+      ],
+      "notes": "The product in the current message (HP laptop) conflicts with the session entity product (Dell laptop)."
     },
     "question": "Compare it with HP laptops.",
     "question_key": "ques_5"
@@ -186,11 +186,11 @@
   {
     "current_turn": {
       "intent": "DISCOVERY",
-      "sub_intent": "add",
-      "confidence": 0.9,
+      "sub_intent": "purchase",
+      "confidence": 0.7,
       "entities": {
-        "category": null,
-        "subcategory": null,
+        "category": "appliances",
+        "subcategory": "kitchen",
         "product": "blender",
         "specifications": {},
         "budget": null,
@@ -200,15 +200,53 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is expressing a need for a blender, suggesting they are exploring or looking to add this to their shopping consideration."
+      "reasoning": "The user is expressing a desire to buy a 'blender', indicating a DISCOVERY intent with a purchase sub-intent. The product is 'blender', and it can be categorized as kitchen appliance."
     },
     "continuity": {
       "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.85,
-      "reasoning": "The user previously expressed intent to buy running shoes but is now requesting to consider a blender, indicating a different target product while still engaging in product discovery.",
+      "confidence": 0.9,
+      "reasoning": "The user was previously searching for running shoes (DISCOVERY intent). Now they are asking for a blender, which is a completely different product category. This constitutes a CONTEXT_SWITCH.",
       "context_switch_options": [
-        "ADD"
+        "SEPARATE"
       ],
+      "suggested_clarification": null,
+      "why_clarification": ""
+    },
+    "consistency_checks": {
+      "entity_conflicts_with_session": [
+        "category",
+        "subcategory",
+        "product"
+      ],
+      "notes": "The user is now asking for a blender, which is a different category and product than the shoes they were previously interested in."
+    },
+    "question": "Now I also need a blender.",
+    "question_key": "ques_6"
+  },
+  {
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "sub_intent": "null",
+      "confidence": 0.7,
+      "entities": {
+        "category": null,
+        "subcategory": null,
+        "product": null,
+        "specifications": {},
+        "budget": null,
+        "quantity": null,
+        "order_id": null,
+        "urgency": null,
+        "comparison_items": [],
+        "preferences": []
+      },
+      "reasoning": "The user is asking about the return policy, which falls under the discovery intent as it pertains to information gathering before a purchase."
+    },
+    "continuity": {
+      "continuity_type": "ADDITION",
+      "confidence": 0.9,
+      "reasoning": "The user was previously looking for a laptop (DISCOVERY). Now, they are asking about the return policy. This indicates a new, related question rather than a continuation of the original search. It's an addition to the overall shopping journey.",
+      "context_switch_options": [],
       "suggested_clarification": null,
       "why_clarification": ""
     },
@@ -216,48 +254,14 @@
       "entity_conflicts_with_session": [],
       "notes": ""
     },
-    "question": "Now I also need a blender.",
-    "question_key": "ques_6"
-  },
-  {
-    "current_turn": {
-      "intent": "CHITCHAT",
-      "sub_intent": null,
-      "confidence": 0.8,
-      "entities": {
-        "category": null,
-        "subcategory": null,
-        "product": null,
-        "specifications": {},
-        "budget": null,
-        "quantity": null,
-        "order_id": null,
-        "urgency": null,
-        "comparison_items": [],
-        "preferences": []
-      },
-      "reasoning": "The intent is identified as CHITCHAT because the user is asking about the return policy, which is more of a general inquiry rather than an exploration of products."
-    },
-    "continuity": {
-      "continuity_type": "ADDITION",
-      "confidence": 0.8,
-      "reasoning": "While the last intent was DISCOVERY focused on finding a laptop, asking about the return policy introduces a new aspect of interest that relates to the potential purchase without changing the primary goal of exploring laptops.",
-      "context_switch_options": [],
-      "suggested_clarification": null,
-      "why_clarification": ""
-    },
-    "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": "No conflicts with the session entities."
-    },
     "question": "Also, tell me about the return policy.",
     "question_key": "ques_7"
   },
   {
     "current_turn": {
       "intent": "DISCOVERY",
-      "sub_intent": null,
-      "confidence": 0.8,
+      "sub_intent": "decide",
+      "confidence": 0.6,
       "entities": {
         "category": null,
         "subcategory": null,
@@ -270,12 +274,12 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user's inquiry 'What about that one?' suggests they are exploring options related to a previously mentioned product, indicating a discovery intent."
+      "reasoning": "The user is referring to a previously mentioned item ('that one'), implying they are still in the discovery phase and making a decision. No new entities are introduced."
     },
     "continuity": {
       "continuity_type": "CONTINUATION",
-      "confidence": 0.9,
-      "reasoning": "The last intent was DISCOVERY and the previous messages indicate specific preferences. The current message continues the exploration of laptops.",
+      "confidence": 0.8,
+      "reasoning": "The user is continuing the previous conversation about finding a laptop, refining their search by asking about a specific one. The LAST_INTENT was DISCOVERY, and the PAST_3_USER_MESSAGES indicate a continued interest in purchasing a laptop with certain specifications.",
       "context_switch_options": [],
       "suggested_clarification": null,
       "why_clarification": ""

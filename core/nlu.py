@@ -3,6 +3,7 @@ Natural Language Understanding Module
 """
 
 import json
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
@@ -30,30 +31,13 @@ class EnhancedNLU:
     def __init__(self, llm_client: Optional[LLMClient] = None):
         self.llm_client = llm_client or LLMClient()
 
-    def _create_prompt(self, user_message: str, conversation_context: List[Dict[str, Any]]) -> str:
-        """Create prompt with context."""
-        # Get past user messages
-        user_messages = [msg.get("content", "") for msg in conversation_context if msg.get("role") == "user"]
-        past_messages = (user_messages[-3:] + ["", "", ""])[:3]
-
-        return COMBINED_SYSTEM_PROMPT.format(
-            current_message=user_message,
-            past_user_msg_1=past_messages[0],
-            past_user_msg_2=past_messages[1],
-            past_user_msg_3=past_messages[2],
-            last_intent="",
-            session_entities_json="{}"
-        )
-
-    def analyze_message(self, user_message: str, conversation_context: Optional[List[Dict[str, Any]]] = None,
-                        last_intent: str = "", session_entities: Dict = None) -> Dict[str, Any]:
+    def analyze_message(self, user_message: str, conversation_context: Optional[List[Dict[str, Any]]] = None, last_intent: str = "", session_entities: Dict = None) -> Dict[str, Any]:
         """Analyze user message and return intent + entities."""
         if not user_message.strip():
             return self._error_response("Empty message")
 
         try:
-            prompt = self._create_prompt_with_context(user_message.strip(), conversation_context or [], last_intent,
-                                                      session_entities or {})
+            prompt = self._create_prompt_with_context(user_message.strip(), conversation_context or [], last_intent, session_entities or {})
             response = self.llm_client.generate(prompt)
             result = self._parse_json(response)
             return self._clean_result(result)
@@ -61,8 +45,7 @@ class EnhancedNLU:
             print(f"Error: {e}")
             return self._error_response(str(e))
 
-    def _create_prompt_with_context(self, user_message: str, conversation_context: List[Dict[str, Any]],
-                                    last_intent: str, session_entities: Dict) -> str:
+    def _create_prompt_with_context(self, user_message: str, conversation_context: List[Dict[str, Any]], last_intent: str, session_entities: Dict) -> str:
         """Create prompt with all context."""
         # Get past user messages
         user_messages = [msg.get("content", "") for msg in conversation_context if msg.get("role") == "user"]
@@ -142,8 +125,11 @@ if __name__ == "__main__":
 
     nlu = EnhancedNLU()
     answers = []
+    total_start_time = time.time()
 
     for idx, (key, value) in enumerate(questions.items(), start=1):
+        start_time = time.time()
+
         past_messages = []
         for msg in value.get("PAST_3_USER_MESSAGES", []):
             past_messages.append({"role": "user", "content": msg})
@@ -157,7 +143,12 @@ if __name__ == "__main__":
         answer["question"] = value["CURRENT_MESSAGE"]
         answer["question_key"] = key
         answers.append(answer)
-        print(f"Question {idx}: done")
+
+        elapsed_time = time.time() - start_time
+        print(f"Question {idx}: done ({elapsed_time:.2f}s)")
+
+    total_time = time.time() - total_start_time
+    print(f"\nTotal execution time: {total_time:.2f}s")
 
     # Save results
     output_file = Path("tests") / "nlu" / "nlu_answers.json"
