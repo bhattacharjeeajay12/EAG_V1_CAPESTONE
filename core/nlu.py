@@ -30,20 +30,6 @@ class EnhancedNLU:
     def __init__(self, llm_client: Optional[LLMClient] = None):
         self.llm_client = llm_client or LLMClient()
 
-    def analyze_message(self, user_message: str, conversation_context: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
-        """Analyze user message and return intent + entities."""
-        if not user_message.strip():
-            return self._error_response("Empty message")
-
-        try:
-            prompt = self._create_prompt(user_message.strip(), conversation_context or [])
-            response = self.llm_client.generate(prompt)
-            result = self._parse_json(response)
-            return self._clean_result(result)
-        except Exception as e:
-            print(f"Error: {e}")
-            return self._error_response(str(e))
-
     def _create_prompt(self, user_message: str, conversation_context: List[Dict[str, Any]]) -> str:
         """Create prompt with context."""
         # Get past user messages
@@ -57,6 +43,38 @@ class EnhancedNLU:
             past_user_msg_3=past_messages[2],
             last_intent="",
             session_entities_json="{}"
+        )
+
+    def analyze_message(self, user_message: str, conversation_context: Optional[List[Dict[str, Any]]] = None,
+                        last_intent: str = "", session_entities: Dict = None) -> Dict[str, Any]:
+        """Analyze user message and return intent + entities."""
+        if not user_message.strip():
+            return self._error_response("Empty message")
+
+        try:
+            prompt = self._create_prompt_with_context(user_message.strip(), conversation_context or [], last_intent,
+                                                      session_entities or {})
+            response = self.llm_client.generate(prompt)
+            result = self._parse_json(response)
+            return self._clean_result(result)
+        except Exception as e:
+            print(f"Error: {e}")
+            return self._error_response(str(e))
+
+    def _create_prompt_with_context(self, user_message: str, conversation_context: List[Dict[str, Any]],
+                                    last_intent: str, session_entities: Dict) -> str:
+        """Create prompt with all context."""
+        # Get past user messages
+        user_messages = [msg.get("content", "") for msg in conversation_context if msg.get("role") == "user"]
+        past_messages = (user_messages[-3:] + ["", "", ""])[:3]
+
+        return COMBINED_SYSTEM_PROMPT.format(
+            current_message=user_message,
+            past_user_msg_1=past_messages[0],
+            past_user_msg_2=past_messages[1],
+            past_user_msg_3=past_messages[2],
+            last_intent=last_intent,
+            session_entities_json=json.dumps(session_entities, indent=2)
         )
 
     def _parse_json(self, response: str) -> Dict[str, Any]:
@@ -130,7 +148,12 @@ if __name__ == "__main__":
         for msg in value.get("PAST_3_USER_MESSAGES", []):
             past_messages.append({"role": "user", "content": msg})
 
-        answer = nlu.analyze_message(value["CURRENT_MESSAGE"], past_messages)
+        answer = nlu.analyze_message(
+            value["CURRENT_MESSAGE"],
+            past_messages,
+            value.get("last_intent", ""),
+            value.get("session_entities", {})
+        )
         answer["question"] = value["CURRENT_MESSAGE"]
         answer["question_key"] = key
         answers.append(answer)
