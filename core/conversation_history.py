@@ -11,18 +11,20 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 import uuid
 
+from dotenv import load_dotenv
+load_dotenv()
 
 @dataclass
 class Workstream:
-    id: str
+    id: str # Unique ID
     type: str  # "DISCOVERY"|"ORDER"|"RETURN"|"EXCHANGE"|"PAYMENT"|"CHITCHAT"
-    status: str = "collecting"
-    slots: Dict[str, Any] = field(default_factory=dict)
-    candidates: List[Dict[str, Any]] = field(default_factory=list)
-    compare: Dict[str, Any] = field(default_factory=lambda: {"left": None, "right": None})
-    next_needed_slot: Optional[str] = None
-    satisfaction: float = 0.0
-    history: List[Dict[str, Any]] = field(default_factory=list)
+    status: str = "collecting" # collecting|completed|cancelled
+    slots: Dict[str, Any] = field(default_factory=dict) # structured facts/entities gathered so far
+    candidates: List[Dict[str, Any]] = field(default_factory=list) # items to present to the user
+    compare: Dict[str, Any] = field(default_factory=lambda: {"left": None, "right": None}) #for side-by-side comparisons
+    next_needed_slot: Optional[str] = None # what to fill next (planning hint)
+    satisfaction: float = 0.0 # user satisfaction 0–1 score
+    history: List[Dict[str, Any]] = field(default_factory=list) # per work stream history
 
 
 @dataclass

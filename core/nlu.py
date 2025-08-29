@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
-from prompts.nlu_prompt import COMBINED_SYSTEM_PROMPT
+from prompts.nlu_prompt import SYSTEM_PROMPT
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -37,28 +37,29 @@ class EnhancedNLU:
             return self._error_response("Empty message")
 
         try:
-            prompt = self._create_prompt_with_context(user_message.strip(), conversation_context or [], last_intent, session_entities or {})
-            response = self.llm_client.generate(prompt)
+            user_prompt = self._create_user_prompt(user_message.strip(), conversation_context or [], last_intent, session_entities or {})
+            response = self.llm_client.generate(SYSTEM_PROMPT, user_prompt)
             result = self._parse_json(response)
             return self._clean_result(result)
         except Exception as e:
             print(f"Error: {e}")
             return self._error_response(str(e))
 
-    def _create_prompt_with_context(self, user_message: str, conversation_context: List[Dict[str, Any]], last_intent: str, session_entities: Dict) -> str:
-        """Create prompt with all context."""
+    def _create_user_prompt(self, user_message: str, conversation_context: List[Dict[str, Any]], last_intent: str, session_entities: Dict) -> str:
+        """Create user prompt with context data."""
         # Get past user messages
         user_messages = [msg.get("content", "") for msg in conversation_context if msg.get("role") == "user"]
         past_messages = (user_messages[-3:] + ["", "", ""])[:3]
 
-        return COMBINED_SYSTEM_PROMPT.format(
-            current_message=user_message,
-            past_user_msg_1=past_messages[0],
-            past_user_msg_2=past_messages[1],
-            past_user_msg_3=past_messages[2],
-            last_intent=last_intent,
-            session_entities_json=json.dumps(session_entities, indent=2)
-        )
+        return f"""
+CURRENT_MESSAGE: {user_message}
+PAST_3_USER_MESSAGES:
+  1. {past_messages[0]}
+  2. {past_messages[1]}
+  3. {past_messages[2]}
+LAST_INTENT: {last_intent}
+SESSION_ENTITIES_SO_FAR: {json.dumps(session_entities, indent=2)}
+"""
 
     def _parse_json(self, response: str) -> Dict[str, Any]:
         """Extract JSON from LLM response."""
@@ -68,6 +69,11 @@ class EnhancedNLU:
         if text.startswith("```"):
             lines = text.split('\n')
             text = '\n'.join(line for line in lines if not line.strip().startswith("```"))
+
+        # Clean trailing commas
+        import re
+        text = re.sub(r',\s*}', '}', text)
+        text = re.sub(r',\s*]', ']', text)
 
         # Find JSON boundaries
         start = text.find('{')
@@ -127,6 +133,7 @@ if __name__ == "__main__":
     answers = []
     total_start_time = time.time()
 
+    # questions = {"ques_2": questions["ques_2"]}
     for idx, (key, value) in enumerate(questions.items(), start=1):
         start_time = time.time()
 
