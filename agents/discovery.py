@@ -1,74 +1,57 @@
-# agents/discovery.py
-"""
-DiscoveryAgent:
-- Enforces that `category` and `subcategory` are mandatory to SEARCH.
-- Treats messages like "I need a laptop" as: category=electronics, subcategory=laptop (product may be absent).
-- If user gives a very specific string ("Dell Inspiron 15"), keep it as a `product` hint AND mirror brand/model in specifications
-  if NLU delivered them — but do not block if specs are missing.
-- quantity is NOT required at discovery time; it matters at checkout/commit.
 
-Decision table (simplified):
-1) If missing category → ASK(category)
-2) Else if missing subcategory → ASK(subcategory)
-3) Else if COMPARE needed and one side missing → ASK(comparison item)
-4) Else → TOOL semantic_search + rank → PRESENT top-K with affordances
-"""
-
-from typing import Dict, Any, List, Optional
-from agents.base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Present
-from tools.registry import ToolRegistry
+from __future__ import annotations
+from typing import Dict, Any, Optional, List
+from .base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Present, Info
+from core.goals import TOOL_GUARDS, has_all
 from core.llm_client import LLMClient
-from core.config import PlannerConfig  # simple dataclass, no circular deps
 
-MANDATORY_SLOTS = ("category", "subcategory")
-
+def nonempty(v): return v not in (None,"",[],{})
 
 class DiscoveryAgent(AgentBase):
-    def __init__(self, tools: ToolRegistry, llm: LLMClient, cfg: PlannerConfig):
+    def __init__(self, tools, llm: LLMClient, cfg):
         self.tools = tools
         self.llm = llm
         self.cfg = cfg
 
-    def decide_next(self, ctx: AgentContext) -> AgentOutput:
-        slots = dict(ctx.workstream.slots or {})
-        # Normalize mandatorys
-        category = slots.get("category")
-        subcategory = slots.get("subcategory")
-        product = slots.get("product")
-        specs = slots.get("specifications") or {}
-        budget = slots.get("budget")
+    async def decide_next(self, ctx: AgentContext) -> AgentOutput:
+        ws = ctx.workstream
+        turn = ctx.nlu_result["current_turn"]
+        sub_intent = turn.get("sub_intent")
+        entities = turn.get("entities", {})
 
-        # 1) Ask for mandatory fields
-        if not category:
-            return AgentOutput(action=Ask("Which category are you shopping for?", slot="category"))
-        if not subcategory:
-            return AgentOutput(action=Ask("Great — which subcategory? (e.g., laptop, smartphone, shoes)", slot="subcategory"))
+        updated_slots = {k:v for k,v in entities.items() if nonempty(v)}
 
-        # 2) Compare flow needs exactly two sides
-        comp = ctx.workstream.compare or {"left": None, "right": None}
-        if (comp.get("left") is None) != (comp.get("right") is None):
-            return AgentOutput(action=Ask("What’s the other item to compare with?", slot="comparison_items"))
+        # If collecting, enforce mandatories first (ask just one question)
+        if ws.status == "collecting":
+            for req in ("category","subcategory"):
+                if not nonempty(ws.slots.get(req)) and not nonempty(updated_slots.get(req)):
+                    return AgentOutput(action=Ask(f"Which {req}?"), updated_slots=updated_slots)
 
-        # 3) Build a semantic search query
-        # Treat "product" as a strong hint in the subcategory. If product is just a repetition of subcategory, keep it but don't block.
-        query = {
-            "category": category,
-            "subcategory": subcategory,
-            "product_hint": product,
-            "specifications": specs,
-            "budget": budget
+        # Ask LLM to propose tools
+        payload = {
+            "state": ws.status,
+            "slots": {**ws.slots, **updated_slots},
+            "sub_intent": sub_intent,
+            "tools": [{"name":k, "requires": list(v["required"]), "next_state": v["next_state"]} for k,v in TOOL_GUARDS.items()],
         }
+        proposal = await self.llm.propose_tools(payload)
+        candidates = sorted(proposal.get("candidates", []), key=lambda c: c.get("score",0), reverse=True)
 
-        # 4) Choose the right tool from the registry (semantic search + rank)
-        search_tool = self.tools.get("Catalog.semantic_search")
-        rank_tool = self.tools.get("Recommender.rank")
+        chosen = None
+        for c in candidates:
+            name = c.get("tool")
+            params = c.get("params", {})
+            guard = TOOL_GUARDS.get(name)
+            if not guard: continue
+            merged = {**ws.slots, **params}
+            if ws.status in guard["allowed_states"] and has_all(merged, guard["required"]):
+                chosen = (name, params, guard["next_state"])
+                break
 
-        # 5) Tool calls (Planner runtime will execute; here we just emit the intent)
-        # Keep it one action per turn: first call search, next turn will present results after tool execution returns
-        return AgentOutput(
-            action=ToolCall(name=search_tool.name, params={"query": query, "top_k": self.cfg.top_k_present}),
-            updated_slots=None,
-            presented_items=None
-        )
+        if not chosen:
+            ask = proposal.get("fallback_ask") or "Could you clarify what to explore next?"
+            return AgentOutput(action=Ask(ask), updated_slots=updated_slots)
 
-    # (Your runtime would handle the actual tool execution and feed the results back next turn.)
+        name, params, next_state = chosen
+        ws.status = next_state
+        return AgentOutput(action=ToolCall(name, params), updated_slots=updated_slots)

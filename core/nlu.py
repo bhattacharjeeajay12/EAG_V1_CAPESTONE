@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
 from prompts.nlu_prompt import SYSTEM_PROMPT
-
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -30,16 +30,17 @@ class EnhancedNLU:
     }
 
     def __init__(self, llm_client: Optional[LLMClient] = None):
-        self.llm_client = llm_client or LLMClient()
-
-    def analyze_message(self, user_message: str, conversation_context: Optional[List[Dict[str, Any]]] = None, last_intent: str = "", session_entities: Dict = None) -> Dict[str, Any]:
+        # self.llm_client = llm_client or LLMClient(model_type=os.getenv("MODEL_TYPE", "openai"))
+        model_type = os.getenv("MODEL_TYPE", "gpt-3.5")  # Use a supported default
+        self.llm_client = llm_client or LLMClient(model_type=model_type)
+    async def analyze_message(self, user_message: str, conversation_context: Optional[List[Dict[str, Any]]] = None, last_intent: str = "", session_entities: Dict = None) -> Dict[str, Any]:
         """Analyze user message and return intent + entities."""
         if not user_message.strip():
             return self._error_response("Empty message")
 
         try:
             user_prompt = self._create_user_prompt(user_message.strip(), conversation_context or [], last_intent, session_entities or {})
-            response = self.llm_client.generate(SYSTEM_PROMPT, user_prompt)
+            response = await self.llm_client.generate(SYSTEM_PROMPT, user_prompt)  # Make this call async
             result = self._parse_json(response)
             return self._clean_result(result)
         except Exception as e:
@@ -127,39 +128,4 @@ SESSION_ENTITIES_SO_FAR: {json.dumps(session_entities, indent=2)}
         }
 
 
-if __name__ == "__main__":
-    from tests.nlu.nlu_questions import questions
-
-    nlu = EnhancedNLU()
-    answers = []
-    total_start_time = time.time()
-
-    # questions = {"ques_2": questions["ques_2"]}
-    for idx, (key, value) in enumerate(questions.items(), start=1):
-        start_time = time.time()
-
-        past_messages = []
-        for msg in value.get("PAST_3_USER_MESSAGES", []):
-            past_messages.append({"role": "user", "content": msg})
-
-        answer = nlu.analyze_message(
-            value["CURRENT_MESSAGE"],
-            past_messages,
-            value.get("last_intent", ""),
-            value.get("session_entities", {})
-        )
-        answer["question"] = value["CURRENT_MESSAGE"]
-        answer["question_key"] = key
-        answers.append(answer)
-
-        elapsed_time = time.time() - start_time
-        print(f"Question {idx}: done ({elapsed_time:.2f}s)")
-
-    total_time = time.time() - total_start_time
-    print(f"\nTotal execution time: {total_time:.2f}s")
-
-    # Save results
-    output_file = Path("tests") / "nlu" / "nlu_answers.json"
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    with output_file.open("w") as f:
-        json.dump(answers, f, indent=2)
+# Create a new testing script: tests/test_nlu.py
