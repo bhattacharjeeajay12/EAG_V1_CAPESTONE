@@ -28,7 +28,6 @@ class Planner:
             "DISCOVERY": DiscoveryAgent(self.tools, self.llm, self.cfg),
             "ORDER": OrderAgent(self.tools, self.llm, self.cfg),
         }
-
     async def handle_user_turn(self, user_message: str) -> Action:
         # ---- Step 1. Run NLU ----
         convo_ctx = self.history.as_nlu_context()
