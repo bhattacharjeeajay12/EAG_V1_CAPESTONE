@@ -1,4 +1,4 @@
-# core_1/llm_client.py
+# core/llm_client.py
 # Minimal LLM wrapper for gemini-2.0-flash with a safe fallback.
 
 import os

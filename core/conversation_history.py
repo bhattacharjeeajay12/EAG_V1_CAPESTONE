@@ -1,4 +1,4 @@
-# conversation_history.py
+# core/conversation_history.py
 """
 ConversationHistory manages:
 - Workstreams (WS) registry and focus stack

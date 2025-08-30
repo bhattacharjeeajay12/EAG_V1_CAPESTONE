@@ -1,43 +1,39 @@
 [
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "decide",
-      "confidence": 0.9,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
         "category": null,
-        "subcategory": "laptop",
-        "product": "gaming laptop",
+        "subcategory": null,
+        "product": null,
         "specifications": {},
-        "budget": "$1500",
+        "budget": null,
         "quantity": null,
         "order_id": null,
         "urgency": null,
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is asking to see \"gaming laptops under $1500\", indicating a desire to filter or narrow down options (decide intent) within the laptop subcategory and setting a budget. The presence of 'gaming laptop' indicates a desire for a specific type of laptop."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "CONTINUATION",
-      "confidence": 0.8,
-      "reasoning": "The last intent was DISCOVERY, and the current message continues to refine the laptop search by specifying 'gaming' and a budget, building upon the previous turns.",
-      "context_switch_options": [],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": "The subcategory 'laptop' is consistent with the session. The budget is new information. The product 'gaming laptop' is more specific and adds more info to previous turns. No conflicts."
+      "entity_conflicts_with_session": []
     },
     "question": "Show me gaming laptops under $1500",
     "question_key": "ques_1"
   },
   {
     "current_turn": {
-      "intent": "ORDER",
-      "sub_intent": "check_status",
-      "confidence": 0.95,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
         "category": null,
         "subcategory": null,
@@ -50,31 +46,27 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is asking about the location of their order. This directly corresponds to checking the status of an order, fitting the ORDER intent and check_status sub-intent. No entities are explicitly mentioned in the current message."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "INTENT_SWITCH",
-      "confidence": 0.9,
-      "reasoning": "The last intent was DISCOVERY (browsing laptops), but the current message asks about an order's location. This is a clear switch from product discovery to order management.",
-      "context_switch_options": [],
-      "suggested_clarification": "Could you please provide your order ID?",
-      "why_clarification": "To track the order, we need the order ID."
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": ""
+      "entity_conflicts_with_session": []
     },
     "question": "Where is my order?",
     "question_key": "ques_2"
   },
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "explore",
-      "confidence": 0.9,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
-        "category": "electronics",
-        "subcategory": "tablet",
+        "category": null,
+        "subcategory": null,
         "product": null,
         "specifications": {},
         "budget": null,
@@ -84,35 +76,27 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is asking to be shown tablets, which falls under the DISCOVERY intent. The sub_intent is explore, as they are looking for options. 'tablets' is extracted as the subcategory."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.9,
-      "reasoning": "The user was previously looking for laptops (LAST_INTENT = DISCOVERY, PAST_3_USER_MESSAGES show laptop search). Now the user wants to see tablets instead. This is a switch in the context of the search from laptops to tablets.",
-      "context_switch_options": [
-        "REPLACE"
-      ],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [
-        "subcategory"
-      ],
-      "notes": ""
+      "entity_conflicts_with_session": []
     },
     "question": "Actually, show me tablets instead.",
     "question_key": "ques_3"
   },
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "explore",
-      "confidence": 0.9,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
-        "category": "electronics",
-        "subcategory": "smartphone",
+        "category": null,
+        "subcategory": null,
         "product": null,
         "specifications": {},
         "budget": null,
@@ -122,76 +106,58 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is asking to see smartphones, indicating a DISCOVERY intent with the sub-intent explore. The category is electronics, and the subcategory is smartphone."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.8,
-      "reasoning": "The user was previously looking for laptops (LAST_INTENT=DISCOVERY, PAST_3_USER_MESSAGES about laptops). Now, the user is asking to see smartphones, indicating a switch in the product they are interested in. This is adding to the scope.",
-      "context_switch_options": [
-        "ADD"
-      ],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [
-        "subcategory"
-      ],
-      "notes": "The subcategory has changed from laptop to smartphone."
+      "entity_conflicts_with_session": []
     },
     "question": "Also show me smartphones.",
     "question_key": "ques_4"
   },
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "compare",
-      "confidence": 0.9,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
         "category": null,
         "subcategory": null,
-        "product": "HP laptop",
+        "product": null,
         "specifications": {},
         "budget": null,
         "quantity": null,
         "order_id": null,
         "urgency": null,
-        "comparison_items": [
-          "HP laptop"
-        ],
+        "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is explicitly asking to compare with HP laptops. The intent is DISCOVERY with sub_intent compare. The product is HP laptop and it is added to comparison_items."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.9,
-      "reasoning": "The user was previously looking at Dell laptops with specific screen size and budget. Now they are asking to compare those with HP laptops. This is a CONTEXT_SWITCH from Dell to HP for comparison.",
-      "context_switch_options": [
-        "COMPARE"
-      ],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [
-        "product"
-      ],
-      "notes": "The product in the current message (HP laptop) conflicts with the session entity product (Dell laptop)."
+      "entity_conflicts_with_session": []
     },
     "question": "Compare it with HP laptops.",
     "question_key": "ques_5"
   },
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "purchase",
-      "confidence": 0.7,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
-        "category": "appliances",
-        "subcategory": "kitchen",
-        "product": "blender",
+        "category": null,
+        "subcategory": null,
+        "product": null,
         "specifications": {},
         "budget": null,
         "quantity": null,
@@ -200,34 +166,24 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is expressing a desire to buy a 'blender', indicating a DISCOVERY intent with a purchase sub-intent. The product is 'blender', and it can be categorized as kitchen appliance."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "CONTEXT_SWITCH",
-      "confidence": 0.9,
-      "reasoning": "The user was previously searching for running shoes (DISCOVERY intent). Now they are asking for a blender, which is a completely different product category. This constitutes a CONTEXT_SWITCH.",
-      "context_switch_options": [
-        "SEPARATE"
-      ],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [
-        "category",
-        "subcategory",
-        "product"
-      ],
-      "notes": "The user is now asking for a blender, which is a different category and product than the shoes they were previously interested in."
+      "entity_conflicts_with_session": []
     },
     "question": "Now I also need a blender.",
     "question_key": "ques_6"
   },
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "null",
-      "confidence": 0.7,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
         "category": null,
         "subcategory": null,
@@ -240,28 +196,24 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is asking about the return policy, which falls under the discovery intent as it pertains to information gathering before a purchase."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "ADDITION",
-      "confidence": 0.9,
-      "reasoning": "The user was previously looking for a laptop (DISCOVERY). Now, they are asking about the return policy. This indicates a new, related question rather than a continuation of the original search. It's an addition to the overall shopping journey.",
-      "context_switch_options": [],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": ""
+      "entity_conflicts_with_session": []
     },
     "question": "Also, tell me about the return policy.",
     "question_key": "ques_7"
   },
   {
     "current_turn": {
-      "intent": "DISCOVERY",
-      "sub_intent": "decide",
-      "confidence": 0.6,
+      "intent": "UNKNOWN",
+      "sub_intent": null,
+      "confidence": 0.0,
       "entities": {
         "category": null,
         "subcategory": null,
@@ -274,19 +226,15 @@
         "comparison_items": [],
         "preferences": []
       },
-      "reasoning": "The user is referring to a previously mentioned item ('that one'), implying they are still in the discovery phase and making a decision. No new entities are introduced."
+      "reasoning": "Error: name 'messages' is not defined"
     },
     "continuity": {
-      "continuity_type": "CONTINUATION",
-      "confidence": 0.8,
-      "reasoning": "The user is continuing the previous conversation about finding a laptop, refining their search by asking about a specific one. The LAST_INTENT was DISCOVERY, and the PAST_3_USER_MESSAGES indicate a continued interest in purchasing a laptop with certain specifications.",
-      "context_switch_options": [],
-      "suggested_clarification": null,
-      "why_clarification": ""
+      "continuity_type": "UNCLEAR",
+      "confidence": 0.0,
+      "reasoning": "Processing error"
     },
     "consistency_checks": {
-      "entity_conflicts_with_session": [],
-      "notes": ""
+      "entity_conflicts_with_session": []
     },
     "question": "What about that one?",
     "question_key": "ques_8"

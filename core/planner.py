@@ -1,4 +1,4 @@
-# planner.py
+# core/planner.py
 """
 Stateful Planner for the E-commerce Agent.
 
