@@ -1,54 +1,66 @@
-from .base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Present, Info
+from .base import AgentBase, AgentContext, AgentOutput, Ask, Present, Info
 from core.goals import TOOL_GUARDS, has_all
 from core.states import DiscoveryState
-from enum import Enum
+from core.fsm_engine import FSMEngine
+from core.fsm_rules import DISCOVERY_TRANSITIONS
+
 class DiscoveryAgent(AgentBase):
     def __init__(self, tools, llm, cfg):
         self.tools = tools
         self.llm = llm
         self.cfg = cfg
+        self.fsm = FSMEngine(DISCOVERY_TRANSITIONS)  # 👈 FSM engine here
 
     async def decide_next(self, ctx: AgentContext) -> AgentOutput:
         ws = ctx.workstream
-        # todo: entites should be extracted only using discovery agent LLM
-        # entities = ctx.nlu_result["current_turn"].get("entities", {})
-        entities = {"category": "electronics", "subcategory": "laptop", "budget": "$500", "specifications": {}}
+
+        # === STEP 1: FSM progression NEW → COLLECTING
+        if ws.status == DiscoveryState.NEW:
+            ws.status = DiscoveryState.COLLECTING
+
+        # Update slots from NLU entities (later: agent-specific LLM extraction)
+        entities = ctx.nlu_result["current_turn"].get("entities", {})
         ws.update_slots(entities)
 
-        # Step 1: Collect mandatory slots
-        if not has_all(ws.slots, {"category","subcategory"}):
-            ws.status = DiscoveryState.COLLECTING
-            return AgentOutput(action=Ask("Could you specify the category and subcategory?"))
+        # === STEP 2: Mandatory slots
+        if ws.status == DiscoveryState.COLLECTING:
+            if not has_all(ws.slots, {"category", "subcategory"}):
+                # Still missing mandatory slots → stay in COLLECTING
+                return AgentOutput(action=Ask("Could you specify the category and subcategory?"))
 
-        # Not mandatory slot check - specification
+            # All mandatory slots present → transition to READY
+            if self.fsm.can_transition(ws.status.value, DiscoveryState.READY.value):
+                ws.status = DiscoveryState.READY
+
+        # === STEP 3: Optional specs
         missing_specs = ws.missing_specifications()
-        if missing_specs:
+        if missing_specs and not ws.skip_specifications:
             specs_str = ", ".join(missing_specs[:3])  # show top 3
             return AgentOutput(action=Ask(f"Would you like to add specifications like {specs_str}?"))
 
-        # todo: temporary bypass specification collection
-        ws.skip_specifications = True
-
-        # Step 2: Ready to call tools
-        if ws.status in {DiscoveryState.NEW, DiscoveryState.COLLECTING, DiscoveryState.READY}:
-            ws.status = DiscoveryState.PROCESSING
-
-            # LLM proposes tool
+        # === STEP 4: READY → PROCESSING
+        if ws.status == DiscoveryState.READY:
             proposal = await self.llm.propose_tools(ws)
             tool = proposal.get("tool")
             params = proposal.get("params", {})
 
-            # Validate against FSM guards
             guard = TOOL_GUARDS.get(tool)
             if guard and has_all(ws.slots, guard["required"]):
-                # Execute tool here 👇
+                # 1️⃣ Execute tool(s)
                 results = await self.tools.call(tool, params)
                 ws.candidates = results
+
+                # # 2️⃣ Summarizer hook (LLM post-processing)
+                # results = await self.llm.summarize(results)
+
+                # 3️⃣ Transition FSM
                 ws.status = DiscoveryState.PRESENTING
+
                 return AgentOutput(action=Present(results, affordances=["compare","select"]))
 
-        # Step 3: If already presenting, wait for user choice
+        # === STEP 5: PRESENTING
         if ws.status == DiscoveryState.PRESENTING:
             return AgentOutput(action=Info("You can compare, select, or refine your choices."))
 
+        # Default
         return AgentOutput(action=Info("Still collecting more details..."))

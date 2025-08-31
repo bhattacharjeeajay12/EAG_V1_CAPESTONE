@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
-from prompts.nlu_prompt import SYSTEM_PROMPT
+from prompts.planner import SYSTEM_PROMPT
 import os
 from dotenv import load_dotenv
 load_dotenv()

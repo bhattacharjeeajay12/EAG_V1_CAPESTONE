@@ -40,24 +40,30 @@ class Planner:
         intent = nlu_result["current_turn"]["intent"]
         confidence = nlu_result["current_turn"]["confidence"]
 
+        # Confidence check
         if confidence < INTENT_THRESHOLDS.get(intent, 0.5):
             action = Ask("Could you clarify what you’d like to do?")
             self.history.append_action(action)
             return action
 
+        # Ensure workstream
         focused_ws = self.history.get_focused_ws()
         if not focused_ws:
             focused_ws = self.history.ensure_workstream(intent, seed_entities={})
 
+        # Route to agent
         agent = self.agents.get(focused_ws.type)
         if not agent:
             action = Info(f"Sorry, I can’t handle {focused_ws.type} yet.")
             self.history.append_action(action)
             return action
 
+        # Build agent context
         agent_ctx = AgentContext(workstream=focused_ws, session=self.history.session_snapshot(), nlu_result=nlu_result)
-        output: AgentOutput = await agent.decide_next(agent_ctx)
 
+        # Delegate decision
+        output: AgentOutput = await agent.decide_next(agent_ctx)
+        # Apply updates
         if output.updated_slots:
             focused_ws.slots.update(output.updated_slots)
         if output.presented_items is not None:
@@ -67,6 +73,7 @@ class Planner:
 
         self.history.append_action(output.action)
 
+        # Goal check
         goal = GOALS.get((focused_ws.type, None))
         if goal and has_all(focused_ws.slots, set(goal["mandatory"])) and goal["is_done"](focused_ws):
             focused_ws.status = "completed"
