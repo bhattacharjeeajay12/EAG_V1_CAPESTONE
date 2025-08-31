@@ -20,6 +20,15 @@ class DiscoveryAgent(AgentBase):
             ws.status = DiscoveryState.COLLECTING
             return AgentOutput(action=Ask("Could you specify the category and subcategory?"))
 
+        # Not mandatory slot check - specification
+        missing_specs = ws.missing_specifications()
+        if missing_specs:
+            specs_str = ", ".join(missing_specs[:3])  # show top 3
+            return AgentOutput(action=Ask(f"Would you like to add specifications like {specs_str}?"))
+
+        # todo: temporary bypass specification collection
+        ws.skip_specifications = True
+
         # Step 2: Ready to call tools
         if ws.status in {DiscoveryState.NEW, DiscoveryState.COLLECTING, DiscoveryState.READY}:
             ws.status = DiscoveryState.PROCESSING
