@@ -1,9 +1,8 @@
-
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Protocol
 
-class Action: pass
+class Action:
+    pass
 
 @dataclass
 class Ask(Action):
@@ -21,7 +20,7 @@ class ToolCall(Action):
 class Present(Action):
     items: List[Dict[str, Any]]
     affordances: List[str]
-    def __repr__(self): return f"PRESENT({len(self.items)} items, affordances={self.affordances})"
+    def __repr__(self): return f"PRESENT({len(self.items)} items)"
 
 @dataclass
 class Commit(Action):
@@ -32,11 +31,6 @@ class Commit(Action):
 class Info(Action):
     message: str
     def __repr__(self): return f"INFO({self.message})"
-
-@dataclass
-class SwitchFocus(Action):
-    to_ws_id: str
-    def __repr__(self): return f"SWITCH_FOCUS({self.to_ws_id})"
 
 @dataclass
 class AgentContext:

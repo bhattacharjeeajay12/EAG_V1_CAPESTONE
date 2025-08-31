@@ -1,57 +1,48 @@
+"""
+DiscoveryAgent manages product discovery flows.
+"""
+from markdown_it.common.entities import entities
 
-from __future__ import annotations
-from typing import Dict, Any, Optional, List
-from .base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Present, Info
+from .base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Info
 from core.goals import TOOL_GUARDS, has_all
-from core.llm_client import LLMClient
+from enum import Enum
 
-def nonempty(v): return v not in (None,"",[],{})
+
 
 class DiscoveryAgent(AgentBase):
-    def __init__(self, tools, llm: LLMClient, cfg):
+    def __init__(self, tools, llm, cfg):
         self.tools = tools
         self.llm = llm
         self.cfg = cfg
 
     async def decide_next(self, ctx: AgentContext) -> AgentOutput:
         ws = ctx.workstream
-        turn = ctx.nlu_result["current_turn"]
-        sub_intent = turn.get("sub_intent")
-        entities = turn.get("entities", {})
+        # todo: entites should be extracted only using discovery agent LLM
+        # entities = ctx.nlu_result["current_turn"].get("entities", {})
+        entities = {"category": "electronics", "subcategory": "laptop", "budget": "$500", "specifications": {}}
+        ws.update_slots(entities)
 
-        updated_slots = {k:v for k,v in entities.items() if nonempty(v)}
+        # Mandatory slot check
+        if not has_all(ws.slots, {"category","subcategory"}):
+            return AgentOutput(action=Ask("Could you specify what your are looking for?"))
 
-        # If collecting, enforce mandatories first (ask just one question)
-        if ws.status == "collecting":
-            for req in ("category","subcategory"):
-                if not nonempty(ws.slots.get(req)) and not nonempty(updated_slots.get(req)):
-                    return AgentOutput(action=Ask(f"Which {req}?"), updated_slots=updated_slots)
+        # Not mandatory slot check - specification
+        missing_specs = ws.missing_specifications()
+        if missing_specs:
+            specs_str = ", ".join(missing_specs[:3])  # show top 3
+            return AgentOutput(action=Ask(f"Would you like to add specifications like {specs_str}?"))
 
-        # Ask LLM to propose tools
-        payload = {
-            "state": ws.status,
-            "slots": {**ws.slots, **updated_slots},
-            "sub_intent": sub_intent,
-            "tools": [{"name":k, "requires": list(v["required"]), "next_state": v["next_state"]} for k,v in TOOL_GUARDS.items()],
-        }
-        proposal = await self.llm.propose_tools(payload)
-        candidates = sorted(proposal.get("candidates", []), key=lambda c: c.get("score",0), reverse=True)
+        # todo: temporary bypass specification collection
+        ws.skip_specifications = True
 
-        chosen = None
-        for c in candidates:
-            name = c.get("tool")
-            params = c.get("params", {})
-            guard = TOOL_GUARDS.get(name)
-            if not guard: continue
-            merged = {**ws.slots, **params}
-            if ws.status in guard["allowed_states"] and has_all(merged, guard["required"]):
-                chosen = (name, params, guard["next_state"])
-                break
+        # Ask LLM for tool proposal
+        proposal = await self.llm.propose_tools(ws)
+        tool = proposal.get("tool")
+        params = proposal.get("params", {})
 
-        if not chosen:
-            ask = proposal.get("fallback_ask") or "Could you clarify what to explore next?"
-            return AgentOutput(action=Ask(ask), updated_slots=updated_slots)
+        guard = TOOL_GUARDS.get(tool)
+        if guard and has_all(ws.slots, guard["required"]) and ws.status in guard["allowed_states"]:
+            ws.status = guard["next_state"]
+            return AgentOutput(action=ToolCall(tool, params))
 
-        name, params, next_state = chosen
-        ws.status = next_state
-        return AgentOutput(action=ToolCall(name, params), updated_slots=updated_slots)
+        return AgentOutput(action=Info("Still collecting more details..."))
