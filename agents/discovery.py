@@ -1,14 +1,7 @@
-"""
-DiscoveryAgent manages product discovery flows.
-"""
-from markdown_it.common.entities import entities
-
-from .base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Info
+from .base import AgentBase, AgentContext, AgentOutput, Ask, ToolCall, Present, Info
 from core.goals import TOOL_GUARDS, has_all
+from core.states import DiscoveryState
 from enum import Enum
-
-
-
 class DiscoveryAgent(AgentBase):
     def __init__(self, tools, llm, cfg):
         self.tools = tools
@@ -22,27 +15,31 @@ class DiscoveryAgent(AgentBase):
         entities = {"category": "electronics", "subcategory": "laptop", "budget": "$500", "specifications": {}}
         ws.update_slots(entities)
 
-        # Mandatory slot check
+        # Step 1: Collect mandatory slots
         if not has_all(ws.slots, {"category","subcategory"}):
-            return AgentOutput(action=Ask("Could you specify what your are looking for?"))
+            ws.status = DiscoveryState.COLLECTING
+            return AgentOutput(action=Ask("Could you specify the category and subcategory?"))
 
-        # Not mandatory slot check - specification
-        missing_specs = ws.missing_specifications()
-        if missing_specs:
-            specs_str = ", ".join(missing_specs[:3])  # show top 3
-            return AgentOutput(action=Ask(f"Would you like to add specifications like {specs_str}?"))
+        # Step 2: Ready to call tools
+        if ws.status in {DiscoveryState.NEW, DiscoveryState.COLLECTING, DiscoveryState.READY}:
+            ws.status = DiscoveryState.PROCESSING
 
-        # todo: temporary bypass specification collection
-        ws.skip_specifications = True
+            # LLM proposes tool
+            proposal = await self.llm.propose_tools(ws)
+            tool = proposal.get("tool")
+            params = proposal.get("params", {})
 
-        # Ask LLM for tool proposal
-        proposal = await self.llm.propose_tools(ws)
-        tool = proposal.get("tool")
-        params = proposal.get("params", {})
+            # Validate against FSM guards
+            guard = TOOL_GUARDS.get(tool)
+            if guard and has_all(ws.slots, guard["required"]):
+                # Execute tool here 👇
+                results = await self.tools.call(tool, params)
+                ws.candidates = results
+                ws.status = DiscoveryState.PRESENTING
+                return AgentOutput(action=Present(results, affordances=["compare","select"]))
 
-        guard = TOOL_GUARDS.get(tool)
-        if guard and has_all(ws.slots, guard["required"]) and ws.status in guard["allowed_states"]:
-            ws.status = guard["next_state"]
-            return AgentOutput(action=ToolCall(tool, params))
+        # Step 3: If already presenting, wait for user choice
+        if ws.status == DiscoveryState.PRESENTING:
+            return AgentOutput(action=Info("You can compare, select, or refine your choices."))
 
         return AgentOutput(action=Info("Still collecting more details..."))

@@ -1,42 +1,33 @@
 # tools/registry.py
-"""
-ToolRegistry:
-- Central store for available tools (backed by DB or services).
-- Provides .get(name) and simple grouping/lookup.
-- Agents can also ask LLM to pick a tool from an allowed list (see prompts/agent_prompts.py).
-"""
-
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
-
-from tools.tools import (
-    CatalogSemanticSearch, RecommenderRank, OrdersGet, OrdersCancel, OrdersModify,
-    ReturnsCheckEligibility, ExchangesCheckEligibility, PaymentsCharge
-)
-
-@dataclass
-class ToolSpec:
-    name: str
-    fn: Any
-    description: str
+from typing import Callable, Dict, Awaitable, Any
 
 class ToolRegistry:
     def __init__(self):
-        self._tools: Dict[str, ToolSpec] = {
-            "Catalog.semantic_search": ToolSpec("Catalog.semantic_search", CatalogSemanticSearch(), "Semantic search over products"),
-            "Recommender.rank": ToolSpec("Recommender.rank", RecommenderRank(), "Re-rank search results"),
-            "Orders.get": ToolSpec("Orders.get", OrdersGet(), "Get order and tracking status"),
-            "Orders.cancel": ToolSpec("Orders.cancel", OrdersCancel(), "Cancel an order"),
-            "Orders.modify": ToolSpec("Orders.modify", OrdersModify(), "Modify an order"),
-            "Returns.check_eligibility": ToolSpec("Returns.check_eligibility", ReturnsCheckEligibility(), "Check return eligibility"),
-            "Exchanges.check_eligibility": ToolSpec("Exchanges.check_eligibility", ExchangesCheckEligibility(), "Check exchange eligibility"),
-            "Payments.charge": ToolSpec("Payments.charge", PaymentsCharge(), "Perform a payment charge"),
+        # Register available tools here
+        self._registry: Dict[str, Callable[[Dict[str, Any]], Awaitable[Any]]] = {
+            "search_products": self._search_products,
+            "place_order": self._place_order,
         }
 
-    def get(self, name: str) -> ToolSpec:
-        if name not in self._tools:
-            raise KeyError(f"Tool '{name}' not found")
-        return self._tools[name]
+    async def call(self, name: str, params: dict):
+        """Dispatcher: find tool by name and call it."""
+        tool = self._registry.get(name)
+        if not tool:
+            raise ValueError(f"Unknown tool: {name}")
+        return await tool(params)
 
-    def all(self) -> Dict[str, ToolSpec]:
-        return dict(self._tools)
+    # ---------- Tools ----------
+    async def _search_products(self, params: dict):
+        # Stub: return fake products
+        return [
+            {"id": "p1", "name": "Gaming Laptop 1", "brand": "Dell"},
+            {"id": "p2", "name": "Gaming Laptop 2", "brand": "HP"},
+        ]
+
+    async def _place_order(self, params: dict):
+        # Stub: fake order placement
+        return {
+            "order_id": "ord_123",
+            "product_id": params.get("product_id"),
+            "status": "confirmed"
+        }
