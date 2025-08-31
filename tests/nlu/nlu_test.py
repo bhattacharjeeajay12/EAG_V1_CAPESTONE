@@ -1,8 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from core.nlu import EnhancedNLU
-from core.llm_client import LLMClient
+from runtime.planner_nlu import EnhancedNLU
 from tests.nlu.nlu_questions import questions  # Assuming questions are imported here
 import time
 
