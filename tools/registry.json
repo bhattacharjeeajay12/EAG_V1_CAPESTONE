@@ -1,0 +1,82 @@
+{
+  "DISCOVERY": {
+    "available_tools": [
+      {
+        "name": "filter_products",
+        "description": "Filter products in a subcategory using specifications like RAM, storage, screen size, etc.",
+        "mandatory_params": [{"name": "subcategory", "type": "string", "description": "subcategory of the product.", "examples": ["laptop", "mobile", "treadmill"]},
+                             {"name": "category", "type": "string", "description": "category of the product.", "examples": ["electronics", "sports"]}
+        ],
+        "optional_params": [{"name": "brand", "type": "string", "description": "subcategory of the product.", "examples": ["Apple", "lenovo", "samsung"]},
+                            {"name": "price_range", "type": "list", "description": "price range of the product - [minimum, maximum].", "examples": [[0, 70000], [20000, 190000]]}],
+        "returns": ["dataframe of filtered products."]
+      },
+      {
+        "name": "get_product_reviews",
+        "description": "Retrieve raw reviews for a specific product, including rating, title, text, date, and helpful votes.",
+        "mandatory_params": [
+          {"name": "product_id", "type": "int", "description": "unique product identifier", "examples": [12345, 98765]},
+          {"name": "product_name", "type": "string", "description": "product name (alternative to product_id)", "examples": ["MacBook Air", "Galaxy S21"]}
+        ],
+        "optional_params": [
+          {"name": "limit", "type": "int", "description": "maximum number of reviews to return", "examples": [10, 50]},
+          {"name": "sort_by", "type": "string", "description": "sort field (date, helpful_votes, rating)", "examples": ["date", "helpful_votes", "rating"]},
+          {"name": "min_rating", "type": "int", "description": "filter reviews with rating >= value", "examples": [4]}
+        ],
+        "returns": ["dataframe of reviews with columns: review_id, user_id, product_id, rating, review_title, review_text, review_date, helpful_votes_count"]
+      },
+      {
+        "name": "rank_products_by_reviews",
+        "description": "Rank products by average rating (optionally constrained by category/subcategory or price).",
+        "mandatory_params": [
+          {"name": "subcategory", "type": "string", "description": "product subcategory to rank within", "examples": ["laptop", "mobile"]},
+          {"name": "category", "type": "string", "description": "product category (optional if subcategory provided)", "examples": ["electronics", "sports"]}
+        ],
+        "optional_params": [
+          {"name": "limit", "type": "int", "description": "number of top products to return", "examples": [5, 10]},
+          {"name": "min_review_count", "type": "int", "description": "minimum number of reviews required to consider a product", "examples": [10, 50]},
+          {"name": "price_range", "type": "list", "description": "price range filter [min, max]", "examples": [[0, 1000], [500, 2000]]}
+        ],
+        "returns": ["dataframe of products ranked by avg_rating with columns: product_id, product_name, avg_rating, review_count"]
+      },
+      {
+        "name": "rank_products_by_review_count",
+        "description": "Return products ordered by number of reviews (popularity by count).",
+        "mandatory_params": [
+          {"name": "subcategory", "type": "string", "description": "product subcategory to consider", "examples": ["laptop", "headphones"]}
+        ],
+        "optional_params": [
+          {"name": "limit", "type": "int", "description": "number of products to return", "examples": [10, 20]},
+          {"name": "min_rating", "type": "int", "description": "only include products with avg rating >= value", "examples": [3, 4]}
+        ],
+        "returns": ["dataframe of products ordered by review_count with columns: product_id, product_name, review_count, avg_rating"]
+      },
+      {
+        "name": "filter_products_by_review_votes",
+        "description": "Filter or surface reviews/products by helpful vote thresholds or surface top helpful reviews for a product.",
+        "mandatory_params": [
+          {"name": "product_id", "type": "int", "description": "product identifier (for review-level queries)", "examples": [12345]},
+          {"name": "subcategory", "type": "string", "description": "for product-level queries (alternative to product_id)", "examples": ["mobile", "laptop"]}
+        ],
+        "optional_params": [
+          {"name": "min_helpful_votes", "type": "int", "description": "minimum helpful votes to include a review", "examples": [5, 20]},
+          {"name": "limit", "type": "int", "description": "max number of reviews or products to return", "examples": [5, 10]},
+          {"name": "sort_by", "type": "string", "description": "sorting preference (helpful_votes, rating)", "examples": ["helpful_votes", "rating"]}
+        ],
+        "returns": ["dataframe of reviews or products filtered by helpful votes with columns appropriate to query"]
+      },
+      {
+        "name": "compare_reviews",
+        "description": "Compare review statistics (avg rating, review_count, sentiment highlights) across multiple products or brands.",
+        "mandatory_params": [
+          {"name": "compare_ids", "type": "list", "description": "list of product_ids or brand names to compare", "examples": [[12345, 67890], ["Dell", "HP"]]}
+        ],
+        "optional_params": [
+          {"name": "spec_keys", "type": "list", "description": "specs to include in the comparison (optional)", "examples": ["battery_hours", "ram_gb"]},
+          {"name": "limit_reviews", "type": "int", "description": "limit number of reviews to summarize per product", "examples": [50]}
+        ],
+        "returns": ["comparison dataframe with columns: entity, avg_rating, review_count, top_positive_highlights, top_negative_highlights"]
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-from .base import AgentBase, AgentContext, AgentOutput, Ask, Present, Info
+from agents.base import AgentBase, AgentContext, AgentOutput, Ask, Present, Info
 from core.goals import TOOL_GUARDS, has_all
 from core.states import DiscoveryState
 from core.fsm_engine import FSMEngine
@@ -18,7 +18,7 @@ class DiscoveryAgent(AgentBase):
         if ws.status == DiscoveryState.NEW:
             ws.status = DiscoveryState.COLLECTING
 
-        # Update slots from NLU entities (later: agent-specific LLM extraction)
+        # Update slots from nlu entities (later: agent-specific LLM extraction)
         entities = ctx.nlu_result["current_turn"].get("entities", {})
         ws.update_slots(entities)
 

@@ -1,12 +1,12 @@
 import asyncio
 import json
 from pathlib import Path
-from runtime.planner_nlu import EnhancedNLU
-from tests.nlu.nlu_questions import questions  # Assuming questions are imported here
+from nlu.planner_nlu import PlannerNLU
+from dev_docs.tests.nlu.nlu_questions import questions  # Assuming questions are imported here
 import time
 
 async def main():
-    nlu = EnhancedNLU()  # Initialize the NLU class
+    nlu = PlannerNLU()  # Initialize the nlu class
     answers = []
     total_start_time = time.time()
 

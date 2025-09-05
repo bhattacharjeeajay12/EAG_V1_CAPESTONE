@@ -3,7 +3,7 @@ Planner: Slim orchestrator that routes to agents and enforces mandatory slot pol
 """
 from typing import Dict, Optional
 from config.planner_config import PlannerConfig, INTENT_THRESHOLDS
-from runtime.planner_nlu import EnhancedNLU
+from nlu.planner_nlu import PlannerNLU
 from core.conversation_history import ConversationHistory
 from agents.base import AgentBase, Action, Ask, Info, AgentOutput, AgentContext
 from agents.discovery import DiscoveryAgent
@@ -12,13 +12,12 @@ from tools.registry import ToolRegistry
 from core.llm_client import LLMClient
 from core.logging_setup import configure_logging
 from core.goals import GOALS, has_all
-
 logger = configure_logging("planner")
 
 class Planner:
-    def __init__(self, nlu: Optional[EnhancedNLU] = None, tools: Optional[ToolRegistry] = None,
+    def __init__(self, nlu: Optional[PlannerNLU] = None, tools: Optional[ToolRegistry] = None,
                  llm_client: Optional[LLMClient] = None, config: PlannerConfig = PlannerConfig()):
-        self.nlu = nlu or EnhancedNLU()
+        self.nlu = nlu or PlannerNLU()
         self.tools = tools or ToolRegistry()
         self.llm = llm_client or LLMClient()
         self.cfg = config
@@ -32,7 +31,7 @@ class Planner:
         convo_ctx = self.history.as_nlu_context()
 
         # todo: remove hardcoing
-        # nlu_result = await self.nlu.analyze_message(user_message, conversation_context=convo_ctx)
+        # nlu_result = await self.planner_nlu.analyze_message(user_message, conversation_context=convo_ctx)
         nlu_result = {'current_turn': {'intent': "DISCOVERY", 'confidence': 1.0}, "continuity": {'continuity_type': 'NEW'}}
         #===
         self.history.append_user_turn(user_message, nlu_result)

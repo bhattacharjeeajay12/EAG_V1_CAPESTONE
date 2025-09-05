@@ -1,0 +1,182 @@
+[
+  {
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "confidence": 0.95,
+      "entities": {
+        "category": [
+          "electronics"
+        ],
+        "subcategory": [
+          "laptop"
+        ],
+        "specifications": {}
+      },
+      "reasoning": "User is asking to see gaming laptops, which is a product search under electronics."
+    },
+    "continuity": {
+      "continuity_type": "CONTINUATION",
+      "sub_intent": "NULL",
+      "confidence": 0.9,
+      "reasoning": "User was previously exploring laptops (DISCOVERY) and is now refining their search to gaming laptops under a specific budget, maintaining the same intent."
+    },
+    "question": "Show me gaming laptops under $1500",
+    "question_key": "ques_1"
+  },
+  {
+    "current_turn": {
+      "intent": "ORDER",
+      "confidence": 0.95,
+      "entities": {
+        "category": [],
+        "subcategory": [],
+        "specifications": {}
+      },
+      "reasoning": "User is asking about the status of their order, which falls under the order management category."
+    },
+    "continuity": {
+      "continuity_type": "INTENT_SWITCH",
+      "sub_intent": "NULL",
+      "confidence": 0.9,
+      "reasoning": "User was previously exploring laptops (DISCOVERY) but has now switched to checking the status of an order, indicating a different intent."
+    },
+    "question": "Where is my order?",
+    "question_key": "ques_2"
+  },
+  {
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "confidence": 0.95,
+      "entities": {
+        "category": [
+          "electronics"
+        ],
+        "subcategory": [
+          "tablet"
+        ],
+        "specifications": {}
+      },
+      "reasoning": "User is requesting to see tablets, which is a product search under electronics."
+    },
+    "continuity": {
+      "continuity_type": "CONTEXT_SWITCH",
+      "sub_intent": "REPLACE",
+      "confidence": 0.9,
+      "reasoning": "User was previously exploring laptops (DISCOVERY) and is now switching to tablets, indicating a change in target product."
+    },
+    "question": "Actually, show me tablets instead.",
+    "question_key": "ques_3"
+  },
+  {
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "confidence": 0.95,
+      "entities": {
+        "category": [
+          "electronics"
+        ],
+        "subcategory": [
+          "smartphone"
+        ],
+        "specifications": {}
+      },
+      "reasoning": "User is asking to see smartphones, which is a product search under electronics."
+    },
+    "continuity": {
+      "continuity_type": "CONTEXT_SWITCH",
+      "sub_intent": "ADD",
+      "confidence": 0.9,
+      "reasoning": "User was previously exploring laptops (DISCOVERY) and now adds smartphones, so intent stays DISCOVERY but target expands."
+    },
+    "question": "Also show me smartphones.",
+    "question_key": "ques_4"
+  },
+  {
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "confidence": 0.95,
+      "entities": {
+        "category": [
+          "electronics"
+        ],
+        "subcategory": [
+          "laptop"
+        ],
+        "specifications": {}
+      },
+      "reasoning": "User is asking to compare Dell laptops with HP laptops, indicating a product exploration intent."
+    },
+    "continuity": {
+      "continuity_type": "CONTINUATION",
+      "sub_intent": "NULL",
+      "confidence": 0.9,
+      "reasoning": "User continues to explore laptops (DISCOVERY) by comparing different brands, maintaining the same goal of finding a suitable laptop."
+    },
+    "question": "Compare it with HP laptops.",
+    "question_key": "ques_5"
+  },
+  {
+    "current_turn": {
+      "intent": "DISCOVERY",
+      "confidence": 0.95,
+      "entities": {
+        "category": [
+          "utensils"
+        ],
+        "subcategory": [
+          "blender"
+        ],
+        "specifications": {}
+      },
+      "reasoning": "User is expressing a need for a blender, which is a product search under utensils."
+    },
+    "continuity": {
+      "continuity_type": "CONTEXT_SWITCH",
+      "sub_intent": "ADD",
+      "confidence": 0.9,
+      "reasoning": "User was previously exploring running shoes (DISCOVERY) and now adds a blender, indicating an expansion of their shopping interests."
+    },
+    "question": "Now I also need a blender.",
+    "question_key": "ques_6"
+  },
+  {
+    "current_turn": {
+      "intent": "RETURN",
+      "confidence": 0.9,
+      "entities": {
+        "category": [],
+        "subcategory": [],
+        "specifications": {}
+      },
+      "reasoning": "User is inquiring about the return policy, which indicates an interest in returning a product."
+    },
+    "continuity": {
+      "continuity_type": "INTENT_SWITCH",
+      "sub_intent": "NULL",
+      "confidence": 0.85,
+      "reasoning": "User was previously exploring laptops (DISCOVERY) but has now switched to asking about the return policy, indicating a different intent."
+    },
+    "question": "Also, tell me about the return policy.",
+    "question_key": "ques_7"
+  },
+  {
+    "current_turn": {
+      "intent": "UNKNOWN",
+      "confidence": 0.8,
+      "entities": {
+        "category": [],
+        "subcategory": [],
+        "specifications": {}
+      },
+      "reasoning": "The message is vague and does not specify a product or category, making it difficult to extract relevant entities."
+    },
+    "continuity": {
+      "continuity_type": "UNCLEAR",
+      "sub_intent": "NULL",
+      "confidence": 0.85,
+      "reasoning": "User's message does not provide clear direction related to the ongoing goal of discovering a laptop, making it unclear how it relates to previous messages."
+    },
+    "question": "What about that one?",
+    "question_key": "ques_8"
+  }
+]

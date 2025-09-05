@@ -13,20 +13,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-class EnhancedNLU:
-    """Simple NLU for intent and entity extraction."""
+class PlannerNLU:
+    """Simple nlu for intent and entity extraction."""
 
     ENTITY_DEFAULTS = {
-        "category": None,
-        "subcategory": None,
-        "product": None,
-        "specifications": {},
-        "budget": None,
-        "quantity": None,
-        "order_id": None,
-        "urgency": None,
-        "comparison_items": [],
-        "preferences": []
+        "category": [],
+        "subcategory": []
     }
 
     def __init__(self, llm_client: Optional[LLMClient] = None):
@@ -93,8 +85,6 @@ SESSION_ENTITIES_SO_FAR: {json.dumps(session_entities, indent=2)}
             result["current_turn"] = {}
         if "continuity" not in result:
             result["continuity"] = {}
-        if "consistency_checks" not in result:
-            result["consistency_checks"] = {}
 
         # Clean entities
         current_turn = result["current_turn"]
@@ -111,20 +101,18 @@ SESSION_ENTITIES_SO_FAR: {json.dumps(session_entities, indent=2)}
         """Return error response."""
         return {
             "current_turn": {
-                "intent": "UNKNOWN",
-                "sub_intent": None,
                 "confidence": 0.0,
                 "entities": dict(self.ENTITY_DEFAULTS),
+                "intent": "UNKNOWN",
                 "reasoning": f"Error: {error}"
             },
             "continuity": {
                 "continuity_type": "UNCLEAR",
                 "confidence": 0.0,
-                "reasoning": "Processing error"
+                "reasoning": "Processing error",
+                "sub_intent": "NULL"
             },
-            "consistency_checks": {
-                "entity_conflicts_with_session": []
-            }
+            "is_error": True
         }
 
 
