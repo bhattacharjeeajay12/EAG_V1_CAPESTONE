@@ -80,7 +80,8 @@ OUTPUT (strict JSON only — follow this schema exactly):
       "optional": {{ /* param_name: value */ }}
     }}
   }} or null,
-  "tool_needed": "tool_name" or null,  // if mandatory params missing
+  "execute_flag": true|false,   // true = Planner should execute chosen_tool now; false = wait
+  "tool_needed": "tool_name" or null,  // if collecting inputs for a probable tool
   "clarification_question": "string or null",
   "one_shot_optional_prompt": "string or null",
   "suggested_footnotes": ["Top by reviews","Low return rate","Short review summary"]
@@ -89,11 +90,11 @@ OUTPUT (strict JSON only — follow this schema exactly):
 ==============================
 BEHAVIORAL GUIDELINES:
 ==============================
-- If **all mandatory_params** are present & valid → populate chosen_tool.params and set chosen_tool.
-- If **any mandatory_param missing** → set chosen_tool=null, tool_needed=best_tool_name,
-  and produce one concise clarification_question naming the missing mandatory param.
+- If **all mandatory_params** are present & valid → set chosen_tool, execute_flag=true.
+- If **any mandatory_param missing** → chosen_tool=null, tool_needed=best_tool_name,
+  execute_flag=false, and produce one concise clarification_question.
 - If mandatory params satisfied but important optional params missing → set chosen_tool (ready),
-  and also set one_shot_optional_prompt to ask the single highest-value optional.
+  execute_flag=false, and set one_shot_optional_prompt to ask the highest-value optional.
 - Always include suggested_footnotes (from the fixed list above) so Summarizer can include them
   after execution.
 - Keep response concise and conversational. Example:
@@ -103,8 +104,8 @@ BEHAVIORAL GUIDELINES:
 FEW-SHOT EXAMPLES
 ==============================
 
-Example 1 — Straightforward (all mandatory + optional present)
---------------------------------------------------------------
+Example 1 — Straightforward (ready to execute)
+----------------------------------------------
 Input:
 {{
   "conversation_context": [{{"role":"user","content":"I want a Dell laptop under $1000 with 16GB RAM"}}],
@@ -112,7 +113,7 @@ Input:
   "slots_till_now": {{}},
   "fsm_state": "COLLECTING",
   "available_tools": [...],
-  "spec_keys": {{"brand":"Dell","ram_gb":"8","storage_gb":"512"}}
+  "spec_keys": {{"brand":["Dell","Apple"],"ram_gb":[8,16],"storage_gb":[256,512]}}
 }}
 Output:
 {{
@@ -130,14 +131,15 @@ Output:
       "optional": {{"brand":"Dell","price_range":[0,1000],"specifications":[{{"key":"ram_gb","op":">=","value":16}}]}}
     }}
   }},
+  "execute_flag": true,
   "tool_needed": null,
   "clarification_question": null,
   "one_shot_optional_prompt": null,
   "suggested_footnotes": ["Top by reviews","Low return rate","Short review summary"]
 }}
 
-Example 2 — Missing optional (one-shot clarifier)
---------------------------------------------------
+Example 2 — Missing optional (ask, but not execute yet)
+-------------------------------------------------------
 Input:
 {{
   "conversation_context": [{{"role":"user","content":"Show me laptops"}}],
@@ -145,7 +147,7 @@ Input:
   "slots_till_now": {{}},
   "fsm_state": "COLLECTING",
   "available_tools": [...],
-  "spec_keys": {{"brand":"Dell","ram_gb":"8"}}
+  "spec_keys": {{"brand":["Dell","Apple"],"ram_gb":[8,16],"price":[500,1000]}}
 }}
 Output:
 {{
@@ -159,14 +161,15 @@ Output:
       "optional": {{}}
     }}
   }},
+  "execute_flag": false,
   "tool_needed": null,
   "clarification_question": null,
   "one_shot_optional_prompt": "Do you have a preferred brand or budget?",
   "suggested_footnotes": ["Top by reviews","Low return rate","Short review summary"]
 }}
 
-Example 3 — Ambiguity (clarification required)
-----------------------------------------------
+Example 3 — Ambiguity (cannot execute until clarified)
+------------------------------------------------------
 Input:
 {{
   "conversation_context": [{{"role":"user","content":"Show me the best laptops"}}],
@@ -174,7 +177,7 @@ Input:
   "slots_till_now": {{}},
   "fsm_state": "COLLECTING",
   "available_tools": [...],
-  "spec_keys": {{"brand":"Dell","ram_gb":"8"}}
+  "spec_keys": {{"brand":["Dell","HP"],"ram_gb":[8,16]}}
 }}
 Output:
 {{
@@ -182,14 +185,15 @@ Output:
   "updated_slots": {{"category":"electronics","subcategory":"laptop"}},
   "constraints": [],
   "chosen_tool": null,
+  "execute_flag": false,
   "tool_needed": "rank_products_by_reviews",
   "clarification_question": "Do you want to rank by average rating or by review count?",
   "one_shot_optional_prompt": null,
   "suggested_footnotes": ["Top by reviews","Low return rate","Short review summary"]
 }}
 
-Example 4 — Context switch (dropping irrelevant slots)
-------------------------------------------------------
+Example 4 — Context switch (drop irrelevant slots)
+--------------------------------------------------
 Input:
 {{
   "conversation_context": [
@@ -201,7 +205,7 @@ Input:
   "slots_till_now": {{"subcategory":"laptop"}},
   "fsm_state": "COLLECTING",
   "available_tools": [...],
-  "spec_keys": {{"brand":"Samsung","battery_hours":"10"}}
+  "spec_keys": {{"brand":["Samsung","Apple"],"battery_hours":[8,10]}}
 }}
 Output:
 {{
@@ -209,14 +213,15 @@ Output:
   "updated_slots": {{"category":"electronics","subcategory":"mobile"}},
   "constraints": [],
   "chosen_tool": null,
+  "execute_flag": false,
   "tool_needed": "filter_products",
   "clarification_question": "Do you have a preferred brand or budget for mobiles?",
   "one_shot_optional_prompt": "Do you want to specify a budget or brand?",
   "suggested_footnotes": ["Top by reviews","Low return rate","Short review summary"]
 }}
 
-Example 5 — Contradiction / Update (latest wins)
-------------------------------------------------
+Example 5 — Contradiction / Update (latest wins, ready to execute)
+------------------------------------------------------------------
 Input:
 {{
   "conversation_context": [
@@ -227,7 +232,7 @@ Input:
   "slots_till_now": {{"subcategory":"laptop","budget":1500}},
   "fsm_state": "COLLECTING",
   "available_tools": [...],
-  "spec_keys": {{"ram_gb":"8"}}
+  "spec_keys": {{"ram_gb":[8,16],"price":[500,1500]}}
 }}
 Output:
 {{
@@ -243,14 +248,15 @@ Output:
       "optional": {{"price_range":[0,1000]}}
     }}
   }},
+  "execute_flag": true,
   "tool_needed": null,
   "clarification_question": null,
   "one_shot_optional_prompt": "Would you also like to add a brand or RAM size?",
   "suggested_footnotes": ["Top by reviews","Low return rate","Short review summary"]
 }}
 
-Example 6 — No relevant tool
-----------------------------
+Example 6 — Out of scope (no relevant tool)
+-------------------------------------------
 Input:
 {{
   "conversation_context": [{{"role":"user","content":"How many orders did I place last year?"}}],
@@ -266,6 +272,7 @@ Output:
   "updated_slots": {{}},
   "constraints": [],
   "chosen_tool": null,
+  "execute_flag": false,
   "tool_needed": null,
   "clarification_question": null,
   "one_shot_optional_prompt": null,
