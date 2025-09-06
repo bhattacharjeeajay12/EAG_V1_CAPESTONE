@@ -3,7 +3,7 @@ Planner: Slim orchestrator that routes to agents and enforces mandatory slot pol
 """
 from typing import Dict, Optional
 from config.planner_config import PlannerConfig, INTENT_THRESHOLDS
-from nlu.planner_nlu import PlannerNLU
+from nlu.discovery_nlu import PlannerNLU
 from core.conversation_history import ConversationHistory
 from agents.base import AgentBase, Action, Ask, Info, AgentOutput, AgentContext
 from agents.discovery import DiscoveryAgent
@@ -31,8 +31,8 @@ class Planner:
         convo_ctx = self.history.as_nlu_context()
 
         # todo: remove hardcoing
-        # nlu_result = await self.planner_nlu.analyze_message(user_message, conversation_context=convo_ctx)
-        nlu_result = {'current_turn': {'intent': "DISCOVERY", 'confidence': 1.0}, "continuity": {'continuity_type': 'NEW'}}
+        # nlu_result = await self.nlu.analyze_message(user_message, conversation_context=convo_ctx)
+        nlu_result = {'continuity': {'clarification_message': None, 'confidence': 0.9, 'continuity_type': 'CONTINUATION', 'reasoning': 'First message of the conversation, new DISCOVERY workflow must be created.', 'workstream_decision': {'existing_workflow_status': 'NULL', 'new_workstreams': [{'target': {'category': 'electronics', 'subcategory': 'laptop'}, 'type': 'DISCOVERY'}]}}, 'current_turn': {'confidence': 0.95, 'entities': {'category': [], 'products': [{'category': 'electronics', 'subcategory': 'laptop'}], 'specifications': {}, 'subcategory': []}, 'intent': 'DISCOVERY', 'reasoning': 'User explicitly states a need for a laptop.', 'referenced_entities': []}}
         #===
         self.history.append_user_turn(user_message, nlu_result)
 

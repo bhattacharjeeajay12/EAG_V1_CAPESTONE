@@ -1,0 +1,10 @@
+{
+  "electronics": {
+        "laptop": ["Processor", "RAM", "Storage", "Graphics", "Display", "Operating System", "Weight"],
+        "phone": ["Processor", "RAM", "Storage", "Display", "Camera", "Battery", "Operating System"],
+        "earphone": ["Driver Size", "Connectivity", "Battery Life", "Noise Cancellation", "Water Resistance", "Charging"]
+    },
+  "sports": {
+    "treadmill": ["Motor", "Speed Range", "Incline Range", "Running Surface", "Display", "Incline"]
+  }
+}

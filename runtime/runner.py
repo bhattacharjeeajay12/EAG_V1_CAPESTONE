@@ -14,7 +14,9 @@ async def main():
         "Buy this one",
     ]
 
-    for t in turns:
+    # for t in turns:
+    while True:
+        t = input("USER: ")
         action = await planner.handle_user_turn(t)
         logger.info(f"USER: {t}")
         logger.info(f"ACTION: {action}")

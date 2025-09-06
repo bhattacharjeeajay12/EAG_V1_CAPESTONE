@@ -19,7 +19,7 @@ class DiscoveryAgent(AgentBase):
             ws.status = DiscoveryState.COLLECTING
 
         # Update slots from nlu entities (later: agent-specific LLM extraction)
-        entities = ctx.nlu_result["current_turn"].get("entities", {})
+        entities = ctx.nlu_result["current_turn"].get("products", {})
         ws.update_slots(entities)
 
         # === STEP 2: Mandatory slots

@@ -29,7 +29,6 @@ class PlannerNLU:
         """Analyze user message and return intent + entities."""
         if not user_message.strip():
             return self._error_response("Empty message")
-
         try:
             user_prompt = self._create_user_prompt(user_message.strip(), conversation_context or [], last_intent, session_entities or {})
             response = await self.llm_client.generate(SYSTEM_PROMPT, user_prompt)  # Make this call async
