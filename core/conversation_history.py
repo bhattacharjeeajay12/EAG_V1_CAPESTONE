@@ -41,7 +41,7 @@ class ConversationHistory:
         self.focus.active_ws_id = ws_id
 
     def ensure_workstream(self, intent: str, seed_entities: Dict[str, Any]) -> Workstream:
-        ws = Workstream(id=str(uuid.uuid4()), type=intent, status=initial_state(intent), slots=seed_entities or {})
+        ws = Workstream(id=str(uuid.uuid4()), type=intent.upper(), status=initial_state(intent), slots=seed_entities or {})
         self.workstreams[ws.id] = ws
         self.focus.active_ws_id = ws.id
         return ws

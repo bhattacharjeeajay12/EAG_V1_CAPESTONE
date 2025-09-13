@@ -145,9 +145,16 @@ class Planner:
 
         logger.info(f"Focused workstream type: {getattr(focused_ws, 'type', None)}")
         # Route to agent
-        agent = self.agents.get(focused_ws.type)
+        # normalize workstream type to uppercase for lookup
+        ws_type = getattr(focused_ws, 'type', None)
+        if isinstance(ws_type, str):
+            ws_type_key = ws_type.upper()
+        else:
+            ws_type_key = ws_type
+        agent = self.agents.get(ws_type_key)
         if not agent:
-            action = Info(f"Sorry, I can’t handle {focused_ws.type} yet.")
+            logger.warning(f"No agent found for workstream type '{ws_type_key}' (ws_id={getattr(focused_ws, 'id', None)})")
+            action = Info(f"Sorry, I can’t handle {ws_type_key} yet.")
             self.history.append_action(action)
             return action
 
