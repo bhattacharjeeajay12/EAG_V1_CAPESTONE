@@ -2,20 +2,20 @@
 from enum import Enum
 
 class DiscoveryState(Enum):
-    NEW = "new"
-    COLLECTING = "collecting"
-    READY = "ready"
-    PROCESSING = "processing"
-    PRESENTING = "presenting"
-    AWAITING_DECISION = "awaiting_decision"
-    CONFIRMING = "confirming"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    NEW = "NEW"
+    COLLECTING = "COLLECTING"
+    READY = "READY"
+    PROCESSING = "PROCESSING"
+    PRESENTING = "PRESENTING"
+    AWAITING_DECISION = "AWAITING_DECISION"
+    CONFIRMING = "CONFIRMING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
 
 class OrderState(Enum):
-    NEW = "new"
-    COLLECTING = "collecting"
-    CONFIRMING = "confirming"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    NEW = "NEW"
+    COLLECTING = "COLLECTING"
+    CONFIRMING = "CONFIRMING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"

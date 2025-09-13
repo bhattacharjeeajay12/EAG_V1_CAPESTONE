@@ -9,8 +9,8 @@ class Workstream:
     id: str
     type: str  # DISCOVERY | ORDER | RETURN | EXCHANGE | PAYMENT | CHITCHAT
     status: Union[DiscoveryState, OrderState, str]
-    slots: Dict[str, Any] = field(default_factory=dict)
     skip_specifications: bool = False
+    slots: Dict[str, Any] = field(default_factory=dict)
     candidates: List[Dict[str, Any]] = field(default_factory=list)
     compare: Dict[str, Any] = field(default_factory=lambda: {"left": None, "right": None})
     satisfaction: float = 0.0
