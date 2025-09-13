@@ -1,9 +1,8 @@
 # conversation_history.py
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-from core.workstream import Workstream
 import uuid
-from core.states import DiscoveryState
+from core.workstream import Workstream
 from core.state_factory import initial_state
 
 @dataclass
@@ -16,9 +15,10 @@ class ConversationHistory:
         self.workstreams: Dict[str, Workstream] = {}
         self.focus = Focus()
         self._conversation_log: List[Dict[str, Any]] = []
-        # pending decision holds continuity/workstream_decision when planner asked for clarification.
-        # It should be applied or cleared once the user clarifies.
+        # pending_decision used earlier for continuity confirm flows
         self.pending_decision: Optional[Dict[str, Any]] = None
+        # pending_asks maps workstream_id -> { "slot": str|None, "prompt": str }
+        self.pending_asks: Dict[str, Dict[str, Any]] = {}
 
     def as_nlu_context(self) -> List[Dict[str, Any]]:
         ctx: List[Dict[str, Any]] = []
@@ -41,17 +41,12 @@ class ConversationHistory:
         self.focus.active_ws_id = ws_id
 
     def ensure_workstream(self, intent: str, seed_entities: Dict[str, Any]) -> Workstream:
-        if intent == "DISCOVERY":
-            status = DiscoveryState.NEW
-        else:
-            status = "new"  # fallback if not modeled yet
-
         ws = Workstream(id=str(uuid.uuid4()), type=intent, status=initial_state(intent), slots=seed_entities or {})
         self.workstreams[ws.id] = ws
         self.focus.active_ws_id = ws.id
         return ws
 
-    # --- New helper methods for multi-workstream management ---
+    # --- Multi-workstream helpers ---
     def list_workstreams(self) -> List[Workstream]:
         return list(self.workstreams.values())
 
@@ -62,7 +57,6 @@ class ConversationHistory:
         ws = self.workstreams.get(ws_id)
         if ws:
             ws.status = "paused"
-            # if it was focused, clear focus
             if self.focus.active_ws_id == ws_id:
                 self.focus.active_ws_id = None
 
@@ -72,6 +66,8 @@ class ConversationHistory:
             ws.status = "abandoned"
             if self.focus.active_ws_id == ws_id:
                 self.focus.active_ws_id = None
+            # clear any pending asks for abandoned ws
+            self.pending_asks.pop(ws_id, None)
 
     def resume_workstream(self, ws_id: str) -> Optional[Workstream]:
         ws = self.workstreams.get(ws_id)
@@ -82,10 +78,6 @@ class ConversationHistory:
         return None
 
     def find_workstream_by_target(self, type: str, target: Dict[str, Any]) -> Optional[Workstream]:
-        """
-        Find a workstream with matching type and matching slots (category/subcategory).
-        Prefer paused ones first (so we can resume), then active or new.
-        """
         def matches(ws: Workstream):
             slots = ws.slots or {}
             return ws.type == type and slots.get("category") == target.get("category") and slots.get("subcategory") == target.get("subcategory")
@@ -100,7 +92,7 @@ class ConversationHistory:
                 return ws
         return None
 
-    # Pending decision helpers
+    # --- Pending decision helpers (continuity) ---
     def set_pending_decision(self, decision: Dict[str, Any]):
         self.pending_decision = decision
 
@@ -110,9 +102,44 @@ class ConversationHistory:
     def get_pending_decision(self) -> Optional[Dict[str, Any]]:
         return self.pending_decision
 
+    # --- Pending ask helpers (new) ---
+    def set_pending_ask(self, ws_id: str, slot: Optional[str], prompt: str):
+        """
+        Register that an agent asked the user for `slot` in workstream `ws_id`.
+        slot may be None if the Ask is free-form (no explicit slot).
+        """
+        self.pending_asks[ws_id] = {"slot": slot, "prompt": prompt}
+
+    def get_pending_ask_for_ws(self, ws_id: str) -> Optional[Dict[str, Any]]:
+        return self.pending_asks.get(ws_id)
+
+    def find_any_pending_ask(self) -> Optional[tuple]:
+        """
+        Return (ws_id, ask_dict) for any pending ask, preferring focused ws if present.
+        """
+        if not self.pending_asks:
+            return None
+        # prefer focused ws
+        focused = self.focus.active_ws_id
+        if focused and focused in self.pending_asks:
+            return focused, self.pending_asks[focused]
+        # else return arbitrary pending ask (first)
+        for k, v in self.pending_asks.items():
+            return k, v
+        return None
+
+    def clear_pending_ask(self, ws_id: str):
+        self.pending_asks.pop(ws_id, None)
+
     # Conversation log helpers
     def append_user_turn(self, content: str, nlu_result: Dict[str, Any]):
         self._conversation_log.append({"role": "user", "content": content, "nlu_result": nlu_result})
 
     def append_action(self, action: Any):
-        self._conversation_log.append({"role": "assistant", "action": repr(action)})
+        # store representation; if Ask, also helpful to store prompt
+        entry = {"role": "assistant", "action": repr(action)}
+        try:
+            entry["text"] = getattr(action, "text", "") or getattr(action, "prompt", "")
+        except Exception:
+            entry["text"] = ""
+        self._conversation_log.append(entry)
