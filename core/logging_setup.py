@@ -6,7 +6,8 @@ import sys
 from pathlib import Path
 
 # DEFAULT_LOG_PATH = Path("/mnt/data/eag_logs")
-DEFAULT_LOG_PATH = Path("/")
+# DEFAULT_LOG_PATH = Path("/")
+DEFAULT_LOG_PATH = Path.home() / "eag_logs"
 DEFAULT_LOG_PATH.mkdir(parents=True, exist_ok=True)
 
 def configure_logging(name: str = "eag", level: int = logging.INFO) -> logging.Logger:
