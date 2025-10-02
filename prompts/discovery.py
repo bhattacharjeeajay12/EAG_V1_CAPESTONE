@@ -4,7 +4,7 @@ import os
 # todo: remove this block
 print("Before:", os.getcwd())
 os.chdir(os.path.join(".."))
-print("Before:", os.getcwd())
+print("After:", os.getcwd())
 # block ends
 
 SYSTEM_PROMPT = f"""

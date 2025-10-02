@@ -20,6 +20,7 @@ class ToolCall(Action):
 class Present(Action):
     items: List[Dict[str, Any]]
     affordances: List[str]
+    text: Optional[str] = None
     def __repr__(self): return f"PRESENT({len(self.items)} items)"
 
 @dataclass
@@ -45,6 +46,12 @@ class AgentOutput:
     presented_items: Optional[List[Dict[str, Any]]] = None
     satisfaction_delta: float = 0.0
     mark_completed: bool = False
+
+@dataclass
+class Confirm:
+    type: str = "confirm"
+    text: str = ""
+    details: Optional[Dict[str, Any]] = None
 
 class AgentBase(Protocol):
     async def decide_next(self, ctx: AgentContext) -> AgentOutput: ...

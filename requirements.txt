@@ -2,3 +2,4 @@ python-dotenv==1.1.1
 openai==1.109.1
 google-generativeai==0.8.5
 google==3.0.0
+pandas==2.3.3

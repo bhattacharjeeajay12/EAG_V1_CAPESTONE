@@ -1,4 +1,4 @@
-#core/planner_nlu.py
+#core/planner.py
 """
 Natural Language Understanding Module
 """
@@ -8,12 +8,12 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from core.llm_client import LLMClient
-from prompts.planner import SYSTEM_PROMPT
+from prompts.discovery import SYSTEM_PROMPT
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-class PlannerNLU:
+class DiscoveryNLU:
     """Simple nlu for intent and entity extraction."""
 
     ENTITY_DEFAULTS = {
@@ -29,7 +29,6 @@ class PlannerNLU:
         """Analyze user message and return intent + entities."""
         if not user_message.strip():
             return self._error_response("Empty message")
-
         try:
             user_prompt = self._create_user_prompt(user_message.strip(), conversation_context or [], last_intent, session_entities or {})
             response = await self.llm_client.generate(SYSTEM_PROMPT, user_prompt)  # Make this call async

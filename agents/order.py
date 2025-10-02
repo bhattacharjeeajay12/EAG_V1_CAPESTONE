@@ -1,25 +1,37 @@
-from .base import AgentBase, AgentContext, AgentOutput, Ask, Commit
-from core.states import OrderState
+from typing import Dict, Any
+from agents.base import AgentBase, AgentContext, AgentOutput, Ask, Info, Confirm
+from tools.registry import ToolRegistry
+from typing import Dict, Optional, Any
+from core.llm_client import LLMClient
+from config.planner_config import PlannerConfig
 
 class OrderAgent(AgentBase):
-    def __init__(self, tools, llm, cfg):
+    def __init__(self,
+        tools: Optional[ToolRegistry] = None,
+        llm: Optional[LLMClient] = None,
+        cfg: PlannerConfig = PlannerConfig()):
+
+        super().__init__()
+        self.tools = tools   # <-- inject ToolRegistry
         self.tools = tools
         self.llm = llm
         self.cfg = cfg
 
     async def decide_next(self, ctx: AgentContext) -> AgentOutput:
         ws = ctx.workstream
-        entities = ctx.nlu_result["current_turn"].get("entities", {})
-        ws.update_slots(entities)
+        product_id = ws.slots.get("product_id")
+        if not product_id:
+            return AgentOutput(
+                action=Ask(question="Which product would you like to buy? Provide a product id.", slot="product_id")
+            )
 
-        # Step 1: Need a product_id
-        if "product_id" not in ws.slots:
-            ws.status = OrderState.COLLECTING
-            return AgentOutput(action=Ask("Which product would you like to order?"))
-
-        # Step 2: Place order (simulate tool call)
-        ws.status = OrderState.CONFIRMING
-        result = await self.tools.call("place_order", {"product_id": ws.slots["product_id"]})
-
-        ws.status = OrderState.COMPLETED
-        return AgentOutput(action=Commit(result), mark_completed=True)
+        try:
+            resp = await self.tools.call("place_order", {"product_id": product_id})
+            msg = f"Order confirmed (ID: {resp.get('order_id')})."
+            return AgentOutput(
+                action=Confirm(text=msg),
+                updated_slots={"order_id": resp.get("order_id")},
+                mark_completed=True,
+            )
+        except Exception as e:
+            return AgentOutput(action=Info(message=f"Failed to place order: {e}"))
