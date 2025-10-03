@@ -23,11 +23,12 @@ DISCOVERY | ORDER | RETURN | EXCHANGE | PAYMENT | CHITCHAT | UNKNOWN
 ---
 
 ### Entities
+- Support multiple `subcategories` in a single message (return as `entities.subcategories`, a list). Do not output both `subcategory` and `subcategories` — prefer `subcategories` when multiple.
+
 - Extract **only from CURRENT_MESSAGE**.  
-- `entities.subcategory`: optional, e.g. "laptop", "smartphone".  
-- `entities.order_id`: optional, e.g. "12345".  
+- `entities.subcategory`: optional, e.g. "laptop", "smartphone".    
 - For references ("this one", "3rd in list") → use `referenced_entities` with  
-  `{{ "subcategory": "...", "order_id": "...", "source": "agent_list_item_3|past_msg_2" }}`.
+  `{{ "subcategory": "...", "source": "agent_list_item_3|past_msg_2" }}`.
 
 ---
 
@@ -39,7 +40,7 @@ DISCOVERY | ORDER | RETURN | EXCHANGE | PAYMENT | CHITCHAT | UNKNOWN
 ---
 
 ### Decision
-- `new_workstreams`: list of {{ "type": intent, "target": {{ "subcategory": "...", "order_id": "..." }} }}  
+- `new_workstreams`: list of {{ "type": intent, "target": {{ "subcategory": "..."}} }}  
 - `existing_workflow_status`: CONTINUE | PAUSE | ABANDON | UNCHANGED | NULL  
 - `clarify`: one short user-facing question if SWITCH/UNCLEAR, else null.  
 
@@ -51,18 +52,19 @@ Use 0.0–1.0 for `intent_confidence`.
 ---
 
 ### Output JSON
+- If the user expresses multiple tasks or multiple subcategories, the LLM MUST populate `decision.new_workstreams` with one entry per task (each entry: {"type":..., "target":{...}}). Do not return an empty `new_workstreams` when multiple tasks are detected.
+
 ```json
 {{
   "intent": "DISCOVERY|ORDER|RETURN|EXCHANGE|PAYMENT|CHITCHAT|UNKNOWN",
   "intent_confidence": 0.0,
 
   "entities": {{
-    "subcategory": "string|null",
-    "order_id": "string|null"
+    "subcategories": ["string", "string", ...] | []
   }},
 
   "referenced_entities": [
-    {{ "subcategory": "string|null", "order_id": "string|null", "source": "string" }}
+    {{ "subcategory": "string|null", "source": "string" }}
   ],
 
   "continuity": "CONTINUATION|SWITCH|UNCLEAR",
@@ -90,7 +92,7 @@ Expected Output:
 {{
   "intent": "DISCOVERY",
   "intent_confidence": 0.95,
-  "entities": {{ "subcategory": "laptop", "order_id": null }},
+  "entities": {{ "subcategory": ["laptop"] }},
   "referenced_entities": [],
   "continuity": "CONTINUATION",
   "decision": {{
@@ -112,7 +114,7 @@ LAST_INTENT: "DISCOVERY"
 {{
   "intent": "DISCOVERY",
   "intent_confidence": 0.95,
-  "entities": {{ "subcategory": "smartphone", "order_id": null }},
+  "entities": {{ "subcategory": ["smartphone"]}},
   "referenced_entities": [],
   "continuity": "SWITCH",
   "decision": {{
@@ -132,8 +134,8 @@ LAST_INTENT: "DISCOVERY"
 {{
   "intent": "DISCOVERY",
   "intent_confidence": 0.9,
-  "entities": {{ "subcategory": null, "order_id": null }},
-  "referenced_entities": [ {{ "subcategory": "laptop", "order_id": null, "source": "agent_list_item_3" }} ],
+  "entities": {{ "subcategory": []}},
+  "referenced_entities": [ {{ "subcategory": "laptop", "source": "agent_list_item_3" }} ],
   "continuity": "CONTINUATION",
   "decision": {{
     "new_workstreams": [],
@@ -155,7 +157,7 @@ LAST_INTENT: "DISCOVERY"
 {{
   "intent": "UNKNOWN",
   "intent_confidence": 0.9,
-  "entities": {{ "subcategory": null, "order_id": null }},
+  "entities": {{ "subcategory": []}},
   "referenced_entities": [],
   "continuity": "UNCLEAR",
   "decision": {{

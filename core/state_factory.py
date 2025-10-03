@@ -7,6 +7,9 @@ def initial_state(intent: str) -> Union[DiscoveryState, OrderState, str]:
     mapping = {
         "DISCOVERY": DiscoveryState.NEW,
         "ORDER": OrderState.NEW,
-        # Add RETURN, EXCHANGE, PAYMENT later
+        "RETURN": OrderState.NEW,
+        "EXCHANGE": OrderState.NEW,
+        "PAYMENT": OrderState.NEW,
+        # Add other intents as needed
     }
-    return mapping.get(intent, "new")  # fallback string for unmodeled intents
+    return mapping.get(intent, "NEW")  # fallback string for unmodeled intents
