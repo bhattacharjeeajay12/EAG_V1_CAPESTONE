@@ -2,22 +2,7 @@
 import re, json, os
 from typing import Dict, Any, List, Optional
 from core.llm_client import LLMClient
-
-# Try importing SYSTEM_PROMPT from prompts.planner; fallback to loading file if import fails
-try:
-    from prompts.planner import SYSTEM_PROMPT
-except Exception:
-    _prompt_path = os.path.join(os.path.dirname(__file__), '..', 'prompts', 'planner.py')
-    if not os.path.exists(_prompt_path):
-        _prompt_path = os.path.join(os.path.dirname(__file__), '..', 'planner.py')
-    try:
-        with open(_prompt_path, 'r', encoding='utf-8') as _f:
-            # crude extraction: find SYSTEM_PROMPT = """ ... """
-            txt = _f.read()
-            m = re.search(r'SYSTEM_PROMPT\\s*=\\s*f?("""|\'\'\')(.*?)(\\1)', txt, re.DOTALL)
-            SYSTEM_PROMPT = m.group(2) if m else "You are an e-commerce Workflow Planner."
-    except Exception:
-        SYSTEM_PROMPT = "You are an e-commerce Workflow Planner."
+from prompts.planner import SYSTEM_PROMPT
 
 class PlannerNLU:
     def __init__(self, llm_client: Optional[LLMClient] = None):
@@ -33,6 +18,7 @@ class PlannerNLU:
             obj = self._extract_json(raw)
         except Exception:
             # fallback: return a conservative UNKNOWN result
+
             return {
                 "intent": "UNKNOWN",
                 "intent_confidence": 0.0,
@@ -40,7 +26,8 @@ class PlannerNLU:
                 "referenced_entities": [],
                 "continuity": "UNCLEAR",
                 "decision": {"new_workstreams": [], "existing_workflow_status": "UNCHANGED"},
-                "clarify": None
+                "clarify": None,
+                "exception": True,
             }
         # retain raw for heuristics if needed
         obj['raw_text'] = raw or ""

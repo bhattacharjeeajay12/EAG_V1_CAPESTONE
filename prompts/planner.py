@@ -52,7 +52,7 @@ Use 0.0–1.0 for `intent_confidence`.
 ---
 
 ### Output JSON
-- If the user expresses multiple tasks or multiple subcategories, the LLM MUST populate `decision.new_workstreams` with one entry per task (each entry: {"type":..., "target":{...}}). Do not return an empty `new_workstreams` when multiple tasks are detected.
+- If the user expresses multiple tasks or multiple subcategories, the LLM MUST populate `decision.new_workstreams` with one entry per task (each entry: {{"type":..., "target":{{...}} }}). Do not return an empty `new_workstreams` when multiple tasks are detected.
 
 ```json
 {{

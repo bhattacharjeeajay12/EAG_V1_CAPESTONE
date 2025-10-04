@@ -19,3 +19,13 @@ TOOL_GUARDS = {
         "next_state": "searching"
     }
 }
+
+
+# Per-intent mandatory slots mapping (used by runtime and agents)
+MANDATORY_SLOTS = {
+    'DISCOVERY': ['subcategory'],
+    'ORDER': ['product_id'],
+    'PAYMENT': ['order_id'],
+    'EXCHANGE': ['order_id'],
+    'RETURN': ['order_id']
+}

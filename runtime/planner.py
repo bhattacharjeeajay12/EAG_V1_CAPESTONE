@@ -1,4 +1,3 @@
-
 # runtime/planner.py (updated to consume slim planner JSON)
 from typing import Dict, Optional, Any
 from config.planner_config import PlannerConfig, INTENT_THRESHOLDS
@@ -18,6 +17,7 @@ from core.states import DiscoveryState, OrderState
 
 logger = configure_logging("planner")
 
+
 def _to_enum_status(ws_type: str, upper_name: str):
     try:
         if ws_type == "DISCOVERY":
@@ -27,6 +27,7 @@ def _to_enum_status(ws_type: str, upper_name: str):
     except Exception:
         pass
     return upper_name
+
 
 class Planner:
     def __init__(self,
@@ -205,7 +206,7 @@ class Planner:
 
     def _ensure_focus(self, intent: str, decision: Optional[Dict[str, Any]], nlu_result: Dict[str, Any], focused_ws):
         if not focused_ws:
-            # Create new workstream if decision says so
+            # Create new workstreams if decision provides multiple
             new_list = (decision or {}).get("new_workstreams", [])
             if new_list:
                 first = new_list[0]
@@ -218,7 +219,7 @@ class Planner:
 
                 focused_ws = self.history.ensure_workstream(first.get("type", intent), seed_entities=seed)
 
-                # Pause extras
+                # Pause or create extra workstreams
                 for extra in new_list[1:]:
                     ew = self.history.ensure_workstream(extra.get("type", intent),
                                                         seed_entities=extra.get("target", {}))
@@ -236,6 +237,8 @@ class Planner:
 
         return focused_ws
 
+    async def slot_check(self, focused_ws, nlu: Dict[str, Any]) -> Optional[AgentOutput]:
+        return
     async def _route_and_decide(self, focused_ws, nlu: Dict[str, Any]) -> AgentOutput:
         ws_type = getattr(focused_ws, "type", None)
         ws_key = ws_type.upper() if isinstance(ws_type, str) else ws_type
@@ -245,6 +248,9 @@ class Planner:
             self.history.append_action(info)
             return AgentOutput(action=info)
         agent_ctx = AgentContext(workstream=focused_ws, session=self.history.session_snapshot(), nlu_result=nlu)
+
+        # call agent NLU
+        # then call decide_next
         return await agent.decide_next(agent_ctx)
 
     def _apply_agent_output(self, focused_ws, output: AgentOutput) -> None:
