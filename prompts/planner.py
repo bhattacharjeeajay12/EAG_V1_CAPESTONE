@@ -15,10 +15,10 @@ Your job: detect the user’s current goal phase (e.g., {agent.DISCOVERY.value},
 - CURRENT_MESSAGE: {{current_message}}
 - PAST_5_TURNS(oldest → newest): user message and agent response, intent discovered for each turn, workstream id allocated to each turn, {{ "user": "...", "agent": "...", "workstream_id": "...", "intent": "..." }}
 - SESSION_WORKSTREAMS: List of workstreams. [{{ "id": "...", "current_phase": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.PAYMENT.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}", 
-- "state": "NEW|IN_PROGRESS|PAUSED|COMPLETED|ABANDONED" , "entity": [{{...}}], "is_active": Boolean }} ...]
+- "state": "NEW|IN_PROGRESS|PAUSED|COMPLETED|ABANDONED" , "entities": [{{...}}], "is_active": Boolean }} ...]
 
 "PAST_5_TURNS": [
-  { "user": "I want to buy a laptop", "agent": "Sure, any budget?", "workstream_id": "ws_1", "intent": "DISCOVERY" },
+  {{ "user": "I want to buy a laptop", "agent": "Sure, any budget?", "workstream_id": "ws_1", "intent": "DISCOVERY" }},
   ...
 ]
 --- 
@@ -39,7 +39,7 @@ Your job: detect the user’s current goal phase (e.g., {agent.DISCOVERY.value},
 - CONTINUATION → stay in the same workflow (may move from discovery → order → payment).
 - SWITCH → start a new workflow **only** when the user’s goal context changes
   (e.g., new product category or new top-level goal such as return or exchange).
-- UNCLEAR → ambiguous between multiple workstreams
+- UNCLEAR → ambiguous between multiple workstreams (ask which one to prioritize).
 
 ---
 
@@ -47,7 +47,7 @@ Your job: detect the user’s current goal phase (e.g., {agent.DISCOVERY.value},
 - A change in intent (e.g., DISCOVERY → ORDER) does not automatically create a new workstream.
   Only when continuity == SWITCH should a new one be spawned.
 - Each workstream can progress through multiple phases (DISCOVERY → ORDER → PAYMENT → COMPLETED).
-- If multiple workstreams are active and user’s message could apply to more than one, set continuity=UNCLEAR and include a concise clarify question.
+- If multiple workstreams are active and user’s message could apply to more than one, set continuity=UNCLEAR and include a concise clarify question such as "Which one would you like to continue or prioritize?".
 
 ---
 
@@ -57,7 +57,7 @@ Use 0.0–1.0 for `intent_confidence`.
 ---
 
 ### Note
-- A change in intent (e.g., from DISCOVERY to ORDER) does not automatically mean a new workstream. Only continuity=SWITCH implies creation.”
+- A change in intent (e.g., from DISCOVERY to ORDER) does not automatically mean a new workstream. Only continuity=SWITCH implies creation.
 - If no new workstream is created and the user continues existing context, set existing_workflow_status = 'UNCHANGED'.
 
 ### Input Format
@@ -70,7 +70,7 @@ Use 0.0–1.0 for `intent_confidence`.
       "user": "string",                 // user utterance (oldest → newest)
       "agent": "string",                // assistant reply for that turn
       "workstream_id": "string|null",   // e.g. "ws_1" or null
-      "intent": "DISCOVERY|ORDER|PAYMENT|RETURN|EXCHANGE|CHITCHAT|UNKNOWN",
+      "intent": "DISCOVERY|ORDER|PAYMENT|RETURN|EXCHANGE|CHITCHAT|UNKNOWN"
     }}
   ],
 
@@ -79,16 +79,16 @@ Use 0.0–1.0 for `intent_confidence`.
       "id": "string",                   // e.g. "ws_1"
       "current_phase": "DISCOVERY|ORDER|PAYMENT|RETURN|EXCHANGE|CHITCHAT|UNKNOWN",
       "state": "NEW|IN_PROGRESS|PAUSED|COMPLETED|ABANDONED",
-      "entity": {{
-        "subcategory": ["string", "string", ...] | [],   // e.g. "laptop"
+      "entities": {{
+        "subcategory": "string|null",   // e.g. "laptop"
         "order_id": "string|null",      // if present
+        "candidate_ref": "string|null"  // e.g. "agent_list_item_3" or product_id
       }},
       "is_active": true|false,
-      "candidates_count": 0,            // integer, optional
+      "candidates_count": 0             // integer, optional
     }}
   ]
 }}```
-
 
 ### Output JSON
 ```json
@@ -96,19 +96,19 @@ Use 0.0–1.0 for `intent_confidence`.
   "intent": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}|{agent.PAYMENT.value}|CHITCHAT|UNKNOWN",
   "intent_confidence": 0.0,
 
-  "entities": [{{
-    "subcategory": ["string", "string", ...] | []
-  }}],
-
-  "continuity": "CONTINUATION|SWITCH|UNCLEAR",
+  "entities": {{
+    "subcategory": ["string", "string", ...] | [],
+    "order_id": ["string", "string", ...] | []
+  }},
 
   "decision": {{
     "new_workstreams": [
       {{ "type": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}|{agent.PAYMENT.value}", "target": {{ "subcategory": "string|null", "order_id": "string|null" }} }}
     ],
-    "existing_workflow_status": "CONTINUE|PAUSE|ABANDON|UNCHANGED|NULL",
-    "focus_workstream_id": "string|null",
-    "reason": "string|null",
+    "active_workflow_state": "NEW"|"COLLECTING"|"READY"|"PROCESSING"|"PRESENTING"|"AWAITING_DECISION"|"CONFIRMING"|"COMPLETED"|"FAILED"|"PAUSED",
+    "active_workflow_phase": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.PAYMENT.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}|CHITCHAT|UNKNOWN|NULL",
+    "active_workflow_continuity": "CONTINUATION|SWITCH|UNCLEAR",  # this continuity need to be decided by LLM
+    "focus_workstream_id": "string|null" # if active_workflow_continuity is CONTINUATION (workstream will be same as active) or SWITCH (workstream will be different), then LLM should tell which workstream to focus on.
   }}
 }}```
 
