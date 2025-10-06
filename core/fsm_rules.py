@@ -1,33 +1,14 @@
-# core/fsm_rules.py
-DISCOVERY_TRANSITIONS = {
-    "NEW": ["COLLECTING"],
-    "COLLECTING": ["READY", "COLLECTING"],  # loop until slots ready
-    "READY": ["PROCESSING"],
-    "PROCESSING": ["PRESENTING", "FAILED"],
-    "PRESENTING": ["AWAITING_DECISION"],
-    "AWAITING_DECISION": ["PROCESSING", "CONFIRMING"],
-    "CONFIRMING": ["COMPLETED"],
-    "FAILED": ["COLLECTING", "COMPLETED"]
-}
+from config.enums import WorkstreamState as ws
 
-ORDER_TRANSITIONS = {
-    "NEW": ["COLLECTING"],
-    "COLLECTING": ["CONFIRMING"],
-    "CONFIRMING": ["COMPLETED", "FAILED"],
-    "COMPLETED": [],
-    "FAILED": []
-}
-
-# Unified FSM for a workstream (one source of truth for all workflow types)
 WORKSTREAM_TRANSITIONS = {
-    "NEW": ["COLLECTING", "FAILED"],
-    "COLLECTING": ["READY", "COLLECTING", "FAILED"],        # gather slots / clarifications
-    "READY": ["PROCESSING", "PRESENTING", "FAILED"],       # ready to act (execute tool or present)
-    "PROCESSING": ["PRESENTING", "AWAITING_DECISION", "FAILED"],
-    "PRESENTING": ["AWAITING_DECISION", "COLLECTING", "FAILED"],
-    "AWAITING_DECISION": ["PROCESSING", "CONFIRMING", "COLLECTING", "FAILED"],
-    "CONFIRMING": ["COMPLETED", "FAILED", "COLLECTING"],   # confirmations, payment, etc.
-    "COMPLETED": [],                                       # terminal
-    "FAILED": ["COLLECTING", "COMPLETED"],                 # allow recovery or graceful finish
-    "PAUSED": ["COLLECTING", "READY", "AWAITING_DECISION"] # resume paths
+    ws.NEW: [ws.COLLECTING, ws.FAILED],
+    ws.COLLECTING: [ws.READY, ws.COLLECTING, ws.FAILED, ws.PAUSED],
+    ws.READY: [ws.PROCESSING, ws.PRESENTING, ws.FAILED, ws.PAUSED],
+    ws.PROCESSING: [ws.PRESENTING, ws.AWAITING_DECISION, ws.FAILED, ws.PAUSED],
+    ws.PRESENTING: [ws.AWAITING_DECISION, ws.COLLECTING, ws.FAILED, ws.PAUSED],
+    ws.AWAITING_DECISION: [ws.PROCESSING, ws.CONFIRMING, ws.COLLECTING, ws.FAILED, ws.PAUSED],
+    ws.CONFIRMING: [ws.COMPLETED, ws.FAILED, ws.COLLECTING, ws.PAUSED],
+    ws.COMPLETED: [],
+    ws.FAILED: [ws.COLLECTING, ws.COMPLETED],
+    ws.PAUSED: [ws.COLLECTING, ws.READY, ws.AWAITING_DECISION],
 }

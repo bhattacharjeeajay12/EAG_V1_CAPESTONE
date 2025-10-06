@@ -7,7 +7,7 @@ SPECIFICATIONS = {
     "phone": ["storage", "camera", "battery", "color"],
 }
 
-CATEGORY = {
+CATEGORIES = {
     "electronics": ["laptop", "smartphone", "earphone", "graphic", "tablet", "camera"],
     "sports": ["yoga mat", "dumbbells", "cricket bat", "basketball", "treadmill"]
 }

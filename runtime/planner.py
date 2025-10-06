@@ -49,6 +49,8 @@ class Planner:
         }
 
     async def handle_user_turn(self, user_message: str) -> Action:
+
+        # Every first message is given Planner LLM and parsed by Planner NLU. Planner looks for workstream.
         convo_ctx = self.history.as_nlu_context()
         nlu = await self._analyze_and_record(user_message, convo_ctx)
 

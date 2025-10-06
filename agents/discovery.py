@@ -4,7 +4,7 @@ from agents.base import AgentBase, AgentContext, AgentOutput, Ask, Present, Info
 from core.goals import TOOL_GUARDS, has_all
 from core.states import DiscoveryState
 from core.fsm_engine import FSMEngine
-from core.fsm_rules import DISCOVERY_TRANSITIONS
+# from core.fsm_rules import DISCOVERY_TRANSITIONS
 from prompts.discovery import SYSTEM_PROMPT as DISCOVERY_SYSTEM_PROMPT
 import json
 
@@ -15,7 +15,7 @@ class DiscoveryAgent(AgentBase):
         self.tools = tools
         self.llm = llm
         self.cfg = cfg
-        self.fsm = FSMEngine(DISCOVERY_TRANSITIONS)
+        # self.fsm = FSMEngine(DISCOVERY_TRANSITIONS)
         self.specifications_ask = False
         # try load discovery SYSTEM_PROMPT from prompts.discovery if present
         self.discovery_prompt = DISCOVERY_SYSTEM_PROMPT
@@ -89,9 +89,9 @@ class DiscoveryAgent(AgentBase):
                     action=Ask(question="Which subcategory are you interested in?", slot="subcategory"),
                     updated_slots=updated
                 )
-            # All mandatory present → READY
-            if self.fsm.can_transition(ws.status.value, DiscoveryState.READY.value):
-                ws.status = DiscoveryState.READY
+            # # All mandatory present → READY
+            # if self.fsm.can_transition(ws.status.value, DiscoveryState.READY.value):
+            #     ws.status = DiscoveryState.READY
 
         # === STEP 3: Optional specification prompting ===
         # Ask for up to 3 missing specs unless user opted to skip.
@@ -140,9 +140,9 @@ class DiscoveryAgent(AgentBase):
                 return AgentOutput(action=Info(message=f"Search failed: {e}"), updated_slots=updated)
 
             ws.candidates = results or []
-            # READY → PRESENTING
-            if self.fsm.can_transition(ws.status.value, DiscoveryState.PRESENTING.value):
-                ws.status = DiscoveryState.PRESENTING
+            # # READY → PRESENTING
+            # if self.fsm.can_transition(ws.status.value, DiscoveryState.PRESENTING.value):
+            #     ws.status = DiscoveryState.PRESENTING
 
             return AgentOutput(
                 action=Present(items=results, text="Here are some options.",
