@@ -137,10 +137,10 @@ if __name__ == "__main__":
     sample_code = (
         "import pandas as pd\\n"
         "df_filtered_products = df_product[(df_product['brand'].str.lower() == 'dell') & "
-        "(df_product['subcategory_name'].str.lower() == 'laptop')].copy()\\n"
+        "(df_product['subcategory_name'].str.lower() == 'laptops')].copy()\\n"
         "df_ram_specs = df_specification[df_specification['spec_name'].str.lower() == 'ram'].copy()\\n"
-        "df_ram_specs['spec_value_numeric'] = pd.to_numeric(df_ram_specs['spec_value'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0], errors='coerce')\\n"
-        "df_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 16][['product_id']]\\n"
+        "df_ram_specs['spec_value_numeric'] = pd.to_numeric(df_ram_specs['spec_value'].str.extract(r'(\d+(?:\.\d+)?)')[0], errors='coerce')\\n"
+        "df_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 8][['product_id']]\\n"
         "df_with_ram = df_filtered_products.merge(df_ram_filtered[['product_id']], on='product_id', how='inner')\\n"
         "df_sorted = df_with_ram.sort_values('price_usd').reset_index(drop=True)\\n"
         "if len(df_sorted) >= 2:\\n"
