@@ -61,3 +61,13 @@ class SpecificationsLaptop(Enum):
     CAMERA = "camera"
     BATTERY = "battery"
     COLOR = "color"
+
+class DataFrameLookup(Enum):
+    user_df = "user.json"
+    buy_history_df = "buy_history.json"
+    category_df = "category.json"
+    subcategory_df = "subcategory_df"
+    product_df = "product.json"
+    specification_df = "specification.json"
+    return_df = "return.json"
+    review_df = "review.json"

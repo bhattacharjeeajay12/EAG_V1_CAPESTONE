@@ -1,19 +1,24 @@
 from core.llm_client import LLMClient
 from prompts.EntityExtraction import get_system_prompt_discovery
 from config.constants import SPECIFICATIONS
+from typing import Any, Dict, List, Optional
 import json
 import ast
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class EntityExtractionAgent:
     def __init__(self, user_prompt):
         self.llm_client = LLMClient()
-        self.system_prompt = None
+        self.system_prompt: Optional[str] = None
         self.user_prompt = user_prompt
-        self.entities = []
+        self.entities: List[Dict[str, Any]] = []
+        self.available_specs: List[str] = []
+        self.specifications_string: Optional[str] = None
         self.llm_output = []
-        self.available_specs = []
-        self.specifications_string = None
 
     async def parse_llm_output(self, llm_output: str):
         """
