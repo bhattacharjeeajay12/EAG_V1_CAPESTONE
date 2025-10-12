@@ -11,7 +11,7 @@ The following pandas DataFrames are available in the environment with these name
 - `category_df` — columns: `category_id`, `category_name`
 - `subcategory_df` — columns: `subcategory_id`, `category_id`, `subcategory_name`
 - `product_df` — columns: `product_id`, `subcategory_id`, `product_name`, `brand`, `price_usd`, `stock_quantity`, `created_at`, `updated_at`, `category_id`, `subcategory_name`, `category_name`
-- `specification_df` — columns: `spec_id`, `product_id`, `spec_name`, `spec_value`, `unit`, `data_type`, `subcategory_id`, `subcategory_name`, `category_id`, `category_name`
+- `specification_df` — columns: `spec_id`, `product_id`, `spec_name`, `spec_value`, `unit`, `data_type`, `subcategory_id`, `subcategory_name`, `category_id`, `category_name`, `brand`
 - `return_df` — columns: `return_id`, `order_id`, `user_id`, `product_id`, `reason`, `return_request_date`, `return_processed_date`, `status`, `refund_amount_usd`
 - `review_df` — columns: `review_id`, `order_id`, `user_id`, `product_id`, `rating`, `review_title`, `review_text`, `review_date`, `product_name`, `subcategory_id`, `subcategory_name`, `category_id`, `category_name`
 
@@ -20,7 +20,7 @@ The following pandas DataFrames are available in the environment with these name
 ## Strict rules you **must** follow
 
 1. **Use only provided entities.** Do **not** invent keys, values, or operators that are not present in the `entities` arrays of the conversation history input.  
-2. **Priority:** The most recent turn(s) in `conversation_history` have the highest priority. Use the latest entities to update or override earlier constraints when appropriate. If there is conflicting information across turns, prefer the most recent turn and document that choice in `reasoning`.
+2. **Priority:** Current question is what needs to be answered. The most recent turn(s) in `conversation_history` have the highest priority. Use the latest entities to update or override earlier constraints when appropriate. If there is conflicting information across turns, prefer the most recent turn and document that choice in `reasoning`.
 3. **Valid operators:** Accept and map these operator tokens (if present in `entities`): `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `not in`, `between`, `contains`, `isnull`, `notnull`. If an entity uses a different operator string, treat it as unknown and **do not** use it — explain in `reasoning`.
 4. **Column mapping:** Use logical mapping between entities and DataFrame columns:
    - Keys that directly match DataFrame columns (e.g., `brand`, `price_usd`, `rating`) map directly.
@@ -41,7 +41,7 @@ The following pandas DataFrames are available in the environment with these name
 
 - `current_query` : `<STRING>`
 - `conversation_history` : `[ {{ "user": {{ "user_query": <STRING>, "entities": [ {{ "key": <STRING>, "value": <SINGLE OR LIST>, "operator": <STRING>, "unit": <STRING OPTIONAL> }}, ... ] }}, "agent": {{ "agent_reponse": <STRING> }} }}, ... ]`  
-  - Up to 10 turns. Entities may be empty list.
+  - Up to 10 turns. **Conversation history should be ordered chronologically (oldest → newest)**. Entities may be empty list.
 
 **Entity format rules (guaranteed by the caller but still validate):**
 - `key`: string (case-insensitive). Normalize to lower-case for matching.

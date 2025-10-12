@@ -1,6 +1,6 @@
 from core.llm_client import LLMClient
 from typing import Any, Dict, List, Optional
-from prompts.EntityExtraction import get_system_prompt_schema
+from prompts.QueryTool import get_system_prompt_query_tool
 
 class QueryAgent:
     def __init__(self, conversation_history):
