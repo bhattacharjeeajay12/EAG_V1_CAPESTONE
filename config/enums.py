@@ -43,15 +43,6 @@ class ProductAttributes(Enum):
     SPECIFICATIONS = "specifications"
     PRODUCT_ID = "product_id"
 
-class Specifications(Enum):
-    RAM = "ram"
-    STORAGE = "storage"
-    PROCESSOR = "processor"
-    DISPLAY = "display"
-    CAMERA = "camera"
-    BATTERY = "battery"
-    COLOR = "color"
-
 class OrderAttributes(Enum):
     QUANTITY = "quantity"
     ORDER_ID = "order_id"
@@ -61,3 +52,12 @@ class OrderAttributes(Enum):
     RETURN_REASON = "return_reason"
     EXCHANGE_ITEM = "exchange_item"
     EXCHANGE_REASON = "exchange_reason"
+
+class SpecificationsLaptop(Enum):
+    RAM = "ram"
+    STORAGE = "storage"
+    PROCESSOR = "processor"
+    DISPLAY = "display"
+    CAMERA = "camera"
+    BATTERY = "battery"
+    COLOR = "color"

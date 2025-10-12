@@ -2,7 +2,7 @@ from config.enums import Agents as agent
 from config.enums import Categories as category
 from config.enums import SubCategory as subcategory
 from config.enums import WorkstreamState as ws
-from config.enums import Specifications as spec
+from config.enums import SpecificationsLaptop as spec
 from config.enums import ProductAttributes as pattribute
 
 # Simple numeric constant (no need for Enum)
@@ -34,4 +34,9 @@ CATEGORIES = {
 SPECIAL_SLOTS = {
     subcategory.LAPTOP.value: [spec.RAM.value, spec.STORAGE.value, spec.PROCESSOR.value, spec.DISPLAY.value],
     subcategory.PHONE.value: [spec.STORAGE.value, spec.CAMERA.value, spec.BATTERY.value, spec.COLOR.value],
+}
+
+SPECIFICATIONS = {
+    "laptop": ["Processor", "RAM", "Storage", "Display Size", "Battery Life", "Weight", "Operating_System", "Graphics", "Warranty"],
+    "dumbbells": ["Min Weight", "Max Weight", "Adjustable", "Material", "Grip Type", "Color", "Set of", "Warranty"],
 }
