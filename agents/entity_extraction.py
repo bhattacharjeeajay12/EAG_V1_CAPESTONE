@@ -1,10 +1,11 @@
 from core.llm_client import LLMClient
-from prompts.EntityExtraction import get_system_prompt_discovery
+from prompts.EntityExtraction import get_system_entity_prompt_discovery
 from config.constants import SPECIFICATIONS
 from typing import Any, Dict, List, Optional
 import json
 import ast
 import logging
+from config.utils import get_specification_list
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +20,7 @@ class EntityExtractionAgent:
         self.available_specs: List[str] = []
         self.specifications_string: Optional[str] = None
         self.llm_output = []
+        self.subcategory = None
 
     async def parse_llm_output(self, llm_output: str):
         """
@@ -43,12 +45,22 @@ class EntityExtractionAgent:
                 print(f"⚠️ Could not parse LLM output: {e}")
                 return []
 
-    async def get_spec_string(self, product_name):
-        if product_name not in SPECIFICATIONS:
-            raise ValueError(f"Unknown product: {product_name}")
-        specs = SPECIFICATIONS.get(product_name.lower(), [])
-        self.specifications_string = ", ".join(specs)
-        return self.specifications_string
+    async def get_user_prompt(self, question):
+        user_prompt = "Input:\n"
+        user_prompt += f"Product: {self.subcategory}\n"
+        user_prompt += "Available specs:\n"
+        user_prompt += f"This is the list of specifications available for {self.subcategory}.\n"
+        for obj in self.spec_list:
+            str_ = ""
+            str_ += f"\t- **{obj['spec_name_label']}** is having datatype as **{obj['data_type']}**, e.g. **{obj['spec_value']}**, "
+            if obj["unit"] is not None:
+                str_ += f"having unit of measurement as **{obj['unit']}**. "
+                str_ += f"example - **{obj['spec_value']} {obj['unit']}**."
+            else:
+                str_ += f"example - **{obj['spec_value']} {obj['unit']}**."
+            user_prompt += str_ + "\n"
+        user_prompt += f"\nThe user prompt is - {question}."
+        return user_prompt
 
     async def extract_entities(self, llm_output_dict):
         entities = []
@@ -57,12 +69,14 @@ class EntityExtractionAgent:
     async def get_system_prompt(self, phase, product_name="laptop"):
         try:
             if phase == "discovery":
-                return get_system_prompt_discovery(product_name, self.specifications_string)
+                return get_system_entity_prompt_discovery(product_name, self.specifications_string)
         except Exception as e:
             raise ValueError(f"Error generating system prompt: {e}")
 
-    async def run(self, user_prompt, product_name="laptop", phase="discovery"):
-        self.specifications_string = await self.get_spec_string(product_name)
+    async def run(self, question, product_name="laptop", phase="discovery"):
+        self.spec_list = get_specification_list(product_name)
+        self.subcategory = product_name
+        self.user_prompt = await self.get_user_prompt(question)
         self.system_prompt = await self.get_system_prompt(phase, product_name)
         raw_llm_output = await self.llm_client.generate(self.system_prompt, user_prompt)
         llm_output_dict = await self.parse_llm_output(raw_llm_output)
@@ -74,8 +88,10 @@ if __name__ == "__main__":
     import asyncio
 
     # user_prompt = "Anything but Apple"
-    user_prompt = "No gaming laptops"
+    user_prompt = "I need a laptop under 2000 USD."
+    product_name = "laptop"
 
+    # fetch specification
     agent = EntityExtractionAgent(user_prompt)
-    entities = asyncio.run(agent.run(user_prompt))
+    entities = asyncio.run(agent.run(user_prompt, product_name="Laptop"))
     print("Extracted Entities:", entities)

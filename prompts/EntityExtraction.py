@@ -1,5 +1,5 @@
-def get_system_prompt_discovery(product_name: str, specifications_string: str) -> str:
-    SYSTEM_PROMPT_DISCOVERY = f"""
+def get_system_entity_prompt_discovery(product_name: str, specifications_string: str) -> str:
+    SYSTEM_PROMPT_ENTITY_EXTRACTION = f"""
     
     You are a structured entity extraction assistant.
     
@@ -190,4 +190,4 @@ def get_system_prompt_discovery(product_name: str, specifications_string: str) -
     End of prompt.
     
     """
-    return SYSTEM_PROMPT_DISCOVERY
+    return SYSTEM_PROMPT_ENTITY_EXTRACTION
