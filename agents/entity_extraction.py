@@ -49,17 +49,18 @@ class EntityExtractionAgent:
         user_prompt = "Input:\n"
         user_prompt += f"Product: {self.subcategory}\n"
         user_prompt += "Available specs:\n"
-        user_prompt += f"This is the list of specifications available for {self.subcategory}.\n"
+        spec_list_label = [spec["spec_name_label"].lower() for spec in self.spec_list]
         for obj in self.spec_list:
             str_ = ""
-            str_ += f"\t- **{obj['spec_name_label']}** is having datatype as **{obj['data_type']}**, e.g. **{obj['spec_value']}**, "
+            str_ += f"\t- {obj['spec_name_label']}: datatype={obj['data_type']}, "
             if obj["unit"] is not None:
-                str_ += f"having unit of measurement as **{obj['unit']}**. "
-                str_ += f"example - **{obj['spec_value']} {obj['unit']}**."
+                str_ += f"unit - {obj['unit']}. "
+                str_ += f"example - **{obj['spec_value']} {obj['unit']}."
             else:
-                str_ += f"example - **{obj['spec_value']} {obj['unit']}**."
+                str_ += f"example - {obj['spec_value']}."
             user_prompt += str_ + "\n"
-        user_prompt += f"\nThe user prompt is - {question}."
+        user_prompt += f"Note: Use lowercase keys exactly as listed (e.g. {', '.join(spec_list_label)}) \n"
+        user_prompt += f"\nuser prompt - {question}"
         return user_prompt
 
     async def extract_entities(self, llm_output_dict):
@@ -78,7 +79,7 @@ class EntityExtractionAgent:
         self.subcategory = product_name
         self.user_prompt = await self.get_user_prompt(question)
         self.system_prompt = await self.get_system_prompt(phase, product_name)
-        raw_llm_output = await self.llm_client.generate(self.system_prompt, user_prompt)
+        raw_llm_output = await self.llm_client.generate(self.system_prompt, self.user_prompt)
         llm_output_dict = await self.parse_llm_output(raw_llm_output)
         self.entities = await self.extract_entities(llm_output_dict)
 
@@ -87,9 +88,11 @@ class EntityExtractionAgent:
 if __name__ == "__main__":
     import asyncio
 
+    product_name = "laptop"
+
+    # user_prompt = "Having Display size above 10 inches"
     # user_prompt = "Anything but Apple"
     user_prompt = "I need a laptop under 2000 USD."
-    product_name = "laptop"
 
     # fetch specification
     agent = EntityExtractionAgent(user_prompt)
