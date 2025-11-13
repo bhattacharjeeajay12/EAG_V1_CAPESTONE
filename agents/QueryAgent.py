@@ -60,17 +60,26 @@ if __name__ == "__main__":
     async def main():
         # Example conversation history: Each turn contains user query and entities extracted (if available)
         conversation_turns = [
-            {"user_query": "I need a Dell laptop", "entities": [
-                {"key": "subcategory_name", "value": "laptop", "operator": "="},
-                {"key": "brand", "value": "Dell", "operator": "="}
-            ], "agent_response": "What specifications are important to you?"},
-            {"user_query": "16GB RAM would be great", "entities": [
-                {"key": "RAM", "value": 16, "operator": ">=", "unit": "GB"}
-            ], "agent_response": "Any preference for storage?"},
+            {
+                "user_query": "I need Apple phones between $800 and $1200",
+                "entities": [
+                    {"key": "subcategory_name", "value": "smartphone", "operator": "="},
+                    {"key": "brand", "value": "Apple", "operator": "="},
+                    {"key": "price_usd", "value": [800, 1200], "operator": "between"}
+                ],
+                "agent_response": "Found 4 matches."
+            },
+            {
+                "user_query": "Add requirement: battery life over 20 hours",
+                "entities": [
+                    {"key": "battery_life", "value": 20, "operator": ">", "unit": "hours"}
+                ],
+                "agent_response": "Here you go."
+            }
         ]
 
-        current_query = "Show me the second cheapest Dell laptop with at least 16GB RAM"
-        category = "laptop"
+        current_query = "Show me the third option with full specs"
+        category = "smartphone"
 
         agent = QueryAgent()
         result = await agent.run(current_query=current_query, turns=conversation_turns, category=category)
