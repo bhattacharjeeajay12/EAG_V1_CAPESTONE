@@ -24,7 +24,7 @@ class Categories(Enum):
     SPORTS = "sports"
 
 class SubCategory(Enum):
-    LAPTOP = "laptop"
+    LAPTOP = "Laptop"
     SMARTPHONE = "smartphone"
     PHONE = "phone"
     EARPHONE = "earphone"
@@ -32,7 +32,7 @@ class SubCategory(Enum):
     TABLET = "tablet"
     CAMERA = "camera"
     YOGAMAT = "yoga mat"
-    DUMBBELLS = "dumbbells"
+    DUMBBELLS = "dumbbell"
     CRICKETBAT = "cricket bat"
     BASKETBALL = "basketball"
     TREADMILL = "treadmill"
@@ -54,6 +54,7 @@ class OrderAttributes(Enum):
     EXCHANGE_REASON = "exchange_reason"
 
 class SpecificationsLaptop(Enum):
+    # laptop
     RAM = "ram"
     STORAGE = "storage"
     PROCESSOR = "processor"

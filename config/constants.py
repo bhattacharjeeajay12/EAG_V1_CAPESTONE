@@ -4,6 +4,7 @@ from config.enums import SubCategory as subcategory
 from config.enums import WorkstreamState as ws
 from config.enums import SpecificationsLaptop as spec
 from config.enums import ProductAttributes as pattribute
+from config.utils import get_specification_list
 
 # Simple numeric constant (no need for Enum)
 MAX_TURNS_TO_PULL = 5
@@ -37,6 +38,6 @@ SPECIAL_SLOTS = {
 }
 
 SPECIFICATIONS = {
-    "laptop": ["Processor", "RAM", "Storage", "Display Size", "Battery Life", "Weight", "Operating_System", "Graphics", "Warranty"],
-    "dumbbells": ["Min Weight", "Max Weight", "Adjustable", "Material", "Grip Type", "Color", "Set of", "Warranty"],
+    subcategory.LAPTOP.value: get_specification_list(subcategory.LAPTOP.value)
 }
+

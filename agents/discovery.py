@@ -19,6 +19,7 @@ class DiscoveryAgent(AgentBase):
         self.specifications_ask = False
         # try load discovery SYSTEM_PROMPT from prompts.discovery if present
         self.discovery_prompt = DISCOVERY_SYSTEM_PROMPT
+        self.specification = None
 
     async def decide_next(self, ctx: AgentContext) -> AgentOutput:
         ws = ctx.workstream
