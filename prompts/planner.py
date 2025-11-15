@@ -7,7 +7,7 @@ for cat, subcat_list in CATEGORIES.items():
 
 SYSTEM_PROMPT = f"""
 You are an e-commerce Workflow Planner.
-Your job: detect the user’s current goal phase (e.g., {agent.DISCOVERY.value}, {agent.ORDER.value}, {agent.RETURN.value}) and decide how it fits into the ongoing workflow.
+Your job: detect the user’s current goal phase (e.g., {agent.DISCOVERY}, {agent.EXCHANGE}, {agent.RETURN}) and decide how it fits into the ongoing workflow.
 
 Categories:
 {category_info}
@@ -16,13 +16,16 @@ Categories:
 
 ### Inputs
 - CURRENT_MESSAGE: {{current_message}}
-- PAST_5_TURNS (oldest → newest): user message and agent response, intent discovered for each turn, workstream id allocated to each turn, {{ "user": "...", "agent": "...", "workstream_id": "...", "intent": "..." }}
+- PAST_5_TURNS_PER_WORKSTREAMS (oldest → newest): user message and agent response per workstream, {{ "workstream_id": [{{ "user": "...", "agent": "..."] }} 
 - SESSION_WORKSTREAMS: List of workstreams. [{{ "id": "...", "current_phase": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.PAYMENT.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}", "state": "NEW|COLLECTING|READY|PROCESSING|PRESENTING|AWAITING_DECISION|CONFIRMING|COMPLETED|FAILED|PAUSED|ABANDONED", "entities": {{...}}, "is_active": Boolean }} ...]
 - Note: each SESSION_WORKSTREAM entry represents one workstream and contains scalar fields (single subcategory/order_id).
-- Note: `SESSION_WORKSTREAMS.current_phase` is input per-workstream; the LLM should set `decision.active_workflow_phase` as the authoritative phase for planner action.
 
-PAST_5_TURNS example:
-[ {{ "user": "I want to buy a laptop", "agent": "Sure, any budget?", "workstream_id": "ws_1", "intent": "DISCOVERY" }}, ... ]
+PAST_5_TURNS_PER_WORKSTREAMS example:
+{{ "workstream_id_1" : [ {{ "user": "I want to buy a laptop", "agent": "Sure, any budget?"}}, ... ],
+   "workstream_id_2" : [ {{ "user": "I want to return my order", "agent": "Please tell the order id"}}, ... ],
+   "workstream_id_3" : [ {{ "user": "I am looking for a refrigerator", "agent": "Please fill the specifications"}}, ... ],
+   ...
+}}
 
 --- 
 
@@ -77,27 +80,23 @@ Use 0.0–1.0 for `intent_confidence`.
 {{
   "CURRENT_MESSAGE": "string",
 
-  "PAST_5_TURNS": [
-    {{
+  "PAST_5_TURNS": {{
+    "workstream_id": [{{
       "user": "string",
       "agent": "string",
-      "workstream_id": "string|null",
-      "intent": "DISCOVERY|ORDER|PAYMENT|RETURN|EXCHANGE|CHITCHAT|UNKNOWN"
-    }}
-  ],
+    }}]
+  }},
 
   "SESSION_WORKSTREAMS": [
     {{
-      "id": "string",
+      "workstream_id": "string",
       "current_phase": "DISCOVERY|ORDER|PAYMENT|RETURN|EXCHANGE|CHITCHAT|UNKNOWN",
       "state": "NEW|COLLECTING|READY|PROCESSING|PRESENTING|AWAITING_DECISION|CONFIRMING|COMPLETED|FAILED|PAUSED|ABANDONED",
       "entities": {{
         "subcategory": "string|null",
         "order_id": "string|null",
-        "candidate_ref": "string|null"
       }},
       "is_active": true|false,
-      "candidates_count": 0
     }}
   ]
 }}
@@ -118,7 +117,7 @@ Use 0.0–1.0 for `intent_confidence`.
   "decision": {{
     "new_workstreams": [
       {{
-        "type": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}|{agent.PAYMENT.value}",
+        "phase": "{agent.DISCOVERY.value}|{agent.ORDER.value}|{agent.RETURN.value}|{agent.EXCHANGE.value}|{agent.PAYMENT.value}",
         "target": {{ "subcategory": "string|null", "order_id": "string|null" }}
       }}
     ],
