@@ -65,7 +65,7 @@ if __name__ == "__main__":
                 "entities": [
                     {"key": "subcategory_name", "value": "smartphone", "operator": "="},
                     {"key": "brand", "value": "Apple", "operator": "="},
-                    {"key": "price_usd", "value": [800, 1200], "operator": "between"}
+                    {"key": "price", "value": [800, 1200], "operator": "between"}
                 ],
                 "agent_response": "Found 4 matches."
             },

@@ -8,7 +8,7 @@ import pandas as pd
 
 from agents.QueryAgent import QueryAgent
 
-FIXTURE_DIR = Path(__file__).resolve().parent / "data" / "data_from_llm"
+FIXTURE_DIR = Path(__file__).resolve().parent / "db"
 
 TABLE_FILES = {
     "df_user": "user.json",

@@ -3,89 +3,119 @@ import json
 from pathlib import Path
 from typing import Dict, List
 
-import pandas as pd
-
 from agents.QueryAgent import QueryAgent
 from core.QueryExecutor import QueryExecutorSimple
 
-TEMP_DB_DIR = Path(__file__).resolve().parent / "tmp_db"
-TEMP_DB_DIR.mkdir(parents=True, exist_ok=True)
+DB_DIR = Path(__file__).resolve().parent.parent / "db"
+REQUIRED_FILES = ["product.json", "specification.json"]
 
-PRODUCT_ROWS: List[Dict] = [
-    {"product_id": "p1", "brand": "Dell", "subcategory_name": "laptop", "price_usd": 900, "stock_quantity": 5},
-    {"product_id": "p2", "brand": "Dell", "subcategory_name": "laptop", "price_usd": 950, "stock_quantity": 7},
-    {"product_id": "p3", "brand": "Dell", "subcategory_name": "laptop", "price_usd": 1100, "stock_quantity": 4},
-    {"product_id": "p4", "brand": "Apple", "subcategory_name": "smartphone", "price_usd": 850, "stock_quantity": 10},
-    {"product_id": "p5", "brand": "Apple", "subcategory_name": "smartphone", "price_usd": 920, "stock_quantity": 8},
-    {"product_id": "p6", "brand": "Apple", "subcategory_name": "smartphone", "price_usd": 1000, "stock_quantity": 6},
-    {"product_id": "p7", "brand": "Apple", "subcategory_name": "smartphone", "price_usd": 1150, "stock_quantity": 9},
-]
-
-SPEC_ROWS: List[Dict] = [
-    {"product_id": "p1", "spec_name": "ram", "spec_value": "8 GB", "unit": "GB"},
-    {"product_id": "p2", "spec_name": "ram", "spec_value": "16 GB", "unit": "GB"},
-    {"product_id": "p3", "spec_name": "ram", "spec_value": "32 GB", "unit": "GB"},
-    {"product_id": "p4", "spec_name": "battery_life", "spec_value": "18 hours", "unit": "hours"},
-    {"product_id": "p5", "spec_name": "battery_life", "spec_value": "22 hours", "unit": "hours"},
-    {"product_id": "p6", "spec_name": "battery_life", "spec_value": "24 hours", "unit": "hours"},
-    {"product_id": "p7", "spec_name": "battery_life", "spec_value": "28 hours", "unit": "hours"},
-]
-
-pd.DataFrame(PRODUCT_ROWS).to_json(TEMP_DB_DIR / "product.json", orient="records", indent=2)
-pd.DataFrame(SPEC_ROWS).to_json(TEMP_DB_DIR / "specification.json", orient="records", indent=2)
+for filename in REQUIRED_FILES:
+    path = DB_DIR / filename
+    if not path.exists():
+        raise FileNotFoundError(f"Required data file missing: {path}")
 
 SCENARIOS: List[Dict] = [
     {
-        "name": "Dell laptops second cheapest",
-        "current_query": "Show me the second cheapest Dell laptop with at least 16GB RAM",
+        "name": "Laptops second cheapest (RAM >=8GB)",
+        "current_query": "Show me the second cheapest laptop with at least 8GB RAM",
         "category": "laptop",
         "turns": [
             {
-                "user_query": "I need a Dell laptop",
+                "user_query": "I need a laptop",
                 "entities": [
                     {"key": "subcategory_name", "value": "laptop", "operator": "="},
-                    {"key": "brand", "value": "Dell", "operator": "="},
                 ],
-                "agent_response": "What specifications are important to you?",
+                "agent_response": "Any particular requirements?",
             },
             {
-                "user_query": "16GB RAM would be great",
+                "user_query": "Make sure it has at least 8 GB of RAM",
                 "entities": [
-                    {"key": "ram", "value": 16, "operator": ">=", "unit": "GB"},
+                    {"key": "ram", "value": 8, "operator": ">=", "unit": "GB"},
                 ],
-                "agent_response": "Any preference for storage?",
+                "agent_response": "Got it.",
             },
         ],
         "llm_output": {
-            "pandas_query": """import pandas as pd\nimport numpy as np\n\n# Filter products by brand and subcategory\ndf_filtered_products = df_product[\n    (df_product['brand'].str.lower() == 'dell') & \n    (df_product['subcategory_name'].str.lower() == 'laptop')\n].copy()\n\n# Filter specifications for RAM using regex for robust extraction\ndf_ram_specs = df_specification[\n    df_specification['spec_name'].str.lower() == 'ram'\n].copy()\ndf_ram_specs['spec_value_numeric'] = pd.to_numeric(\n    df_ram_specs['spec_value'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0], \n    errors='coerce'\n)\n\n# Filter RAM >= 16\ndf_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 16][['product_id']]\n\n# Merge to get products with RAM >= 16GB\ndf_with_ram = df_filtered_products.merge(\n    df_ram_filtered, \n    on='product_id', \n    how='inner'\n)\n\n# Sort by price to establish order\ndf_sorted = df_with_ram.sort_values('price_usd').reset_index(drop=True)\n\n# Get the second product with error handling\nif len(df_sorted) >= 2:\n    df_result = pd.DataFrame([df_sorted.iloc[1]])\nelse:\n    # Return empty DataFrame with proper structure if insufficient products\n    df_result = pd.DataFrame(columns=df_sorted.columns)\n\ndf_result""",
-            "reasoning": "Stubbed reasoning",
+            "pandas_query": """import pandas as pd\nimport numpy as np\n\n# Filter laptops\ndf_filtered_products = df_product[\n    df_product['subcategory_name'].str.lower() == 'laptop'\n].copy()\n\n# Extract RAM specs and enforce numeric comparison\ndf_ram_specs = df_specification[\n    df_specification['spec_name'].str.lower() == 'ram'\n].copy()\ndf_ram_specs['spec_value_numeric'] = pd.to_numeric(\n    df_ram_specs['spec_value'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0],\n    errors='coerce'\n)\n\n# Keep products with RAM >= 8\ndf_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 8][['product_id']]\n\n# Merge with product catalog\ndf_with_ram = df_filtered_products.merge(\n    df_ram_filtered,\n    on='product_id',\n    how='inner'\n)\n\n# Sort by price ascending\ndf_sorted = df_with_ram.sort_values('price').reset_index(drop=True)\n\nif len(df_sorted) >= 2:\n    df_result = pd.DataFrame([df_sorted.iloc[1]])\nelse:\n    df_result = df_sorted.copy()\n\ndf_result""",
+            "reasoning": "Filtered laptops to those with RAM >= 8GB and selected the second cheapest entry.",
         },
     },
     {
-        "name": "Apple smartphones third option",
-        "current_query": "Show me the third option with full specs",
-        "category": "smartphone",
+        "name": "Laptops third option (battery >=11h)",
+        "current_query": "Show me the third cheapest laptop with battery life of at least 11 hours",
+        "category": "laptop",
         "turns": [
             {
-                "user_query": "I need Apple phones between $800 and $1200",
+                "user_query": "I'm looking for laptops under $2500",
                 "entities": [
-                    {"key": "subcategory_name", "value": "smartphone", "operator": "="},
-                    {"key": "brand", "value": "Apple", "operator": "="},
-                    {"key": "price_usd", "value": [800, 1200], "operator": "between"},
+                    {"key": "subcategory_name", "value": "laptop", "operator": "="},
+                    {"key": "price", "value": 2500, "operator": "<="},
                 ],
-                "agent_response": "Found 4 matches.",
+                "agent_response": "Any other preferences?",
             },
             {
-                "user_query": "Add requirement: battery life over 20 hours",
+                "user_query": "Battery life should be at least 11 hours",
                 "entities": [
-                    {"key": "battery_life", "value": 20, "operator": ">", "unit": "hours"},
+                    {"key": "battery_life", "value": 11, "operator": ">=", "unit": "hours"},
                 ],
-                "agent_response": "Here you go.",
+                "agent_response": "Sure, let me narrow that down.",
             },
         ],
         "llm_output": {
-            "pandas_query": """import pandas as pd\nimport numpy as np\n\n# Filter products by brand and subcategory\ndf_filtered_products = df_product[\n    (df_product['brand'].str.lower() == 'apple') & \n    (df_product['subcategory_name'].str.lower() == 'smartphone') & \n    (df_product['price_usd'] >= 800) & \n    (df_product['price_usd'] <= 1200)\n].copy()\n\n# Filter specifications for battery life using regex\ndf_battery_specs = df_specification[\n    df_specification['spec_name'].str.lower() == 'battery_life'\n].copy()\ndf_battery_specs['spec_value_numeric'] = pd.to_numeric(\n    df_battery_specs['spec_value'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0], \n    errors='coerce'\n)\n\n# Filter for battery life > 20 hours\ndf_battery_filtered = df_battery_specs[df_battery_specs['spec_value_numeric'] > 20][['product_id']]\n\n# Merge to get products with battery life > 20 hours\ndf_result = df_filtered_products.merge(\n    df_battery_filtered, \n    on='product_id', \n    how='inner'\n)\n\n# Sort by price to establish order\ndf_result = df_result.sort_values('price_usd').reset_index(drop=True)\n\n# Get the third product with error handling\nif len(df_result) >= 3:\n    df_result = pd.DataFrame([df_result.iloc[2]])\nelse:\n    df_result = pd.DataFrame(columns=df_result.columns)\n\ndf_result""",
-            "reasoning": "Stubbed reasoning",
+            "pandas_query": """import pandas as pd\nimport numpy as np\n\n# Filter laptops within budget\ndf_filtered_products = df_product[\n    (df_product['subcategory_name'].str.lower() == 'laptop') &\n    (df_product['price'] <= 2500)\n].copy()\n\n# Extract battery life specs\ndf_battery_specs = df_specification[\n    df_specification['spec_name'].str.lower() == 'battery_life'\n].copy()\ndf_battery_specs['spec_value_numeric'] = pd.to_numeric(\n    df_battery_specs['spec_value'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0],\n    errors='coerce'\n)\n\n# Keep products with battery life >= 11 hours\ndf_battery_filtered = df_battery_specs[df_battery_specs['spec_value_numeric'] >= 11][['product_id']]\n\n# Merge with product catalog\ndf_with_battery = df_filtered_products.merge(\n    df_battery_filtered,\n    on='product_id',\n    how='inner'\n)\n\n# Sort by price and pick the third option if available\ndf_sorted = df_with_battery.sort_values('price').reset_index(drop=True)\n\nif len(df_sorted) >= 3:\n    df_result = pd.DataFrame([df_sorted.iloc[2]])\nelse:\n    df_result = df_sorted.copy()\n\ndf_result""",
+            "reasoning": "Filtered laptops under $2500 with battery life >= 11 hours, then selected the third cheapest.",
+        },
+    },
+    {
+        "name": "Dumbbells adjustable between 3 and 30 kg",
+        "current_query": "Find adjustable dumbbells between 3kg and 30kg",
+        "category": "dumbbells",
+        "turns": [
+            {
+                "user_query": "Show me adjustable dumbbells",
+                "entities": [
+                    {"key": "subcategory_name", "value": "dumbbells", "operator": "="},
+                    {"key": "adjustable", "value": "Yes", "operator": "="}
+                ],
+                "agent_response": "Any weight preference?",
+            },
+            {
+                "user_query": "Between 3 and 30 kilograms",
+                "entities": [
+                    {"key": "min_weight", "value": 3, "operator": ">=", "unit": "kilograms"},
+                    {"key": "max_weight", "value": 30, "operator": "<=", "unit": "kilograms"}
+                ],
+                "agent_response": "Filtering adjustable dumbbells in that range.",
+            },
+        ],
+        "llm_output": {
+            "pandas_query": """import pandas as pd\nimport numpy as np\n\n# Filter dumbbells\ndf_filtered_products = df_product[\n    df_product['subcategory_name'].str.lower() == 'dumbbells'\n].copy()\n\n# Grab relevant specifications\ndf_specs = df_specification[\n    df_specification['spec_name'].str.lower().isin(['min_weight', 'max_weight', 'adjustable'])\n].copy()\n\ndf_specs['spec_name_lower'] = df_specs['spec_name'].str.lower()\ndf_specs_pivot = df_specs.pivot_table(\n    index='product_id',\n    columns='spec_name_lower',\n    values='spec_value',\n    aggfunc='first'\n).reset_index()\n\n# Convert weight values to numeric\ndf_specs_pivot['min_weight_numeric'] = pd.to_numeric(\n    df_specs_pivot['min_weight'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0],\n    errors='coerce'\n)\ndf_specs_pivot['max_weight_numeric'] = pd.to_numeric(\n    df_specs_pivot['max_weight'].str.extract(r'(\\d+(?:\\.\\d+)?)')[0],\n    errors='coerce'\n)\n\n# Apply filters\ndf_specs_filtered = df_specs_pivot[\n    (df_specs_pivot['min_weight_numeric'] >= 3) &\n    (df_specs_pivot['max_weight_numeric'] <= 30) &\n    (df_specs_pivot['adjustable'].str.lower() == 'yes')\n]\n\n# Merge with product catalog\ndf_result = df_filtered_products.merge(\n    df_specs_filtered[['product_id']],\n    on='product_id',\n    how='inner'\n).sort_values('price').reset_index(drop=True)\n\nif df_result.empty:\n    df_result = df_filtered_products.iloc[0:0].copy()\n\ndf_result""",
+            "reasoning": "Pivoted dumbbell specs, converted weights to numeric, filtered adjustable sets in 3-30kg range, merged back to catalog.",
+        },
+    },
+    {
+        "name": "Dumbbells with rubber material",
+        "current_query": "List dumbbells made of rubber sorted by price",
+        "category": "dumbbells",
+        "turns": [
+            {
+                "user_query": "Show me dumbbells",
+                "entities": [
+                    {"key": "subcategory_name", "value": "dumbbells", "operator": "="}
+                ],
+                "agent_response": "Any specific material?",
+            },
+            {
+                "user_query": "Prefer rubber coating",
+                "entities": [
+                    {"key": "material", "value": "Rubber", "operator": "contains"}
+                ],
+                "agent_response": "Filtering dumbbells with rubber material.",
+            }
+        ],
+        "llm_output": {
+            "pandas_query": """import pandas as pd\nimport numpy as np\n\n# Filter dumbbells\ndf_filtered_products = df_product[\n    df_product['subcategory_name'].str.lower() == 'dumbbells'\n].copy()\n\n# Material specifications\ndf_material = df_specification[\n    df_specification['spec_name'].str.lower() == 'material'\n].copy()\n\ndf_material = df_material[\n    df_material['spec_value'].str.contains('rubber', case=False, na=False)\n][['product_id']]\n\n# Merge and sort by price\ndf_result = df_filtered_products.merge(\n    df_material,\n    on='product_id',\n    how='inner'\n).sort_values('price').reset_index(drop=True)\n\nif df_result.empty:\n    df_result = df_filtered_products.iloc[0:0].copy()\n\ndf_result""",
+            "reasoning": "Filtered dumbbells via material specs containing 'rubber' and sorted by price.",
         },
     },
 ]
@@ -95,11 +125,6 @@ async def run_scenario(scenario: Dict) -> None:
     print(f"\n=== Scenario: {scenario['name']} ===")
 
     agent = QueryAgent()
-
-    # async def fake_generate(system_prompt: str, user_prompt: str) -> str:
-    #     return json.dumps(scenario["llm_output"])
-
-    # agent.llm_client.generate = fake_generate  # type: ignore
 
     result = await agent.run(
         current_query=scenario["current_query"],
@@ -112,7 +137,7 @@ async def run_scenario(scenario: Dict) -> None:
         print("No pandas_query produced.")
         return
 
-    executor = QueryExecutorSimple(pandas_query, data_dir=str(TEMP_DB_DIR))
+    executor = QueryExecutorSimple(pandas_query, data_dir=str(DB_DIR))
     df_result = executor.execute()
 
     if df_result is not None:
