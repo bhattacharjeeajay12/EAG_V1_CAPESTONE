@@ -37,7 +37,11 @@ SPECIAL_SLOTS = {
     subcategory.PHONE.value: [spec.STORAGE.value, spec.CAMERA.value, spec.BATTERY.value, spec.COLOR.value],
 }
 
+_laptop_specs = get_specification_list(subcategory.LAPTOP.value)
+_dumbbell_specs = get_specification_list(subcategory.DUMBBELLS.value)
+
 SPECIFICATIONS = {
-    subcategory.LAPTOP.value: get_specification_list(subcategory.LAPTOP.value)
+    subcategory.LAPTOP.value: _laptop_specs,
+    subcategory.DUMBBELLS.value: _dumbbell_specs,
 }
 

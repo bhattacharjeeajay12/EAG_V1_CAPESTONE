@@ -32,7 +32,7 @@ class SubCategory(Enum):
     TABLET = "tablet"
     CAMERA = "camera"
     YOGAMAT = "yoga mat"
-    DUMBBELLS = "dumbbell"
+    DUMBBELLS = "dumbbells"
     CRICKETBAT = "cricket bat"
     BASKETBALL = "basketball"
     TREADMILL = "treadmill"

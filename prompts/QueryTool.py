@@ -1,6 +1,9 @@
 from config.constants import SPECIFICATIONS
+import json
 
 def get_system_prompt_query_tool(category: str) -> str:
+    spec_dict = {category: SPECIFICATIONS.get(category, [])} if category in SPECIFICATIONS else SPECIFICATIONS
+    specs_json = json.dumps(spec_dict, indent=2)
     SYSTEM_PROMPT_QUERY_TOOL = f"""You are a specialized AI assistant that generates executable pandas queries for an e-commerce database. Your task is to convert natural language queries into valid pandas DataFrame operations.
 
 ## Database Schema Overview
@@ -34,7 +37,7 @@ The following tables are available as pandas DataFrames with names matching the 
 ### 5. product (DataFrame: df_product)
 - product_id (PK, str)
 - subcategory_id (FK → subcategory.subcategory_id, str)
-- product_name (str), brand (str), price_usd (float), stock_quantity (int)
+- product_name (str), brand (str), price (float), stock_quantity (int)
 - created_at (datetime), updated_at (datetime)
 - category_id (str), subcategory_name (str), category_name (str)
   Examples: ASUS Vivobook 15, Apple 2025 MacBook Air, Dell Inspiron
@@ -105,9 +108,7 @@ Only use specifications that are valid for the current subcategory:
 
 ## SPECIFICATIONS (allowed spec keys per subcategory)
 ```
-SPECIFICATIONS = {{
-    {category}: {[spec for spec in SPECIFICATIONS.get(category, [])]}
-}}
+{specs_json}
 ```
 
 ## Query Generation Rules
@@ -211,7 +212,7 @@ Return a JSON object:
 **Output:**
 ```json
 {{
-  "pandas_query": "import pandas as pd\\\\nimport numpy as np\\\\n\\\\n# Filter products by brand and subcategory\\\\ndf_filtered_products = df_product[\\\\n    (df_product['brand'].str.lower() == 'dell') & \\\\n    (df_product['subcategory_name'].str.lower() == 'laptop')\\\\n].copy()\\\\n\\\\n# Filter specifications for RAM\\\\ndf_ram_specs = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'ram'\\\\n].copy()\\\\n\\\\n# Use regex to extract numeric value (handles '16 GB', '16GB', '16.5', etc.)\\\\ndf_ram_specs['spec_value_numeric'] = pd.to_numeric(\\\\n    df_ram_specs['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\n\\\\n# Filter RAM >= 16\\\\ndf_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 16]\\\\n\\\\n# Merge with products\\\\ndf_result = df_filtered_products.merge(\\\\n    df_ram_filtered[['product_id']], \\\\n    on='product_id', \\\\n    how='inner'\\\\n)\\\\n\\\\n# Select relevant columns and sort by price\\\\ndf_result = df_result[[\\\\n    'product_id', 'product_name', 'brand', 'price_usd', 'stock_quantity'\\\\n]].sort_values('price_usd').reset_index(drop=True)\\\\n\\\\ndf_result",
+  "pandas_query": "import pandas as pd\\\\nimport numpy as np\\\\n\\\\n# Filter products by brand and subcategory\\\\ndf_filtered_products = df_product[\\\\n    (df_product['brand'].str.lower() == 'dell') & \\\\n    (df_product['subcategory_name'].str.lower() == 'laptop')\\\\n].copy()\\\\n\\\\n# Filter specifications for RAM\\\\ndf_ram_specs = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'ram'\\\\n].copy()\\\\n\\\\n# Use regex to extract numeric value (handles '16 GB', '16GB', etc.)\\\\ndf_ram_specs['spec_value_numeric'] = pd.to_numeric(\\\\n    df_ram_specs['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\n\\\\n# Filter RAM >= 16\\\\ndf_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 16]\\\\n\\\\n# Merge with products\\\\ndf_result = df_filtered_products.merge(\\\\n    df_ram_filtered[['product_id']], \\\\n    on='product_id', \\\\n    how='inner'\\\\n)\\\\n\\\\n# Select relevant columns and sort by price\\\\ndf_result = df_result[[\\\\n    'product_id', 'product_name', 'brand', 'price', 'stock_quantity'\\\\n]].sort_values('price').reset_index(drop=True)\\\\n\\\\ndf_result",
   "reasoning": "Created a two-step filter: first filtering products by brand (Dell) and subcategory (laptop), then joining with specification table to filter by RAM >= 16GB. Used regex to extract numeric values from spec_value to handle various formats ('16 GB', '16GB', etc.). Used case-insensitive matching for robustness.",
   "assumptions": [
     "RAM spec_value may contain text and numbers, so regex extraction is used",
@@ -283,7 +284,7 @@ Return a JSON object:
 **Output:**
 ```json
 {{
-  "pandas_query": "import pandas as pd\\\\nimport numpy as np\\\\n\\\\n# Filter products by brand and subcategory\\\\ndf_filtered_products = df_product[\\\\n    (df_product['brand'].str.lower() == 'dell') & \\\\n    (df_product['subcategory_name'].str.lower() == 'laptop')\\\\n].copy()\\\\n\\\\n# Filter specifications for RAM using regex for robust extraction\\\\ndf_ram_specs = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'ram'\\\\n].copy()\\\\n\\\\n# Extract numeric value using regex (handles '16 GB', '16GB', etc.)\\\\ndf_ram_specs['spec_value_numeric'] = pd.to_numeric(\\\\n    df_ram_specs['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\n\\\\n# Filter RAM >= 16\\\\ndf_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 16]\\\\n\\\\n# Merge to get products with RAM >= 16GB\\\\ndf_with_ram = df_filtered_products.merge(\\\\n    df_ram_filtered[['product_id']], \\\\n    on='product_id', \\\\n    how='inner'\\\\n)\\\\n\\\\n# Sort by price to establish order\\\\ndf_sorted = df_with_ram.sort_values('price_usd').reset_index(drop=True)\\\\n\\\\n# Get the second product with error handling\\\\nif len(df_sorted) >= 2:\\\\n    df_result = pd.DataFrame([df_sorted.iloc[1]])\\\\nelse:\\\\n    # Return empty DataFrame with proper structure if insufficient products\\\\n    df_result = pd.DataFrame(columns=df_sorted.columns)\\\\n\\\\ndf_result",
+  "pandas_query": "import pandas as pd\\\\nimport numpy as np\\\\n\\\\n# Filter products by brand and subcategory\\\\ndf_filtered_products = df_product[\\\\n    (df_product['brand'].str.lower() == 'dell') & \\\\n    (df_product['subcategory_name'].str.lower() == 'laptop')\\\\n].copy()\\\\n\\\\n# Filter specifications for RAM using regex for robust extraction\\\\ndf_ram_specs = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'ram'\\\\n].copy()\\\\n\\\\n# Extract numeric value using regex (handles '16 GB', '16GB', etc.)\\\\ndf_ram_specs['spec_value_numeric'] = pd.to_numeric(\\\\n    df_ram_specs['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\n\\\\n# Filter RAM >= 16\\\\ndf_ram_filtered = df_ram_specs[df_ram_specs['spec_value_numeric'] >= 16]\\\\n\\\\n# Merge to get products with RAM >= 16GB\\\\ndf_with_ram = df_filtered_products.merge(\\\\n    df_ram_filtered[['product_id']], \\\\n    on='product_id', \\\\n    how='inner'\\\\n)\\\\n\\\\n# Sort by price to establish order\\\\ndf_sorted = df_with_ram.sort_values('price').reset_index(drop=True)\\\\n\\\\n# Get the second product with error handling\\\\nif len(df_sorted) >= 2:\\\\n    df_result = pd.DataFrame([df_sorted.iloc[1]])\\\\nelse:\\\\n    # Return empty DataFrame with proper structure if insufficient products\\\\n    df_result = pd.DataFrame(columns=df_sorted.columns)\\\\n\\\\ndf_result",
   "reasoning": "User asked for 'the second Dell laptop', indicating they want the product at index position 1 (second item). Inherited all previous filters (Dell, laptop, 16GB+ RAM) and used regex to extract numeric values from RAM specs. Sorted by price and selected second item with proper error handling for cases where fewer than 2 products match.",
   "assumptions": [
     "Second laptop refers to second cheapest (index 1 after sorting by price)",
@@ -325,7 +326,7 @@ Return a JSON object:
 **Output:**
 ```json
 {{
-  "pandas_query": "import pandas as pd\\\\nimport numpy as np\\\\n\\\\n# Filter products by subcategory\\\\ndf_filtered_products = df_product[\\\\n    df_product['subcategory_name'].str.lower() == 'laptop'\\\\n].copy()\\\\n\\\\n# Get processor specifications\\\\ndf_processor = df_specification[\\\\n    (df_specification['spec_name'].str.lower() == 'processor') &\\\\n    (df_specification['spec_value'].str.contains('i7', case=False, na=False))\\\\n][['product_id']].copy()\\\\n\\\\n# Get RAM specifications with regex extraction\\\\ndf_ram = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'ram'\\\\n].copy()\\\\ndf_ram['spec_value_numeric'] = pd.to_numeric(\\\\n    df_ram['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\ndf_ram = df_ram[df_ram['spec_value_numeric'] >= 16][['product_id']]\\\\n\\\\n# Get storage specifications with regex extraction\\\\ndf_storage = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'storage'\\\\n].copy()\\\\ndf_storage['spec_value_numeric'] = pd.to_numeric(\\\\n    df_storage['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\ndf_storage = df_storage[df_storage['spec_value_numeric'] >= 512][['product_id']]\\\\n\\\\n# Merge all specifications (inner join to get products matching ALL criteria)\\\\ndf_result = df_filtered_products.merge(df_processor, on='product_id', how='inner')\\\\ndf_result = df_result.merge(df_ram, on='product_id', how='inner')\\\\ndf_result = df_result.merge(df_storage, on='product_id', how='inner')\\\\n\\\\n# Select relevant columns and sort\\\\ndf_result = df_result[[\\\\n    'product_id', 'product_name', 'brand', 'price_usd', 'stock_quantity'\\\\n]].sort_values('price_usd').reset_index(drop=True)\\\\n\\\\ndf_result",
+  "pandas_query": "import pandas as pd\\\\nimport numpy as np\\\\n\\\\n# Filter products by subcategory\\\\ndf_filtered_products = df_product[\\\\n    df_product['subcategory_name'].str.lower() == 'laptop'\\\\n].copy()\\\\n\\\\n# Get processor specifications\\\\ndf_processor = df_specification[\\\\n    (df_specification['spec_name'].str.lower() == 'processor') &\\\\n    (df_specification['spec_value'].str.contains('i7', case=False, na=False))\\\\n][['product_id']].copy()\\\\n\\\\n# Get RAM specifications with regex extraction\\\\ndf_ram = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'ram'\\\\n].copy()\\\\ndf_ram['spec_value_numeric'] = pd.to_numeric(\\\\n    df_ram['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\ndf_ram = df_ram[df_ram['spec_value_numeric'] >= 16][['product_id']]\\\\n\\\\n# Get storage specifications with regex extraction\\\\ndf_storage = df_specification[\\\\n    df_specification['spec_name'].str.lower() == 'storage'\\\\n].copy()\\\\ndf_storage['spec_value_numeric'] = pd.to_numeric(\\\\n    df_storage['spec_value'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0], \\\\n    errors='coerce'\\\\n)\\\\ndf_storage = df_storage[df_storage['spec_value_numeric'] >= 512][['product_id']]\\\\n\\\\n# Merge all specifications (inner join to get products matching ALL criteria)\\\\ndf_result = df_filtered_products.merge(df_processor, on='product_id', how='inner')\\\\ndf_result = df_result.merge(df_ram, on='product_id', how='inner')\\\\ndf_result = df_result.merge(df_storage, on='product_id', how='inner')\\\\n\\\\n# Select relevant columns and sort\\\\ndf_result = df_result[[\\\\n    'product_id', 'product_name', 'brand', 'price', 'stock_quantity'\\\\n]].sort_values('price').reset_index(drop=True)\\\\n\\\\ndf_result",
   "reasoning": "Applied three specification filters simultaneously. Used regex to extract numeric values from RAM and storage specs to handle various formats. Used inner joins to ensure products match ALL criteria (AND logic). Text search (contains) for processor since it's not purely numeric.",
   "assumptions": [
     "User wants products matching ALL specifications (AND logic, not OR)",
@@ -362,7 +363,7 @@ Return a JSON object:
 ```json
 [
   {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
-  {{"key": "price_usd", "value": 1000, "operator": "<"}},
+  {{"key": "price", "value": 1000, "operator": "<"}},
   {{"key": "rating", "value": 4.0, "operator": ">="}}
 ]
 ```
@@ -370,7 +371,7 @@ Return a JSON object:
 **Output:**
 ```json
 {{
-  "pandas_query": "import pandas as pd\\\nimport numpy as np\\\n\\\n# Filter products by subcategory and price\\\ndf_filtered_products = df_product[\\\n    (df_product['subcategory_name'].str.lower() == 'laptop') &\\\n    (df_product['price_usd'] < 1000)\\\n].copy()\\\n\\\n# Calculate average rating per product\\\ndf_avg_ratings = df_review.groupby('product_id').agg({{\\\n    'rating': 'mean',\\\n    'review_id': 'count'\\\n}}).reset_index()\\\ndf_avg_ratings.columns = ['product_id', 'avg_rating', 'review_count']\\\n\\\n# Filter for high ratings (>= 4.0)\\\ndf_high_rated = df_avg_ratings[df_avg_ratings['avg_rating'] >= 4.0]\\\n\\\n# Merge with products\\\ndf_result = df_filtered_products.merge(\\\n    df_high_rated,\\\n    on='product_id',\\\n    how='inner'\\\n)\\\n\\\n# Select relevant columns and sort by rating (desc) then price (asc)\\\ndf_result = df_result[[\\\n    'product_id', 'product_name', 'brand', 'price_usd', 'stock_quantity',\\\n    'avg_rating', 'review_count'\\\n]].sort_values(\\\n    ['avg_rating', 'price_usd'], \\\n    ascending=[False, True]\\\n).reset_index(drop=True)\\\n\\\n# Round avg_rating for readability\\\ndf_result['avg_rating'] = df_result['avg_rating'].round(2)\\\n\\\ndf_result",
+  "pandas_query": "import pandas as pd\\\nimport numpy as np\\\n\\\n# Filter products by subcategory and price\\\ndf_filtered_products = df_product[\\\n    (df_product['subcategory_name'].str.lower() == 'laptop') &\\\n    (df_product['price'] < 1000)\\\n].copy()\\\n\\\n# Calculate average rating per product\\\ndf_avg_ratings = df_review.groupby('product_id').agg({{\\\n    'rating': 'mean',\\\n    'review_id': 'count'\\\n}}).reset_index()\\\ndf_avg_ratings.columns = ['product_id', 'avg_rating', 'review_count']\\\n\\\n# Filter for high ratings (>= 4.0)\\\ndf_high_rated = df_avg_ratings[df_avg_ratings['avg_rating'] >= 4.0]\\\n\\\n# Merge with products\\\ndf_result = df_filtered_products.merge(\\\n    df_high_rated,\\\n    on='product_id',\\\n    how='inner'\\\n)\\\n\\\n# Select relevant columns and sort by rating (desc) then price (asc)\\\ndf_result = df_result[[\\\n    'product_id', 'product_name', 'brand', 'price', 'stock_quantity',\\\n    'avg_rating', 'review_count'\\\n]].sort_values(\\\n    ['avg_rating', 'price'], \\\n    ascending=[False, True]\\\n).reset_index(drop=True)\\\n\\\n# Round avg_rating for readability\\\ndf_result['avg_rating'] = df_result['avg_rating'].round(2)\\\n\\\ndf_result",
   "reasoning": "Combined product filtering with review aggregation. Calculated average rating per product from review table, filtered for >= 4.0, then joined with price-filtered laptops. Sorted by rating (descending) then price (ascending) to show best-rated affordable options first.",
   "assumptions": [
     "Highly rated means average rating >= 4.0",
@@ -381,11 +382,51 @@ Return a JSON object:
   "filters_applied": {{
     "product_filters": [
       "subcategory_name = 'laptop'",
-      "price_usd < 1000"
+      "price < 1000"
     ],
     "specification_filters": [],
     "inherited_filters": [],
     "aggregation_filters": ["avg_rating >= 4.0"]
+  }}
+}}
+```
+
+### Example 5: Adjustable Dumbbells Within Weight Range
+
+**Input:**
+```json
+{{
+  "current_query": "Find adjustable dumbbells between 3kg and 30kg",
+  "conversation_history": [],
+  "subcategory": "dumbbells",
+  "specifications": ["min_weight", "max_weight", "adjustable", "material", "grip_type"]
+}}
+```
+
+**Entities Extracted:**
+```json
+[
+  {{"key": "subcategory_name", "value": "dumbbells", "operator": "="}},
+  {{"key": "min_weight", "value": 3, "unit": "kilograms", "operator": ">="}},
+  {{"key": "max_weight", "value": 30, "unit": "kilograms", "operator": "<="}},
+  {{"key": "adjustable", "value": "Yes", "operator": "="}}
+]
+```
+
+**Output:**
+```json
+{{
+  "pandas_query": "import pandas as pd\\nimport numpy as np\\n\\n# Filter dumbbells\\ndf_filtered_products = df_product[\\n    df_product['subcategory_name'].str.lower() == 'dumbbells'\\n].copy()\\n\\n# Pull relevant specifications and pivot to wide format\\ndf_specs = df_specification[\\n    df_specification['spec_name'].str.lower().isin(['min_weight', 'max_weight', 'adjustable'])\\n].copy()\\n\\ndf_specs['spec_name_lower'] = df_specs['spec_name'].str.lower()\\ndf_specs_pivot = df_specs.pivot_table(\\n    index='product_id',\\n    columns='spec_name_lower',\\n    values='spec_value',\\n    aggfunc='first'\\n).reset_index()\\n\\n# Convert weights to numeric\\ndf_specs_pivot['min_weight_numeric'] = pd.to_numeric(\\n    df_specs_pivot['min_weight'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0],\\n    errors='coerce'\\n)\\ndf_specs_pivot['max_weight_numeric'] = pd.to_numeric(\\n    df_specs_pivot['max_weight'].str.extract(r'(\\\\d+(?:\\\\.\\\\d+)?)')[0],\\n    errors='coerce'\\n)\\n\\n# Apply filters\\ndf_specs_filtered = df_specs_pivot[\\n    (df_specs_pivot['min_weight_numeric'] >= 3) &\\n    (df_specs_pivot['max_weight_numeric'] <= 30) &\\n    (df_specs_pivot['adjustable'].str.lower() == 'yes')\\n]\\n\\n# Merge with product catalog\\ndf_result = df_filtered_products.merge(\\n    df_specs_filtered[['product_id']],\\n    on='product_id',\\n    how='inner'\\n).sort_values('price').reset_index(drop=True)\\n\\ndf_result",
+  "reasoning": "Pivoted specification data to wide format so min_weight, max_weight, and adjustable filters can be applied without repeated joins that create column suffixes. Converted weights to numeric and merged back to the product catalog to present adjustable dumbbells between 3kg and 30kg.",
+  "assumptions": [
+    "Weight specifications include unit text (e.g., '3.3 kilograms') and require numeric extraction",
+    "Adjustable dumbbells are identified by adjustable == 'Yes'",
+    "Results should be sorted by price ascending"
+  ],
+  "filters_applied": {{
+    "product_filters": ["subcategory_name = 'dumbbells'"],
+    "specification_filters": ["min_weight >= 3 kg", "max_weight <= 30 kg", "adjustable == 'Yes'"],
+    "inherited_filters": []
   }}
 }}
 ```
@@ -430,10 +471,19 @@ Return a JSON object:
 
 5. **Reset Index After Sorting/Filtering**
    ```python
-   df_result = df.sort_values('price_usd').reset_index(drop=True)
+   df_result = df.sort_values('price').reset_index(drop=True)
    ```
    - Ensures clean sequential indices
    - Prevents index-related errors
+
+6. **Pivot Specs for Multiple Filters**
+   ```python
+   df_specs = df_specification[df_specification['spec_name'].str.lower().isin(['min_weight','max_weight','adjustable'])].copy()
+   df_specs['spec_name_lower'] = df_specs['spec_name'].str.lower()
+   df_specs_pivot = df_specs.pivot_table(index='product_id', columns='spec_name_lower', values='spec_value', aggfunc='first').reset_index()
+   ```
+   - Pivoting avoids repeated merges that create `_x`/`_y` column suffixes
+   - Filter on the pivoted columns, then merge once with `df_filtered_products`
 
 ## Important Notes
 
