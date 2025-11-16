@@ -1,6 +1,6 @@
 from enum import Enum
 
-class WorkstreamState(Enum):
+class WorkstreamState(str, Enum):
     NEW = "NEW"
     COLLECTING = "COLLECTING"
     READY = "READY"
@@ -12,18 +12,18 @@ class WorkstreamState(Enum):
     FAILED = "FAILED"
     PAUSED = "PAUSED"
 
-class Agents(Enum):
+class Agents(str, Enum):
     DISCOVERY = "DISCOVERY"
     ORDER = "ORDER"
     PAYMENT = "PAYMENT"
     EXCHANGE = "EXCHANGE"
     RETURN = "RETURN"
 
-class Categories(Enum):
+class Categories(str, Enum):
     ELECTRONICS = "electronics"
     SPORTS = "sports"
 
-class SubCategory(Enum):
+class SubCategory(str, Enum):
     LAPTOP = "Laptop"
     SMARTPHONE = "smartphone"
     PHONE = "phone"
@@ -37,13 +37,13 @@ class SubCategory(Enum):
     BASKETBALL = "basketball"
     TREADMILL = "treadmill"
 
-class ProductAttributes(Enum):
+class ProductAttributes(str, Enum):
     CATEGORY = "category"
     SUBCATEGORY = "subcategory"
     SPECIFICATIONS = "specifications"
     PRODUCT_ID = "product_id"
 
-class OrderAttributes(Enum):
+class OrderAttributes(str, Enum):
     QUANTITY = "quantity"
     ORDER_ID = "order_id"
     PAYMENT_METHOD = "payment_method"
@@ -53,7 +53,7 @@ class OrderAttributes(Enum):
     EXCHANGE_ITEM = "exchange_item"
     EXCHANGE_REASON = "exchange_reason"
 
-class SpecificationsLaptop(Enum):
+class SpecificationsLaptop(str, Enum):
     # laptop
     RAM = "ram"
     STORAGE = "storage"
@@ -63,7 +63,7 @@ class SpecificationsLaptop(Enum):
     BATTERY = "battery"
     COLOR = "color"
 
-class DataFrameLookup(Enum):
+class DataFrameLookup(str, Enum):
     user_df = "user.json"
     buy_history_df = "buy_history.json"
     category_df = "category.json"
