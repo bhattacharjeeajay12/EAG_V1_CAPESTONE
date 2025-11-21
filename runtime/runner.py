@@ -1,23 +1,25 @@
 import asyncio
-from runtime.planner import Planner
+from runtime.planner import PlannerAgent
 from core.logging_setup import configure_logging
+from core.conversation_history import ConversationHistory
+
+# todo:
+# ConversationHistory should be imported here in runner. Because here the session variable would also be added.
+# in future add the session variables here.
 
 logger = configure_logging("demo")
 
+
 async def main():
-    planner = Planner()
-
+    ch = ConversationHistory()
+    planner = PlannerAgent(ch)
     turns = [
-        "Show me gaming laptops under $1500",
-        "(tool returns results)",   # simulate tool callback
-        "Compare it with HP laptops",
-        "Buy this one",
+        "I need a laptop ?",
     ]
-
     # for t in turns:
     while True:
         t = input("USER: ")
-        action = await planner.handle_user_turn(t)
+        action = await planner.handle_user_turn(t, ch)
         logger.info(f"USER: {t}")
         logger.info(f"ACTION: {action}")
         logger.info("-" * 60)

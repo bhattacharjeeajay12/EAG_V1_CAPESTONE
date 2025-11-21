@@ -18,10 +18,20 @@ class Agents(str, Enum):
     PAYMENT = "PAYMENT"
     EXCHANGE = "EXCHANGE"
     RETURN = "RETURN"
+    PLANNER = "PLANNER"
+
+class WorkflowContinuityDecision(str, Enum):
+    SWITCH = "SWITCH"
+    CONTINUATION = "CONTINUATION"
+    UNCLEAR = "UNCLEAR"
 
 class Categories(str, Enum):
     ELECTRONICS = "electronics"
     SPORTS = "sports"
+
+class MsgTypes(str, Enum):
+    user = "user_message"
+    ai_message = "ai_message"
 
 class SubCategory(str, Enum):
     LAPTOP = "Laptop"
@@ -72,3 +82,13 @@ class DataFrameLookup(str, Enum):
     specification_df = "specification.json"
     return_df = "return.json"
     review_df = "review.json"
+
+class ConverstionVars(str, Enum):
+    max_turns = 5 # max turns per conversation to pull
+
+class LlmVars(str, Enum):
+    max_calls = 3
+
+class ModelType(str, Enum):
+    openai = "openai"
+    gemini = "gemini"

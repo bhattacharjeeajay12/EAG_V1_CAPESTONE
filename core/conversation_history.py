@@ -1,134 +1,98 @@
 # core/conversation_history.py
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 
-from core.workstream import Workstream
-from core.state_factory import initial_state
-from config.enums import WorkstreamState
+from marshmallow.fields import Boolean
+
 from agents.base import Ask
-from config.constants import MAX_TURNS_TO_PULL
+from config.enums import WorkstreamState, MsgTypes, Agents, WorkflowContinuityDecision as WfCDecision
+from core import workstream
+from core.workstream import Workstream
+import uuid
 
 @dataclass
 class ConversationHistory:
-    turns: List[Dict[str, Any]] = field(default_factory=list)
     workstreams: Dict[str, Workstream] = field(default_factory=dict)
-    focus_id: Optional[str] = None
-    pending_asks: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # ws_id -> {"slot": str, "prompt": str}
-    pending_decision: Optional[Dict[str, Any]] = None
+    active_ws_id: Optional[str] = None
+    pending_ws_ids: List[str] = field(default_factory=list)
+    completed_ws_ids: List[str] = field(default_factory=list)
+    session_id = None
 
-    # ---- NLU context helpers ----
-    def as_nlu_context(self) -> List[Dict[str, str]]:
-        """
-        Return the last up-to-5 turns as a minimal context list suitable for NLU prompts.
-        Preserves order oldest -> newest.
-        """
-        recent = self.turns[-MAX_TURNS_TO_PULL:]
-        return [{"role": t["role"], "content": t.get("content", "")} for t in recent]
+    def get_active_workstream(self) -> Workstream | None:
+        if self.active_ws_id:
+            return self.workstreams[self.active_ws_id]
+        return None
 
-    # ---- Turn history helpers ----
-    def append_user_turn(self, content: str, nlu_result: Dict[str, Any]) -> None:
-        self.turns.append({"role": "user", "content": content, "nlu_result": nlu_result})
+    def get_all_workstreams(self) -> Dict[str, Workstream] | None:
+        return self.workstreams
 
-    def append_action(self, action: Any) -> None:
+    def update_active_ws_id(self, ws_id: str, is_completed: Boolean = False) -> None:
+        if is_completed:
+            self.workstreams[self.active_ws_id].current_state = WorkstreamState.COMPLETED
+            self.completed_ws_ids.append(self.active_ws_id)
+        self.active_ws_id = ws_id
+        self.pending_ws_ids = self.get_pending_ws_ids()
+        return
+
+    def create_ws_id(self):
         """
-        Append an assistant action to the conversation turns.
-        Uses Ask.question when available; otherwise falls back to common fields or repr.
+        Note: We are not using uuid to generate workstream_ids because ws_id will be the part of LLM prompt.
+        uuid generates unique ids which are very long. Keeping ws_id in format ws_1, ws_2, ws_3 ...
+        short ws_id will be easy for LLM to match (used in planer prompt).
         """
-        if isinstance(action, Ask):
-            text = getattr(action, "question", None) or getattr(action, "text", None) or repr(action)
+        # ws_id = uuid.uuid4()
+        ws_id_int_part_list = [ws_id.split("_")[-1] for ws_id in list(self.workstreams.keys())]
+        ws_id_int_part_list.sort()
+        if ws_id_int_part_list:
+            return "ws_id_" + str(ws_id_int_part_list[-1])
         else:
-            text = getattr(action, "text", None) or getattr(action, "message", None) or repr(action)
-        self.turns.append({"role": "assistant", "content": text, "action": action})
+            # First Workstream
+            return "ws_id_1"
 
-    # ---- Workstream lifecycle ----
-    def ensure_workstream(self, intent: str, seed_entities: Dict[str, Any]) -> Workstream:
-        """
-        Create a new workstream for a given intent (or return existing focused one).
-        Sets focus to the new workstream.
-        """
-        ws_id = f"ws_{len(self.workstreams) + 1}"
-        init_state = initial_state(intent)
-        ws = Workstream(id=ws_id, state=state, phase=init_state, slots={})
-        if seed_entities:
-            ws.update_slots(seed_entities)
+    def create_new_workstream(self, phase, target) -> workstream.Workstream:
+        ws_id = self.create_ws_id()
+        current_state = WorkstreamState.NEW
+        ws = Workstream(ws_id, current_state, phase, target)
         self.workstreams[ws_id] = ws
-        self.focus_id = ws_id
         return ws
 
-    def get_focused_ws(self) -> Optional[Workstream]:
-        return self.workstreams.get(self.focus_id) if self.focus_id else None
-
-    def set_focus(self, ws_id: str) -> None:
-        if ws_id in self.workstreams:
-            self.focus_id = ws_id
-
-    def pause_workstream(self, ws_id: str) -> None:
-        ws = self.workstreams.get(ws_id)
-        if not ws:
-            return
-        # Use a stable string to indicate paused (keeps compatibility with prior code)
-        ws.status = "paused"
-
-    def resume_workstream(self, ws_id: str) -> None:
-        ws = self.workstreams.get(ws_id)
-        if not ws:
-            return
-        # Best-effort: set to COLLECTING state for known intents, otherwise active
-        if getattr(ws, "type", None) == "DISCOVERY":
-            ws.status = WorkstreamState.COLLECTING
-        elif getattr(ws, "type", None) == "ORDER":
-            ws.status = WorkstreamState.COLLECTING
-        else:
-            ws.status = "active"
-        self.focus_id = ws_id
-
-    # ----- Pending Ask helpers -----
-    def set_pending_ask(self, ws_id: str, slot: Optional[str], prompt: str) -> None:
-        self.pending_asks[ws_id] = {"slot": slot, "prompt": prompt}
-
-    def clear_pending_ask(self, ws_id: str) -> None:
-        if ws_id in self.pending_asks:
-            del self.pending_asks[ws_id]
-
-    def find_any_pending_ask(self) -> Optional[Tuple[str, Dict[str, Any]]]:
+    def add_chat_in_ws(self, ws_id: str, msg_type: str, message: str) -> bool:
         """
-        Return the first pending ask as (ws_id, info) or None.
-        (Deterministic but arbitrary order due to dict iteration; OK for single pending ask case.)
+        A sample chats looks like this:
+        chats = {
+        ws_id: [{MsgTypes.user: "", MsgTypes.ai_message: ""}]
+        }
         """
-        it = iter(self.pending_asks.items())
-        try:
-            return next(it)
-        except StopIteration:
-            return None
+        if ws_id not in self.workstreams:
+            raise Exception(f"Workstream {ws_id} does not exist")
 
-    # ----- Continuity decision helpers -----
-    def set_pending_decision(self, payload: Dict[str, Any]) -> None:
-        self.pending_decision = payload
+        if msg_type == MsgTypes.user:
+            chats = self.workstreams[ws_id].chats
+            chats.append({MsgTypes.user: message, MsgTypes.ai_message: None})
+            return True
 
-    def get_pending_decision(self) -> Optional[Dict[str, Any]]:
-        return self.pending_decision
+        elif msg_type == MsgTypes.ai_message:
+            chats = self.workstreams[ws_id].chats
+            if not chats:
+                raise Exception("Cannot add AI message before a user message")
+            if MsgTypes.user not in chats[-1].keys():
+                raise Exception("Cannot add AI message before a user message")
+            if MsgTypes.ai_message in chats[-1].keys():
+                if chats[-1][MsgTypes.ai_message] is None:
+                    chats[-1][MsgTypes.ai_message] = message
+                return True
+        return False
 
-    def clear_pending_decision(self) -> None:
-        self.pending_decision = None
+    def get_pending_ws_ids(self) -> List[str]:
+        pending_ws_ids = []
+        for ws_id, ws in self.workstreams.items():
+            if ws.current_state not in [WorkstreamState.COMPLETED] and ws_id not in [self.active_ws_id]:
+                pending_ws_ids.append(ws_id)
+        return pending_ws_ids
 
-    # ----- Snapshot for debugging / UI -----
-    def _serialize_ws(self, ws: Workstream) -> Dict[str, Any]:
-        """Return a JSON-serializable summary of a workstream."""
-        state = getattr(ws.state, "value", ws.state)
-        return {
-            "id": ws.id,
-            "type": getattr(ws, "type", None),
-            "status": state,
-            "slots": ws.slots,
-            "candidates_count": len(getattr(ws, "candidates", []) or []),
-            "has_pending_ask": ws.id in self.pending_asks,
-        }
 
-    def session_snapshot(self) -> Dict[str, Any]:
-        return {
-            "turns": self.turns[-20:],
-            "workstreams": {wid: self._serialize_ws(ws) for wid, ws in self.workstreams.items()},
-            "focus_id": self.focus_id,
-            "pending_asks": self.pending_asks,
-            "pending_decision": self.pending_decision,
-        }
+
+
+
+
+
