@@ -80,7 +80,7 @@ class PlannerAgent:
         """
         if sender == Agents.PLANNER:
             decision = llm_decision["decision"]
-            new_ws, active_wf_continuity, focus_workstream_id   = decision["new_workstreams"], decision["active_workflow_continuity"], decision["focus_workstream_id"]
+            new_ws_list, active_wf_continuity, focus_workstream_id   = decision["new_workstreams"], decision["active_workflow_continuity"], decision["focus_workstream_id"]
             if active_wf_continuity == WfCDecision.CONTINUATION:
                 # should not do anything, simply pass. This if-block is optional. Keeping this if-block as a placeholder.
                 pass
@@ -88,13 +88,16 @@ class PlannerAgent:
                 # todo : initiate an Ask message for gathering clarification from user
                 pass
             if active_wf_continuity == WfCDecision.SWITCH:
-                if new_ws:
+                if new_ws_list:
                     # 1. create new ws
                     # 2. focus on the new one
                     if focus_workstream_id is not None:
                         # Whenever we update the active_ws_id of conversation_history, we need to update the pending and completed es list
-                        self.conversation_history.active_ws_id = focus_workstream_id
-                        self.conversation_history.pending_ws_ids = self.conversation_history.get_pending_ws_ids()
-                    for ws in enumerate(new_ws):
+                        self.conversation_history.update_active_ws_id(focus_workstream_id)
+                    for idx, ws in enumerate(new_ws_list):
                         new_ws = self.conversation_history.create_new_workstream(WsState.NEW, llm_decision["entities"])
+                        if focus_workstream_id is None and idx == 0:
+                            # Make first new workstream created as the active one.
+                            self.conversation_history.update_active_ws_id(new_ws.get_workstream_id(), is_completed=False)
+                            self.conversation_history.active_ws_id = new_ws.id
         return

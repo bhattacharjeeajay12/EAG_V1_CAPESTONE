@@ -26,7 +26,7 @@ class ConversationHistory:
     def get_all_workstreams(self) -> Dict[str, Workstream] | None:
         return self.workstreams
 
-    def update_active_ws_id(self, ws_id: str, is_completed: Boolean = False) -> None:
+    def update_active_ws_id(self, ws_id: str, is_completed: bool = False) -> None:
         if is_completed:
             self.workstreams[self.active_ws_id].current_state = WorkstreamState.COMPLETED
             self.completed_ws_ids.append(self.active_ws_id)
