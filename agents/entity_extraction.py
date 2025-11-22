@@ -1,5 +1,5 @@
 from core.llm_client import LLMClient
-from prompts.EntityExtraction import get_system_entity_prompt_discovery
+from prompts.DiscoveryEntityExtractionPrompt import SYSTEM_PROMPT_ENTITY_EXTRACTION
 from config.constants import SPECIFICATIONS
 from typing import Any, Dict, List, Optional
 import json

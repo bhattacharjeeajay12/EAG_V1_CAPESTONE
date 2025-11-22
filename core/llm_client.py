@@ -45,7 +45,7 @@ class LLMClient:
 
     async def generate(self, system_prompt: str, user_prompt: str) -> str:
         """Generate content from the selected model (either Gemini or OpenAI)."""
-        prompt = system_prompt + "\n\n" + user_prompt
+        prompt = str(system_prompt) + "\n\n" + str(user_prompt)
 
         if self._ready and self._client:
             try:

@@ -1,29 +1,52 @@
 from enum import Enum
 
-class WorkstreamState(Enum):
+class WorkstreamState(str, Enum):
     NEW = "NEW"
-    COLLECTING = "COLLECTING"
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    ABORTED = "ABORTED"
+    ACTIVE = "ACTIVE" # Inprogress
+
+class PhaseState(str, Enum):
+    NEW = "NEW"
     READY = "READY"
+    COLLECTING = "COLLECTING"
     PROCESSING = "PROCESSING"
     PRESENTING = "PRESENTING"
     AWAITING_DECISION = "AWAITING_DECISION"
-    CONFIRMING = "CONFIRMING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     PAUSED = "PAUSED"
 
-class Agents(Enum):
+
+
+class Agents(str, Enum):
     DISCOVERY = "DISCOVERY"
     ORDER = "ORDER"
     PAYMENT = "PAYMENT"
     EXCHANGE = "EXCHANGE"
     RETURN = "RETURN"
+    PLANNER = "PLANNER"
+    # CHITCHAT and UNKNOWN are not any agents, but used for user intent classification
+    CHITCHAT = "CHITCHAT"
+    UNKNOWN = "UNKNOWN"
 
-class Categories(Enum):
+class WorkflowContinuityDecision(str, Enum):
+    SWITCH = "SWITCH"
+    CONTINUATION = "CONTINUATION"
+    UNCLEAR = "UNCLEAR"
+
+class Categories(str, Enum):
     ELECTRONICS = "electronics"
     SPORTS = "sports"
 
-class SubCategory(Enum):
+class ChatInfo(str, Enum):
+    user_message = "user_message"
+    ai_message = "ai_message"
+    chat_id = "chat_id"
+    msg_source = "source"
+
+class SubCategory(str, Enum):
     LAPTOP = "Laptop"
     SMARTPHONE = "smartphone"
     PHONE = "phone"
@@ -37,13 +60,13 @@ class SubCategory(Enum):
     BASKETBALL = "basketball"
     TREADMILL = "treadmill"
 
-class ProductAttributes(Enum):
+class ProductAttributes(str, Enum):
     CATEGORY = "category"
     SUBCATEGORY = "subcategory"
     SPECIFICATIONS = "specifications"
     PRODUCT_ID = "product_id"
 
-class OrderAttributes(Enum):
+class OrderAttributes(str, Enum):
     QUANTITY = "quantity"
     ORDER_ID = "order_id"
     PAYMENT_METHOD = "payment_method"
@@ -53,7 +76,7 @@ class OrderAttributes(Enum):
     EXCHANGE_ITEM = "exchange_item"
     EXCHANGE_REASON = "exchange_reason"
 
-class SpecificationsLaptop(Enum):
+class SpecificationsLaptop(str, Enum):
     # laptop
     RAM = "ram"
     STORAGE = "storage"
@@ -63,7 +86,7 @@ class SpecificationsLaptop(Enum):
     BATTERY = "battery"
     COLOR = "color"
 
-class DataFrameLookup(Enum):
+class DataFrameLookup(str, Enum):
     user_df = "user.json"
     buy_history_df = "buy_history.json"
     category_df = "category.json"
@@ -72,3 +95,13 @@ class DataFrameLookup(Enum):
     specification_df = "specification.json"
     return_df = "return.json"
     review_df = "review.json"
+
+class ConverstionVars(str, Enum):
+    max_turns = 5 # max turns per conversation to pull
+
+class LlmVars(str, Enum):
+    max_calls = 3
+
+class ModelType(str, Enum):
+    openai = "openai"
+    gemini = "gemini"

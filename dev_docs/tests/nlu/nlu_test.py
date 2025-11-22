@@ -1,7 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from nlu.planner import PlannerNLU
+from nlu.planner_nlu import PlannerNLU
 from dev_docs.tests.nlu.nlu_questions import questions  # Assuming questions are imported here
 import time
 
