@@ -40,40 +40,13 @@ class PlannerAgent:
         if planner_llm_decision is None:
             raise Exception("Planner NLU returned None. Please inspect upstream logic.")
         await self.handle_workstreams(planner_llm_decision)
-        active_ws = self.conversation_history.get_active_workstream()
+
         # ---------------------------------------------------------------------
         # Active Workstream Execution
         # ---------------------------------------------------------------------
-        active_ws.run()
-
-
-        # if active_ws.current_phase == Agents.DISCOVERY:
-        #     subcategory = active_ws.target.get("subcategory")
-        #     self.discovery_agent = DiscoveryAgent(subcategory=subcategory, ws=active_ws)
-        #
-        #     if active_ws.target.get("subcategory"):
-        #         subcategory = planner_llm_decision["entities"]["subcategory"]
-        #
-        #     else:
-        #         pass
-        #
-        #     self.discovery_agent = DiscoveryAgent(subcategory)
-        #     specification =  await self.discovery_agent.run(current_message)
-        #
-        #
-        # elif phase == Agents.PAYMENT:
-        #     output = await self.payment_agent.handle(current_message, self.conversation_history, decision, entities)
-        #
-        # elif phase == Agents.EXCHANGE:
-        #     output = await self.exchange_agent.handle(current_message, self.conversation_history, decision, entities)
-        #
-        # elif phase == Agents.RETURN:
-        #     output = await self.return_agent.handle(current_message, self.conversation_history, decision, entities)
-        #
-        # elif phase == Agents:
-        #     # Unknown or chitchat
-        #     return "I'm here to help with shopping, orders, returns, or exchanges. Could you clarify your request?"
-        # return output
+        active_ws = self.conversation_history.get_active_workstream()
+        answer = await active_ws.run(current_message)
+        return answer
 
     async def handle_workstreams(self, llm_decision: Dict[str, Any]) -> None:
         """
@@ -84,7 +57,7 @@ class PlannerAgent:
             1. llm_decision: Planner LLM decision containing workstream management info.
         """
         decision = llm_decision["decision"]
-        new_ws_list, active_wf_continuity, focus_workstream_id   = decision["new_workstreams"], decision["active_workflow_continuity"], decision["focus_workstream_id"]
+        new_ws_list, active_wf_continuity, focus_workstream_id = decision["new_workstreams"], decision["active_workflow_continuity"], decision["focus_workstream_id"]
         if active_wf_continuity == WfCDecision.CONTINUATION:
             # should not do anything, simply pass. This if-block is optional. Keeping this if-block as a placeholder.
             pass

@@ -10,49 +10,66 @@ from core.llm_client import LLMClient
 
 
 class DiscoveryAgent:
-    def __init__(self, subcategory: str) -> None:
+    def __init__(self, subcategory: str, llm_client: Optional[LLMClient] = None):
         self.subcategory = subcategory
-        self.llm = LLMClient(model_type=os.getenv("MODEL_TYPE", ModelType.openai))
-        spec_nlu = None
-        spec_nlu_response = None
-
+        self.llm = llm_client or LLMClient(model_type=os.getenv("MODEL_TYPE", ModelType.openai))
+        self.spec_nlu = None
+        self.spec_nlu_response = None
+        self.spec_extracted : List[Dict[str, Any]] = []
         self.spec_asked: List[Dict[str, Any]] = []
 
     async def ask_specification(self, user_given_specs, specification_list):
         user_given_specs_keys = [obj["key"] for obj in user_given_specs]
-        given_specs, other_available_specs = [], []
-        for obj in specification_list:
-            if obj["key"] in user_given_specs_keys:
-                given_specs.append(obj)
-            else:
-                other_available_specs.append(obj)
-        return {"given_specs": given_specs, "other_available_specs": other_available_specs}
+        # given_specs = [obj for obj in specification_list if obj["key"] in user_given_specs_keys]
+        other_specs = [obj for obj in specification_list if obj["spec_name"].lower() not in user_given_specs_keys]
+        return {"given_specs": user_given_specs_keys, "other_available_specs": other_specs}
 
     async def create_spec_statement(self, user_given_specs, specification_list):
-        dict_ = self.ask_specification(user_given_specs, specification_list)
+        user_given_specs_keys = [obj["key"] for obj in user_given_specs]
+        spec_dict = await self.ask_specification(user_given_specs, specification_list)
+        statement = ""
+        if user_given_specs:
+            statement += f"Apart from from these spec(s) - {', '.join(user_given_specs_keys)}, there are more available specification. "
+        else:
+            statement += f"Below are the available specifications. "
+        statement += "Please add few specs to filter your search.\n"
 
-        table_rows = ["spec_name_label, example"]
-        for spec in dict_["other_available_specs"]:
+        # Prepare rows
+        rows = []
+        for spec in specification_list:
             label = spec["spec_name_label"]
             value = spec["spec_value"]
             unit = spec["unit"]
             example = f"{value} {unit}" if unit else value
-            table_rows.append(f"{label}, {example}")
+            rows.append((label, example))
 
-        final_table = "\n".join(table_rows)
-        return final_table
+        # Determine column widths
+        col1_width = max(len(r[0]) for r in rows)
+        col2_width = max(len(r[1]) for r in rows)
 
+        # Build table
+        line = "+" + "-" * (col1_width + 2) + "+" + "-" * (col2_width + 2) + "+"
 
+        table = [line]
+        table.append(f"| {'Specification'.ljust(col1_width)} | {'Example'.ljust(col2_width)} |")
+        table.append(line)
 
-    async def run(self, user_query: str, specification_list, specification_ask=False) -> Dict[str, Any]:
+        for label, example in rows:
+            table.append(f"| {label.ljust(col1_width)} | {example.ljust(col2_width)} |")
+        table.append(line)
+        statement += "\n".join(table)
+        return statement
+
+    async def run(self, user_query: str, specification_list, specification_ask=False) -> str | List[Dict[str, Any]]:
         self.spec_nlu = DiscoveryNLU(self.subcategory, specification_list)
         self.spec_nlu_response = await self.spec_nlu.run(user_query)
+        self.spec_extracted.extend(self.spec_nlu_response)
         if self.spec_nlu_response is None:
             raise ValueError("Discovery NLU response is None. Please investigate.")
-        if specification_ask:
-            await self.create_spec_statement(self.spec_nlu_response, specification_list)
 
-        return {}
+        if specification_ask:
+            return await self.create_spec_statement(self.spec_nlu_response, specification_list)
+        return self.spec_nlu_response
 
 
 # ---------------------------

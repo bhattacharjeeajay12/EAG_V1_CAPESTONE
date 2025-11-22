@@ -2,15 +2,23 @@ from enum import Enum
 
 class WorkstreamState(str, Enum):
     NEW = "NEW"
-    COLLECTING = "COLLECTING"
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    ABORTED = "ABORTED"
+    ACTIVE = "ACTIVE" # Inprogress
+
+class PhaseState(str, Enum):
+    NEW = "NEW"
     READY = "READY"
+    COLLECTING = "COLLECTING"
     PROCESSING = "PROCESSING"
     PRESENTING = "PRESENTING"
     AWAITING_DECISION = "AWAITING_DECISION"
-    CONFIRMING = "CONFIRMING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     PAUSED = "PAUSED"
+
+
 
 class Agents(str, Enum):
     DISCOVERY = "DISCOVERY"
@@ -36,6 +44,7 @@ class ChatInfo(str, Enum):
     user_message = "user_message"
     ai_message = "ai_message"
     chat_id = "chat_id"
+    msg_source = "source"
 
 class SubCategory(str, Enum):
     LAPTOP = "Laptop"

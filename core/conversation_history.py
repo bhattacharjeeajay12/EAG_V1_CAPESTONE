@@ -11,11 +11,13 @@ import uuid
 
 @dataclass
 class ConversationHistory:
+    session_id: str
     workstreams: Dict[str, Workstream] = field(default_factory=dict)
     active_ws_id: Optional[str] = None
     pending_ws_ids: List[str] = field(default_factory=list)
     completed_ws_ids: List[str] = field(default_factory=list)
     session_id = None
+    conversation: Dict[str, Any] = field(default_factory=dict)
 
     def get_active_workstream(self) -> Workstream | None:
         if self.active_ws_id:
@@ -58,34 +60,34 @@ class ConversationHistory:
         self.workstreams[ws_id] = ws
         return ws
 
-    def add_chat_in_ws(self, ws_id: str, msg_type: str, message: str) -> bool:
-        """
-        A sample chats looks like this:
-        chats = {
-        ws_id: [{ChatInfo.user_message: "", ChatInfo.ai_message: ""}]
-        }
-        """
-        if ws_id not in self.workstreams:
-            raise Exception(f"Workstream {ws_id} does not exist")
-
-        if msg_type == ChatInfo.user_message:
-            chats = self.workstreams[ws_id].chats
-            chats.append({ChatInfo.chat_id: uuid.uuid4(),
-                          ChatInfo.user_message: message,
-                          ChatInfo.ai_message: None})
-            return True
-
-        elif msg_type == ChatInfo.ai_message:
-            chats = self.workstreams[ws_id].chats
-            if not chats:
-                raise Exception("Cannot add AI message before a user message")
-            if ChatInfo.user_message not in chats[-1].keys():
-                raise Exception("Cannot add AI message before a user message")
-            if ChatInfo.ai_message in chats[-1].keys():
-                if chats[-1][ChatInfo.ai_message] is None:
-                    chats[-1][ChatInfo.ai_message] = message
-                return True
-        return False
+    # def add_chat_in_ws(self, ws_id: str, msg_type: str, message: str) -> bool:
+    #     """
+    #     A sample chats looks like this:
+    #     chats = {
+    #     ws_id: [{ChatInfo.user_message: "", ChatInfo.ai_message: ""}]
+    #     }
+    #     """
+    #     if ws_id not in self.workstreams:
+    #         raise Exception(f"Workstream {ws_id} does not exist")
+    #
+    #     if msg_type == ChatInfo.user_message:
+    #         chats = self.workstreams[ws_id].chats
+    #         chats.append({ChatInfo.chat_id: uuid.uuid4(),
+    #                       ChatInfo.user_message: message,
+    #                       ChatInfo.ai_message: None})
+    #         return True
+    #
+    #     elif msg_type == ChatInfo.ai_message:
+    #         chats = self.workstreams[ws_id].chats
+    #         if not chats:
+    #             raise Exception("Cannot add AI message before a user message")
+    #         if ChatInfo.user_message not in chats[-1].keys():
+    #             raise Exception("Cannot add AI message before a user message")
+    #         if ChatInfo.ai_message in chats[-1].keys():
+    #             if chats[-1][ChatInfo.ai_message] is None:
+    #                 chats[-1][ChatInfo.ai_message] = message
+    #             return True
+    #     return False
 
     def get_pending_ws_ids(self) -> List[str]:
         pending_ws_ids = []
