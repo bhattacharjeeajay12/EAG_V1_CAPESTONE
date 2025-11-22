@@ -19,7 +19,7 @@ async def main():
     # for t in turns:
     while True:
         t = input("USER: ")
-        action = await planner.handle_user_turn(t, ch)
+        action = await planner.handle_user_turn(t)
         logger.info(f"USER: {t}")
         logger.info(f"ACTION: {action}")
         logger.info("-" * 60)

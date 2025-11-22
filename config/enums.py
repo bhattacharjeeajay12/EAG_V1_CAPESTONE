@@ -19,6 +19,9 @@ class Agents(str, Enum):
     EXCHANGE = "EXCHANGE"
     RETURN = "RETURN"
     PLANNER = "PLANNER"
+    # CHITCHAT and UNKNOWN are not any agents, but used for user intent classification
+    CHITCHAT = "CHITCHAT"
+    UNKNOWN = "UNKNOWN"
 
 class WorkflowContinuityDecision(str, Enum):
     SWITCH = "SWITCH"
@@ -29,9 +32,10 @@ class Categories(str, Enum):
     ELECTRONICS = "electronics"
     SPORTS = "sports"
 
-class MsgTypes(str, Enum):
-    user = "user_message"
+class ChatInfo(str, Enum):
+    user_message = "user_message"
     ai_message = "ai_message"
+    chat_id = "chat_id"
 
 class SubCategory(str, Enum):
     LAPTOP = "Laptop"

@@ -5,16 +5,16 @@ import json
 import os
 from typing import Dict, Any, List, Optional
 from core.llm_client import LLMClient
-from prompts.planner import SYSTEM_PROMPT
+from prompts.PlannerPrompt import SYSTEM_PROMPT
 from core.conversation_history import ConversationHistory
-from config.enums import MsgTypes, ConverstionVars, ModelType
+from config.enums import ChatInfo, ConverstionVars, ModelType
 
 
 class PlannerNLU:
     def __init__(self, llm_client: Optional[LLMClient] = None):
         self.llm_client = llm_client or LLMClient(model_type=os.getenv("MODEL_TYPE", ModelType.openai))
 
-    def get_user_prompt(self, current_msg: str, conversation_history: ConversationHistory) -> str:
+    async def get_user_prompt(self, current_msg: str, conversation_history: ConversationHistory) -> str:
         all_ws = conversation_history.get_all_workstreams()
         active_ws = conversation_history.get_active_workstream()
 
@@ -38,7 +38,7 @@ class PlannerNLU:
     # ------------------------------------------------------------
     # CLEAN RAW RESPONSE
     # ------------------------------------------------------------
-    def clean_raw_response(self, response: str) -> Dict[str, Any]:
+    async def clean_raw_response(self, response: str) -> Dict[str, Any]:
         """
         Extract valid JSON from the LLM response.
         Handles:
@@ -88,7 +88,7 @@ class PlannerNLU:
         Call the Planner LLM and return cleaned JSON planner output.
         """
 
-        user_prompt = self.get_user_prompt(user_message, conversation_context)
+        user_prompt = await self.get_user_prompt(user_message, conversation_context)
 
         try:
             raw_llm_output = await self.llm_client.generate(
@@ -99,7 +99,7 @@ class PlannerNLU:
             print(f"Exception {e} occurred while calling Planner LLM.")
             return None
 
-        cleaned = self.clean_raw_response(raw_llm_output)
+        cleaned = await self.clean_raw_response(raw_llm_output)
         return cleaned
 
 if __name__ == "__main__":

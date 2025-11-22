@@ -2,12 +2,11 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, Tuple, Union
 
-from marshmallow.fields import Boolean
-
 from agents.base import Ask
-from config.enums import WorkstreamState, MsgTypes, Agents, WorkflowContinuityDecision as WfCDecision
+from config.enums import WorkstreamState, ChatInfo, Agents, WorkflowContinuityDecision as WfCDecision
 from core import workstream
 from core.workstream import Workstream
+from config.utils import get_specification_list
 import uuid
 
 @dataclass
@@ -53,6 +52,8 @@ class ConversationHistory:
         ws_id = self.create_ws_id()
         current_state = WorkstreamState.NEW
         ws = Workstream(ws_id, current_state, phase, target)
+        if phase == Agents.DISCOVERY and target["subcategory"]:
+            ws.specification_list = get_specification_list(target["subcategory"])
         self.workstreams[ws_id] = ws
         return ws
 
@@ -60,26 +61,28 @@ class ConversationHistory:
         """
         A sample chats looks like this:
         chats = {
-        ws_id: [{MsgTypes.user: "", MsgTypes.ai_message: ""}]
+        ws_id: [{ChatInfo.user_message: "", ChatInfo.ai_message: ""}]
         }
         """
         if ws_id not in self.workstreams:
             raise Exception(f"Workstream {ws_id} does not exist")
 
-        if msg_type == MsgTypes.user:
+        if msg_type == ChatInfo.user_message:
             chats = self.workstreams[ws_id].chats
-            chats.append({MsgTypes.user: message, MsgTypes.ai_message: None})
+            chats.append({ChatInfo.chat_id: uuid.uuid4(),
+                          ChatInfo.user_message: message,
+                          ChatInfo.ai_message: None})
             return True
 
-        elif msg_type == MsgTypes.ai_message:
+        elif msg_type == ChatInfo.ai_message:
             chats = self.workstreams[ws_id].chats
             if not chats:
                 raise Exception("Cannot add AI message before a user message")
-            if MsgTypes.user not in chats[-1].keys():
+            if ChatInfo.user_message not in chats[-1].keys():
                 raise Exception("Cannot add AI message before a user message")
-            if MsgTypes.ai_message in chats[-1].keys():
-                if chats[-1][MsgTypes.ai_message] is None:
-                    chats[-1][MsgTypes.ai_message] = message
+            if ChatInfo.ai_message in chats[-1].keys():
+                if chats[-1][ChatInfo.ai_message] is None:
+                    chats[-1][ChatInfo.ai_message] = message
                 return True
         return False
 

@@ -16,6 +16,7 @@ class Workstream:
     chats: List[Dict[str, Any]] = field(default_factory=list)
     # Make FSM an instance attribute so it's not shared between objects
     fsm: FSMEngine = field(default_factory=lambda: FSMEngine(WORKSTREAM_TRANSITIONS), init=False, repr=False)
+    specification_list: List[Dict[str, Any]] = field(default_factory=list)
 
     def get_workstream_id(self):
         return self.id

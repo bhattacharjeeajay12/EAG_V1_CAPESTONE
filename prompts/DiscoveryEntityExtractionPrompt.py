@@ -1,5 +1,4 @@
-def get_system_entity_prompt_discovery(product_name: str, specifications_string: str) -> str:
-    SYSTEM_PROMPT_ENTITY_EXTRACTION = f"""
+SYSTEM_PROMPT_ENTITY_EXTRACTION = f"""
 You are a structured entity extraction assistant.
 
 Your task: Extract structured filters (key, value, unit, operator) from a user’s sentence,
@@ -102,7 +101,8 @@ If nothing is found, return `[]`.
 
 ### Example A
 Input:
-- Price: datatype=float, unit=USD, example=1694
+Available Specs:
+    - Price: datatype=float, unit=USD, example=1694
 User prompt: "I need something under 2000 USD"
 
 Output:
@@ -111,8 +111,9 @@ Output:
 ]
 
 ### Example B
-Input:
-- RAM: datatype=integer, unit=gigabytes, example=16
+Inputs:
+Available Specs:
+    - RAM: datatype=integer, unit=gigabytes, example=16
 User prompt: "At least 8GB RAM"
 
 Output:
@@ -122,7 +123,8 @@ Output:
 
 ### Example C
 Input:
-- Brand: datatype=text, example=Apple
+Available Specs:
+    - Brand: datatype=text, example=Apple
 User prompt: "Anything but Apple"
 
 Output:
@@ -134,4 +136,3 @@ Output:
 
 End of system prompt.
 """
-    return SYSTEM_PROMPT_ENTITY_EXTRACTION

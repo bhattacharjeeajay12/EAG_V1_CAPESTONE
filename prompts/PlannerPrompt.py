@@ -1,7 +1,6 @@
 from config.constants import CATEGORIES
 from config.enums import Agents as agent
-from config.enums import MsgTypes
-from core import conversation_history
+from config.enums import ChatInfo
 
 category_info = ""
 for cat, subcat_list in CATEGORIES.items():
@@ -21,25 +20,25 @@ Categories:
 ### Inputs
 - CURRENT_MESSAGE: {{current_message}}
 - ACTIVE_WORKSTREAM: {{active_workstream_id}}
-- ACTIVE_WORKSTREAM_PAST_5_TURNS (oldest → newest): user message and agent response in active workstream, {{ "active_workstream_id": "w_id", "past_5_turns" = [{{ {MsgTypes.user}: "some user message", {MsgTypes.ai_message}: "some ai response"] }} 
-- SESSION_WORKSTREAMS: List of workstreams. [{{ "workstream_id": "...", "first_phase": {all_phases}, "current_phase": "{all_phases}", "entities": {{...}}, "past_5_turns" = [{{ {MsgTypes.user}: "some user message", {MsgTypes.ai_message}: "some ai response"]}} ...]
+- ACTIVE_WORKSTREAM_PAST_5_TURNS (oldest → newest): user message and agent response in active workstream, {{ "active_workstream_id": "w_id", "past_5_turns" = [{{ {ChatInfo.user_message}: "some user message", {ChatInfo.ai_message}: "some ai response"] }} 
+- SESSION_WORKSTREAMS: List of workstreams. [{{ "workstream_id": "...", "first_phase": {all_phases}, "current_phase": "{all_phases}", "entities": {{...}}, "past_5_turns" = [{{ {ChatInfo.user_message}: "some user message", {ChatInfo.ai_message}: "some ai response"]}} ...]
 - Note: each SESSION_WORKSTREAM entry represents one workstream and contains scalar fields (single subcategory/order_id).
 
 ACTIVE_WORKSTREAM_PAST_5_TURNS example:
 {{ "active_workstream_id" : "ws_id_1",
    "past_5_turns" : [
-        {{ {MsgTypes.user}: "I want to buy a laptop", {MsgTypes.ai_message}: "Would you like to add any specification from below -RAM, Memory, ... ?"}},
-        {{ {MsgTypes.user}: "RAM of 16 GB, Memory of 2 TB", {MsgTypes.ai_message}: "Given the mentioned specs these are the laptops which you may like ..."}},
-        {{ {MsgTypes.user}: "From this list can you please restrict only to Dell", {MsgTypes.ai_message}: "These are the Dell laptops ..."}}
+        {{ {ChatInfo.user_message}: "I want to buy a laptop", {ChatInfo.ai_message}: "Would you like to add any specification from below -RAM, Memory, ... ?"}},
+        {{ {ChatInfo.user_message}: "RAM of 16 GB, Memory of 2 TB", {ChatInfo.ai_message}: "Given the mentioned specs these are the laptops which you may like ..."}},
+        {{ {ChatInfo.user_message}: "From this list can you please restrict only to Dell", {ChatInfo.ai_message}: "These are the Dell laptops ..."}}
    ]
    ...
 }}
 
 SESSION_WORKSTREAMS example:
 [
-    {{ "workstream_id": "ws_id_1", "first_phase": "DISCOVERY", "current_phase": "DISCOVERY", "entities": {{"subcategory": "laptop"}}, past_5_turns" = [ {{ {MsgTypes.user}: "I want to buy a laptop", {MsgTypes.ai_message}: "Would you like to add any specification from below -RAM, Memory, ... ?"}}, {{ {MsgTypes.user}: "RAM of 16 GB, Memory of 2 TB", {MsgTypes.ai_message}: "Given the mentioned specs these are the laptops which you may like ..."}}, {{ {MsgTypes.user}: "From this list can you please restrict only to Dell", {MsgTypes.ai_message}: "These are the Dell laptops ..."}} ]}},
-    {{ "workstream_id": "ws_id_2", "first_phase": "RETURN", "current_phase": "EXCHANGE", "entities": {{"order_id": "4567"}}, past_5_turns" = [ {{ {MsgTypes.user}: "I want to return an order", {MsgTypes.ai_message}: "Can you please tell me the order id ?"}}, {{ {MsgTypes.user}: "order id is 4567", {MsgTypes.ai_message}: "The return window is still open. Please mention the return reason"}}, {{ {MsgTypes.user}: "The product seems used. ", {MsgTypes.ai_message}: "return request is granted."}} ]}},
-    {{ "workstream_id": "ws_id_3", "first_phase": "DISCOVERY", "current_phase": "DISCOVERY", "entities": {{"subcategory": "washing_machine"  }}, "past_5_turns": [{{{MsgTypes.user}: "I want to buy a washing machine", {MsgTypes.ai_message}: "Would you like to specify any preferences such as Load Type (Front/Top Load), Capacity, or Special Features (Inverter, Dryer, etc.)?"}}, {{{MsgTypes.user}: "Front load, capacity of 7 kg, inverter motor", {MsgTypes.ai_message}: "Given these specifications, here are some washing machines you may like ..."}}, {{{MsgTypes.user}: "From this list can you please restrict only to LG", {MsgTypes.ai_message}: "These are the LG washing machines that match your criteria ..."}}]}}
+    {{ "workstream_id": "ws_id_1", "first_phase": "DISCOVERY", "current_phase": "DISCOVERY", "entities": {{"subcategory": "laptop"}}, past_5_turns" = [ {{ {ChatInfo.user_message}: "I want to buy a laptop", {ChatInfo.ai_message}: "Would you like to add any specification from below -RAM, Memory, ... ?"}}, {{ {ChatInfo.user_message}: "RAM of 16 GB, Memory of 2 TB", {ChatInfo.ai_message}: "Given the mentioned specs these are the laptops which you may like ..."}}, {{ {ChatInfo.user_message}: "From this list can you please restrict only to Dell", {ChatInfo.ai_message}: "These are the Dell laptops ..."}} ]}},
+    {{ "workstream_id": "ws_id_2", "first_phase": "RETURN", "current_phase": "EXCHANGE", "entities": {{"order_id": "4567"}}, past_5_turns" = [ {{ {ChatInfo.user_message}: "I want to return an order", {ChatInfo.ai_message}: "Can you please tell me the order id ?"}}, {{ {ChatInfo.user_message}: "order id is 4567", {ChatInfo.ai_message}: "The return window is still open. Please mention the return reason"}}, {{ {ChatInfo.user_message}: "The product seems used. ", {ChatInfo.ai_message}: "return request is granted."}} ]}},
+    {{ "workstream_id": "ws_id_3", "first_phase": "DISCOVERY", "current_phase": "DISCOVERY", "entities": {{"subcategory": "washing_machine"  }}, "past_5_turns": [{{{ChatInfo.user_message}: "I want to buy a washing machine", {ChatInfo.ai_message}: "Would you like to specify any preferences such as Load Type (Front/Top Load), Capacity, or Special Features (Inverter, Dryer, etc.)?"}}, {{{ChatInfo.user_message}: "Front load, capacity of 7 kg, inverter motor", {ChatInfo.ai_message}: "Given these specifications, here are some washing machines you may like ..."}}, {{{ChatInfo.user_message}: "From this list can you please restrict only to LG", {ChatInfo.ai_message}: "These are the LG washing machines that match your criteria ..."}}]}}
 ]
 --- 
 
@@ -106,12 +105,12 @@ Use 0.0–1.0 for `phase_confidence`.
 ```json
 {{
   "CURRENT_MESSAGE": "string",
-  
+
   "ACTIVE_WORKSTREAM_PAST_5_TURNS": {{
     "active_workstream_id": "string",
     "past_5_turns": [{{
-      {MsgTypes.user}: "string",
-      {MsgTypes.ai_message}: "string",
+      {ChatInfo.user_message}: "string",
+      {ChatInfo.ai_message}: "string",
     }}]
   }},
 
@@ -125,7 +124,7 @@ Use 0.0–1.0 for `phase_confidence`.
         "order_id": "string|null",
       }},
       "past_5_turns": [
-        {{ {MsgTypes.user}: "string", {MsgTypes.ai_message}: "string"}}
+        {{ {ChatInfo.user_message}: "string", {ChatInfo.ai_message}: "string"}}
       ]
     }}
   ]
@@ -172,8 +171,8 @@ Inputs:
     "active_workstream_id" : "ws_id_1",
     "past_5_turns" : [
         {{
-            {MsgTypes.user}: "Show me gaming laptops under $1500",
-            {MsgTypes.ai_message}: "Here are some options: 1) Dell, 2) HP, 3) Lenovo"
+            {ChatInfo.user_message}: "Show me gaming laptops under $1500",
+            {ChatInfo.ai_message}: "Here are some options: 1) Dell, 2) HP, 3) Lenovo"
         }}
     ]
   }},
@@ -186,7 +185,7 @@ Inputs:
         "subcategory": "laptop",
         "order_id": null
       }},
-      past_5_turns" : [ {{ {MsgTypes.user}: "I want to buy a laptop", {MsgTypes.ai_message}: "Would you like to add any specification from below -RAM, Memory, ... ?"}}, {{ {MsgTypes.user}: "RAM of 16 GB, Memory of 2 TB", {MsgTypes.ai_message}: "Given the mentioned specs these are the laptops which you may like ..."}}, {{ {MsgTypes.user}: "From this list can you please restrict only to Dell", {MsgTypes.ai_message}: "These are the Dell laptops ..."}} ]
+      past_5_turns" : [ {{ {ChatInfo.user_message}: "I want to buy a laptop", {ChatInfo.ai_message}: "Would you like to add any specification from below -RAM, Memory, ... ?"}}, {{ {ChatInfo.user_message}: "RAM of 16 GB, Memory of 2 TB", {ChatInfo.ai_message}: "Given the mentioned specs these are the laptops which you may like ..."}}, {{ {ChatInfo.user_message}: "From this list can you please restrict only to Dell", {ChatInfo.ai_message}: "These are the Dell laptops ..."}} ]
     }},
     {{
       "workstream_id": "ws_id_2",
@@ -196,7 +195,7 @@ Inputs:
         "subcategory": "washing_machine",
         "order_id": null
       }},
-      past_5_turns" : [{{ {MsgTypes.user}: "I want to buy a washing machine", {MsgTypes.ai_message}: "Would you like to specify any preferences such as Load Type (Front/Top Load), Capacity, or Special Features (Inverter, Dryer, etc.)?"}}, {{ {MsgTypes.user}: "Front load, capacity of 7 kg, inverter motor", {MsgTypes.ai_message}: "Given these specifications, here are some washing machines you may like ..."}}, {{{MsgTypes.user}: "From this list can you please restrict only to LG", {MsgTypes.ai_message}: "These are the LG washing machines that match your criteria ..."}}]
+      past_5_turns" : [{{ {ChatInfo.user_message}: "I want to buy a washing machine", {ChatInfo.ai_message}: "Would you like to specify any preferences such as Load Type (Front/Top Load), Capacity, or Special Features (Inverter, Dryer, etc.)?"}}, {{ {ChatInfo.user_message}: "Front load, capacity of 7 kg, inverter motor", {ChatInfo.ai_message}: "Given these specifications, here are some washing machines you may like ..."}}, {{{ChatInfo.user_message}: "From this list can you please restrict only to LG", {ChatInfo.ai_message}: "These are the LG washing machines that match your criteria ..."}}]
     }}
   ]
 }}
@@ -226,8 +225,8 @@ Inputs:
     "active_workstream_id" : "ws_id_1",
     "past_5_turns": [
       {{
-        {MsgTypes.user}: "I want to buy a smart watch",
-        {MsgTypes.ai_message}: "Here are some smart watch options ..."
+        {ChatInfo.user_message}: "I want to buy a smart watch",
+        {ChatInfo.ai_message}: "Here are some smart watch options ..."
       }}
     ]
   }},
@@ -241,9 +240,9 @@ Inputs:
         "order_id": null
       }},
       past_5_turns" : [
-        {{ {MsgTypes.user}: "I want to buy a smart watch", {MsgTypes.ai_message}: "Would you like to add any specification from below – Display size, Battery life, Strap material, ... ?" }},
-        {{ {MsgTypes.user}: "Battery life of 7 days, Display size of 1.8 inch", {MsgTypes.ai_message}: "Given the mentioned specs these are the smart watches you may like ..." }},
-        {{ {MsgTypes.user}: "From this list can you please restrict only to Apple", {MsgTypes.ai_message}: "These are the Apple smart watches ..." }}
+        {{ {ChatInfo.user_message}: "I want to buy a smart watch", {ChatInfo.ai_message}: "Would you like to add any specification from below – Display size, Battery life, Strap material, ... ?" }},
+        {{ {ChatInfo.user_message}: "Battery life of 7 days, Display size of 1.8 inch", {ChatInfo.ai_message}: "Given the mentioned specs these are the smart watches you may like ..." }},
+        {{ {ChatInfo.user_message}: "From this list can you please restrict only to Apple", {ChatInfo.ai_message}: "These are the Apple smart watches ..." }}
       ]
     }},
     {{
@@ -255,9 +254,9 @@ Inputs:
         "order_id": null
       }},
       past_5_turns" : [
-        {{ {MsgTypes.user}: "I want to buy a school bag", {MsgTypes.ai_message}: "Would you like to add any specification from below – Capacity, Material, Number of compartments, Waterproof feature, ... ?" }},
-        {{ {MsgTypes.user}: "Capacity of 25 liters, waterproof material", {MsgTypes.ai_message}: "Given the mentioned specs these are the school bags you may like ..." }},
-        {{ {MsgTypes.user}: "From this list can you please restrict only to Nike", {MsgTypes.ai_message}: "These are the Nike school bags ..." }}]
+        {{ {ChatInfo.user_message}: "I want to buy a school bag", {ChatInfo.ai_message}: "Would you like to add any specification from below – Capacity, Material, Number of compartments, Waterproof feature, ... ?" }},
+        {{ {ChatInfo.user_message}: "Capacity of 25 liters, waterproof material", {ChatInfo.ai_message}: "Given the mentioned specs these are the school bags you may like ..." }},
+        {{ {ChatInfo.user_message}: "From this list can you please restrict only to Nike", {ChatInfo.ai_message}: "These are the Nike school bags ..." }}]
     }}]
 }}
 
@@ -295,8 +294,8 @@ Inputs:
     "active_workstream_id": "ws_1",
     "past_5_turns": [
       {{
-        {MsgTypes.user}: "Show me laptops",
-        {MsgTypes.ai_message}: "Here are some options: 1) Dell, 2) HP, 3) Lenovo"
+        {ChatInfo.user_message}: "Show me laptops",
+        {ChatInfo.ai_message}: "Here are some options: 1) Dell, 2) HP, 3) Lenovo"
       }}
     ]
   }},
@@ -310,7 +309,7 @@ Inputs:
         "order_id": null
       }},
       past_5_turns" : [
-        {{ {MsgTypes.user}: "Show me laptops", {MsgTypes.ai_message}: "Here are some options: 1) Dell, 2) HP, 3) Lenovo" }}
+        {{ {ChatInfo.user_message}: "Show me laptops", {ChatInfo.ai_message}: "Here are some options: 1) Dell, 2) HP, 3) Lenovo" }}
       ]
     }},
     {{
@@ -322,7 +321,7 @@ Inputs:
         "order_id": null
       }},
       past_5_turns" : [
-        {{ {MsgTypes.user}: "Show me smartphones", {MsgTypes.ai_message}: "Here are some options: 1) Fossil, 2) Titan, 3) Apple" }}
+        {{ {ChatInfo.user_message}: "Show me smartphones", {ChatInfo.ai_message}: "Here are some options: 1) Fossil, 2) Titan, 3) Apple" }}
       ]
     }}
   ]
@@ -355,8 +354,8 @@ Inputs:
     "active_workstream_id": "ws_1",
     "past_5_turns": [
       {{
-        {MsgTypes.user}: "I want to buy a laptop",
-        {MsgTypes.ai_message}: "Here are some Dell and HP options"
+        {ChatInfo.user_message}: "I want to buy a laptop",
+        {ChatInfo.ai_message}: "Here are some Dell and HP options"
       }}
     ]
   }},
@@ -370,7 +369,7 @@ Inputs:
         "order_id": null
       }},
       past_5_turns" : [
-        {{ {MsgTypes.user}: "I want to buy a laptop", {MsgTypes.ai_message}: "Here are some Dell and HP options" }}
+        {{ {ChatInfo.user_message}: "I want to buy a laptop", {ChatInfo.ai_message}: "Here are some Dell and HP options" }}
       ]
     }}
   ]
