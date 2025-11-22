@@ -42,31 +42,38 @@ class PlannerAgent:
         await self.handle_workstreams(planner_llm_decision)
         active_ws = self.conversation_history.get_active_workstream()
         # ---------------------------------------------------------------------
-        # PHASE ROUTING
+        # Active Workstream Execution
         # ---------------------------------------------------------------------
-        if active_ws.current_phase == Agents.DISCOVERY:
-            if active_ws.target_entities.get("subcategory"):
-                subcategory = planner_llm_decision["entities"]["subcategory"]
-            else:
-                pass
-
-            self.discovery_agent = DiscoveryAgent(subcategory)
-            specification =  await self.discovery_agent.run(current_message)
+        active_ws.run()
 
 
-        elif phase == Agents.PAYMENT:
-            output = await self.payment_agent.handle(current_message, self.conversation_history, decision, entities)
-
-        elif phase == Agents.EXCHANGE:
-            output = await self.exchange_agent.handle(current_message, self.conversation_history, decision, entities)
-
-        elif phase == Agents.RETURN:
-            output = await self.return_agent.handle(current_message, self.conversation_history, decision, entities)
-
-        elif phase == Agents:
-            # Unknown or chitchat
-            return "I'm here to help with shopping, orders, returns, or exchanges. Could you clarify your request?"
-        return output
+        # if active_ws.current_phase == Agents.DISCOVERY:
+        #     subcategory = active_ws.target.get("subcategory")
+        #     self.discovery_agent = DiscoveryAgent(subcategory=subcategory, ws=active_ws)
+        #
+        #     if active_ws.target.get("subcategory"):
+        #         subcategory = planner_llm_decision["entities"]["subcategory"]
+        #
+        #     else:
+        #         pass
+        #
+        #     self.discovery_agent = DiscoveryAgent(subcategory)
+        #     specification =  await self.discovery_agent.run(current_message)
+        #
+        #
+        # elif phase == Agents.PAYMENT:
+        #     output = await self.payment_agent.handle(current_message, self.conversation_history, decision, entities)
+        #
+        # elif phase == Agents.EXCHANGE:
+        #     output = await self.exchange_agent.handle(current_message, self.conversation_history, decision, entities)
+        #
+        # elif phase == Agents.RETURN:
+        #     output = await self.return_agent.handle(current_message, self.conversation_history, decision, entities)
+        #
+        # elif phase == Agents:
+        #     # Unknown or chitchat
+        #     return "I'm here to help with shopping, orders, returns, or exchanges. Could you clarify your request?"
+        # return output
 
     async def handle_workstreams(self, llm_decision: Dict[str, Any]) -> None:
         """
@@ -91,10 +98,12 @@ class PlannerAgent:
                 if focus_workstream_id is not None:
                     # Whenever we update the active_ws_id of conversation_history, we need to update the pending and completed es list
                     self.conversation_history.update_active_ws_id(focus_workstream_id)
+                    return
+
                 for idx, ws in enumerate(new_ws_list):
-                    new_ws = self.conversation_history.create_new_workstream(WsState.NEW, llm_decision["entities"])
+                    new_ws = self.conversation_history.create_new_workstream(ws["phase"], ws["target"])
                     if focus_workstream_id is None and idx == 0:
                         # Make first new workstream created as the active one.
                         self.conversation_history.update_active_ws_id(new_ws.get_workstream_id(), is_completed=False)
                         self.conversation_history.active_ws_id = new_ws.id
-        return
+                return

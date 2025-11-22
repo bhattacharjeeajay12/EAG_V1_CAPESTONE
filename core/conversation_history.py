@@ -29,6 +29,7 @@ class ConversationHistory:
         if is_completed:
             self.workstreams[self.active_ws_id].current_state = WorkstreamState.COMPLETED
             self.completed_ws_ids.append(self.active_ws_id)
+        # to do : Add for pending as well
         self.active_ws_id = ws_id
         self.pending_ws_ids = self.get_pending_ws_ids()
         return
@@ -51,7 +52,7 @@ class ConversationHistory:
     def create_new_workstream(self, phase, target) -> workstream.Workstream:
         ws_id = self.create_ws_id()
         current_state = WorkstreamState.NEW
-        ws = Workstream(ws_id, current_state, phase, target)
+        ws = Workstream(ws_id, current_state, phase, phase, target)
         if phase == Agents.DISCOVERY and target["subcategory"]:
             ws.specification_list = get_specification_list(target["subcategory"])
         self.workstreams[ws_id] = ws
