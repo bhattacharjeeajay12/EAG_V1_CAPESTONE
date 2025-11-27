@@ -61,6 +61,8 @@ class PlannerAgent:
         if active_wf_continuity == WfCDecision.CONTINUATION:
             # should not do anything, simply pass. This if-block is optional. Keeping this if-block as a placeholder.
             pass
+
+
         if active_wf_continuity == WfCDecision.UNCLEAR:
             # todo : initiate an Ask message for gathering clarification from user
             pass

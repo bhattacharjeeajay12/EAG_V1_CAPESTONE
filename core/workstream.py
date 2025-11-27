@@ -79,13 +79,21 @@ class Workstream:
 
     async def run(self, user_query: str) -> str|None:
         if self.current_phase == Agents.DISCOVERY:
+            self.add_chat_in_ws(ChatInfo.user_message, user_query)
             subcategory = self.target.get("subcategory")
             if self.current_phase not in self.all_phases:
                 discovery_phase = DiscoveryAgent(subcategory=subcategory)
                 self.all_phases[self.current_phase] = discovery_phase
             discovery_phase = self.all_phases.get(self.current_phase)
+
+            # Step 1. Gather specification using Discovery NLU
             d_output = await discovery_phase.run(user_query, self.specification_list, self.specification_Ask)
             self.specification_Ask = False  # Only it will ask for specs once.
             if type(d_output) == str: # AI response
+                self.add_chat_in_ws(ChatInfo.ai_message, d_output)
                 return d_output
+            else:
+                # Step 1. Gather specification using Discovery NLU
+
+                pass
         return None

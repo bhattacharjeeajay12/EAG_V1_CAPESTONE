@@ -7,6 +7,7 @@ import os
 import asyncio
 from config.enums import ModelType
 from core.llm_client import LLMClient
+from config.enums import ProductAttributes as pa
 
 
 class DiscoveryAgent:
@@ -17,6 +18,7 @@ class DiscoveryAgent:
         self.spec_nlu_response = None
         self.spec_extracted : List[Dict[str, Any]] = []
         self.spec_asked: List[Dict[str, Any]] = []
+        self.mandatory_entities: List = [pa.SUBCATEGORY]
 
     async def ask_specification(self, user_given_specs, specification_list):
         user_given_specs_keys = [obj["key"] for obj in user_given_specs]
@@ -36,7 +38,7 @@ class DiscoveryAgent:
 
         # Prepare rows
         rows = []
-        for spec in specification_list:
+        for spec in spec_dict["other_available_specs"]:
             label = spec["spec_name_label"]
             value = spec["spec_value"]
             unit = spec["unit"]
