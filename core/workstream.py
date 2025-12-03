@@ -5,23 +5,30 @@ from config.enums import WorkstreamState
 from core.fsm_engine import FSMEngine
 from core.fsm_rules import PHASE_TRANSITIONS
 from config.enums import Agents, ChatInfo
+from core.PlanGenerator import PlanGenerator
 from agents.DiscoveryAgent import DiscoveryAgent
 import uuid
+from nlu.discovery_nlu import DiscoveryNLU
+from agents.QueryAgent import QueryAgent # QueryBuilder
+from core.QueryExecutor import QueryExecutorSimple
 
-@dataclass
+# @dataclass
 class Workstream:
-    id: str
-    current_state: Union[WorkstreamState, str]
-    current_phase: str
-    first_phase: Union[Agents, str]
-    target: Dict[str, Any] = field(default_factory=dict)
-    chats: List[Dict[str, Any]] = field(default_factory=list)
-    processing: Dict[str, Any] = field(default_factory=dict)
-    # Make FSM an instance attribute so it's not shared between objects
-    fsm: FSMEngine = field(default_factory=lambda: FSMEngine(PHASE_TRANSITIONS), init=False, repr=False)
-    specification_list: List[Dict[str, Any]] = field(default_factory=list)
-    specification_Ask: bool = field(default=True, init=True, repr=True)
-    all_phases: Dict[str, Any] = field(default_factory=dict)
+    def __init__(self, phase, target: Dict[str, Any] = None):
+        self.id: str
+        self.current_state: Union[WorkstreamState, str]
+        self.current_phase: str = phase
+        self.first_phase: Union[Agents, str] = phase
+        self.target: Dict[str, Any] = target
+        self.chats: List[Dict[str, Any]] = field(default_factory=list)
+        self.processing: Dict[str, Any] = field(default_factory=dict)
+        # Make FSM an instance attribute so it's not shared between objects
+        self.fsm: FSMEngine = field(default_factory=lambda: FSMEngine(PHASE_TRANSITIONS))
+        self.specification_list: List[Dict[str, Any]] = field(default_factory=list)
+        self.specification_Ask: bool = field(default=True, init=True, repr=True)
+        self.all_phases: Dict[str, Any] = field(default_factory=dict)
+        self.discoveryPlanGenerator: PlanGenerator = field(default_factory=lambda: PlanGenerator(type=phase))
+        self.discoveryNer: DiscoveryAgent = field(default_factory=lambda: DiscoveryAgent(subcategory=target.get("subcategory") if target else None))
 
     def get_workstream_id(self):
         return self.id
@@ -37,7 +44,7 @@ class Workstream:
     def get_chats(self):
         return self.chats
 
-    def add_chat_in_ws(self, msg_type: str, message: str) -> bool:
+    def add_chat_in_ws(self, msg_type: str, message: Any, processed_data_source = None) -> bool:
         """
         A sample chats looks like this:
         chats = {
@@ -46,10 +53,12 @@ class Workstream:
         """
         if msg_type == ChatInfo.user_message:
             # chats = self.workstreams[ws_id].chats
-            self.chats.append({ChatInfo.chat_id: uuid.uuid4(),
-                          ChatInfo.user_message: message,
-                          ChatInfo.ai_message: None,
-                          ChatInfo.msg_source: None})
+            chat_obj = {
+                            ChatInfo.chat_id: uuid.uuid4(),
+                            ChatInfo.user_message: message,
+                            ChatInfo.ai_message: None,
+                            ChatInfo.processed: []}
+            self.chats.append(chat_obj)
             return True
 
         elif msg_type == ChatInfo.ai_message:
@@ -61,7 +70,13 @@ class Workstream:
             if ChatInfo.ai_message in self.chats[-1].keys():
                 if self.chats[-1][ChatInfo.ai_message] is None:
                     self.chats[-1][ChatInfo.ai_message] = message
-                    self.chats[-1][ChatInfo.msg_source] = self.current_phase
+                return True
+        elif msg_type == ChatInfo.processed:
+            if not self.chats:
+                raise Exception("Cannot add processed information before a user message")
+            if ChatInfo.processed in self.chats[-1].keys():
+                message_dict = {"data": message, "processed_data_source": processed_data_source}
+                self.chats[-1][ChatInfo.processed].append(message_dict)
                 return True
         return False
     def update_status(self, target_state: Union[WorkstreamState, str]) -> bool:
@@ -77,23 +92,59 @@ class Workstream:
         else:
             raise ValueError(f"Invalid transition: {self.current_state} → {target_state}")
 
+    async def get_preplan(self, user_query: str) -> str|None:
+        d_output = await self.discoveryNer.run(user_query, self.specification_list, self.specification_Ask)
+        self.specification_Ask = False  # Only it will ask for specs once.
+        if type(d_output) == str:  # AI response
+            self.add_chat_in_ws(ChatInfo.ai_message, d_output)
+            return d_output
+        return None
+
     async def run(self, user_query: str) -> str|None:
-        if self.current_phase == Agents.DISCOVERY:
+
+        if self.first_phase == Agents.DISCOVERY:
             self.add_chat_in_ws(ChatInfo.user_message, user_query)
-            subcategory = self.target.get("subcategory")
-            if self.current_phase not in self.all_phases:
-                discovery_phase = DiscoveryAgent(subcategory=subcategory)
-                self.all_phases[self.current_phase] = discovery_phase
-            discovery_phase = self.all_phases.get(self.current_phase)
 
-            # Step 1. Gather specification using Discovery NLU
-            d_output = await discovery_phase.run(user_query, self.specification_list, self.specification_Ask)
-            self.specification_Ask = False  # Only it will ask for specs once.
-            if type(d_output) == str: # AI response
-                self.add_chat_in_ws(ChatInfo.ai_message, d_output)
-                return d_output
-            else:
-                # Step 1. Gather specification using Discovery NLU
+            #pre plan stuff
+            if self.specification_Ask:
+                d_output = await self.get_preplan(user_query)
+                if d_output is not None:
+                    return d_output
+                else:
+                    raise Exception("While generating exception error occurred in preplan")
 
-                pass
+            # generate the plan
+            plan = await self.discoveryPlanGenerator.run(user_query, self.chats)
+            steps = plan.get("steps", [])
+            # execute the plan
+            for step in steps:
+                if step["name"] == "ENTITY_EXTRACTION":
+                    spec_nlu = DiscoveryNLU(self.target.get("subcategory"), self.specification_list)
+                    spec_nlu_response = await spec_nlu.run(user_query)
+                    self.add_chat_in_ws(ChatInfo.processed, spec_nlu_response, processed_data_source="ENTITY_EXTRACTION")
+                if step["name"] == "QUERY_BUILDER_EXECUTOR":
+                    # Query Builder
+
+                    # Query Executor
+                    pass
+                if step["name"] == "SUMMARIZER":
+                    pass
+
+        # if self.current_phase == Agents.DISCOVERY:
+        #     self.add_chat_in_ws(ChatInfo.user_message, user_query)
+        #     subcategory = self.target.get("subcategory")
+        #     if self.current_phase not in self.all_phases:
+        #         discovery_phase = DiscoveryAgent(subcategory=subcategory)
+        #         self.all_phases[self.current_phase] = discovery_phase
+        #     discovery_phase = self.all_phases.get(self.current_phase)
+        #
+        #     # Step 1. Gather specification using Discovery NLU
+        #     d_output = await discovery_phase.run(user_query, self.specification_list, self.specification_Ask)
+        #     self.specification_Ask = False  # Only it will ask for specs once.
+        #     if type(d_output) == str: # AI response
+        #         self.add_chat_in_ws(ChatInfo.ai_message, d_output)
+        #         return d_output
+        #     else:
+        #         # Step 1. Gather specification using Discovery NLU
+        #         pass
         return None

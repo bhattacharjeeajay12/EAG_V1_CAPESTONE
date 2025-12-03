@@ -74,7 +74,6 @@ class PlannerAgent:
                     # Whenever we update the active_ws_id of conversation_history, we need to update the pending and completed es list
                     self.conversation_history.update_active_ws_id(focus_workstream_id)
                     return
-
                 for idx, ws in enumerate(new_ws_list):
                     new_ws = self.conversation_history.create_new_workstream(ws["phase"], ws["target"])
                     if focus_workstream_id is None and idx == 0:
