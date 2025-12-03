@@ -36,8 +36,10 @@ class QueryAgent:
             return get_system_prompt_query_tool(category)
         else:
             return get_system_prompt_query_tool("default")
-    
-    async def run(self, current_query: str, turns: List[Dict], category: Optional[str] = None) -> Dict[str, Any]:
+    async def get_turns(self, chats: List[Dict[str, Any]], spec_nlu_result):
+        # Extract turns from chats and spec_nlu_result if needed
+        return chats
+    async def run(self, current_query: str, chats: List[Dict[str, Any]], spec_nlu_result, category: Optional[str] = None) -> Dict[str, Any]:
         system_prompt = await self.get_prompt(category)
         user_prompt = await self.create_input_structure(current_query, turns)
         llm_response = await self.llm_client.generate(system_prompt, user_prompt)

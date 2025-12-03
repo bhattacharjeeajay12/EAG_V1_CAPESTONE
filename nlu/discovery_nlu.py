@@ -76,13 +76,13 @@ class DiscoveryNLU:
             except Exception:
                 return []
 
-    async def run(self, user_query: str) -> List[Dict] | None:
+    async def run(self, user_query: str) -> List[Dict] | []:
         self.user_prompt = await self.get_user_prompt(user_query)
         try:
             raw_llm_output = await self.llm_client.generate(self.system_prompt, self.user_prompt)
         except Exception as e:
             print(f"Discovery NLU caught exception: {e}")
-            return None
+            return []
         llm_output_list = await self.extract_json_list(raw_llm_output)
         return llm_output_list
 

@@ -18,6 +18,12 @@ class PhaseState(str, Enum):
     FAILED = "FAILED"
     PAUSED = "PAUSED"
 
+class WorkStreamOperator(str, Enum):
+    DISCOVERY_OPERATOR = "DISCOVERY_OPERATOR"
+    ORDER_OPERATOR = "ORDER_OPERATOR"
+    PAYMENT_OPERATOR = "PAYMENT_OPERATOR"
+    EXCHANGE_OPERATOR = "EXCHANGE_OPERATOR"
+    RETURN_OPERATOR = "RETURN_OPERATOR"
 
 
 class Agents(str, Enum):
@@ -45,6 +51,7 @@ class ChatInfo(str, Enum):
     ai_message = "ai_message"
     chat_id = "chat_id"
     msg_source = "source"
+    processed = "processed"
 
 class SubCategory(str, Enum):
     LAPTOP = "Laptop"
@@ -105,3 +112,12 @@ class LlmVars(str, Enum):
 class ModelType(str, Enum):
     openai = "openai"
     gemini = "gemini"
+
+class PlanGeneratorAgents(str, Enum):
+    ENTITY_EXTRACTION = "ENTITY_EXTRACTION"
+    QUERY_BUILDER_EXECUTOR = "QUERY_BUILDER_EXECUTOR"
+    SUMMARIZER = "SUMMARIZER"
+
+class ToolNames(str, Enum):
+    GET_ALL_BRANDS_NAMES = "get_all_brands_names"
+    GET_ALL_SPECIFICATIONS  = "get_all_specs_names"

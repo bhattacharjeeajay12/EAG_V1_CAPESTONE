@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from agents.base import AgentBase, AgentContext, AgentOutput, Ask, Info, Confirm
-from tools.registry import ToolRegistry
+from tools.registry_old import ToolRegistry
 from typing import Dict, Optional, Any
 from core.llm_client import LLMClient
 from config.planner_config import PlannerConfig
