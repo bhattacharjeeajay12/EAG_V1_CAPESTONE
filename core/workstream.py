@@ -134,10 +134,27 @@ class Workstream:
                                                        consolidated_entities=self.consolidated_entities,
                                                        chats=self.chats,
                                                        subcategory=self.target.get("subcategory"))
+                    pandas_query = query_llm_output.get("pandas_query")
 
                     # Query Executor
-                    pass
+                    // TODO: Below should be from env
+                    from pathlib import Path
+                    DB_DIR = Path(__file__).resolve().parent.parent / "db"
+                    REQUIRED_FILES = ["product.json", "specification.json"]
+                    for filename in REQUIRED_FILES:
+                        path = DB_DIR / filename
+                        if not path.exists():
+                            raise FileNotFoundError(f"Required data file missing: {path}")
+                    
+                    executor = QueryExecutorSimple(pandas_query, data_dir=str(DB_DIR))
+                    df_result = executor.execute()
+
+                    if df_result is not None:
+                        print("Result shape:", df_result.shape)
+                        print(df_result)
+
                 if step["name"] == "SUMMARIZER":
+                    # Summarization and follow up
                     pass
 
         # if self.current_phase == Agents.DISCOVERY:
