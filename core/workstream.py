@@ -29,6 +29,7 @@ class Workstream:
         self.all_phases: Dict[str, Any] = field(default_factory=dict)
         self.discoveryPlanGenerator: PlanGenerator = field(default_factory=lambda: PlanGenerator(type=phase))
         self.discoveryNer: DiscoveryAgent = field(default_factory=lambda: DiscoveryAgent(subcategory=target.get("subcategory") if target else None))
+        self.consolidated_entities : List[Dict[str, Any]] = []
 
     def get_workstream_id(self):
         return self.id
@@ -44,12 +45,14 @@ class Workstream:
     def get_chats(self):
         return self.chats
 
-    def add_chat_in_ws(self, msg_type: str, message: Any, processed_data_source = None) -> bool:
+    def add_chat_in_ws(self, msg_type: str, message: Any) -> bool:
         """
         A sample chats looks like this:
-        chats = {
-        ws_id: [{ChatInfo.user_message: "", ChatInfo.ai_message: ""}]
-        }
+        chats = [
+                    {chat_id, user_message, ai_message, processed = [{}, {}, {}]},
+                    {chat_id, user_message, ai_message, processed = [{}, {}, {}]},
+                    ...
+        ]
         """
         if msg_type == ChatInfo.user_message:
             # chats = self.workstreams[ws_id].chats
@@ -71,12 +74,11 @@ class Workstream:
                 if self.chats[-1][ChatInfo.ai_message] is None:
                     self.chats[-1][ChatInfo.ai_message] = message
                 return True
-        elif msg_type == ChatInfo.processed:
+        elif msg_type == ChatInfo.processed.value:
             if not self.chats:
                 raise Exception("Cannot add processed information before a user message")
             if ChatInfo.processed in self.chats[-1].keys():
-                message_dict = {"data": message, "processed_data_source": processed_data_source}
-                self.chats[-1][ChatInfo.processed].append(message_dict)
+                self.chats[-1][ChatInfo.processed.value].append(message)
                 return True
         return False
     def update_status(self, target_state: Union[WorkstreamState, str]) -> bool:
@@ -121,9 +123,17 @@ class Workstream:
                 if step["name"] == "ENTITY_EXTRACTION":
                     spec_nlu = DiscoveryNLU(self.target.get("subcategory"), self.specification_list)
                     spec_nlu_response = await spec_nlu.run(user_query)
-                    self.add_chat_in_ws(ChatInfo.processed, spec_nlu_response, processed_data_source="ENTITY_EXTRACTION")
+                    processed_data = {"process_name": "ENTITY_EXTRACTION",
+                                      "output_type": List[Dict[str, Any]],
+                                      "output": spec_nlu_response}
+                    self.add_chat_in_ws(ChatInfo.processed.value, processed_data)
                 if step["name"] == "QUERY_BUILDER_EXECUTOR":
                     # Query Builder
+                    query_agent = QueryAgent()
+                    query_llm_output = query_agent.run(current_query=user_query,
+                                                       consolidated_entities=self.consolidated_entities,
+                                                       chats=self.chats,
+                                                       subcategory=self.target.get("subcategory"))
 
                     # Query Executor
                     pass
