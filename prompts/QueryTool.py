@@ -1,7 +1,8 @@
 from config.constants import SPECIFICATIONS
 import json
+from config.enums import ChatInfo
 
-def get_system_prompt_query_tool(category: str) -> str:
+async def get_system_prompt_query_tool(category: str) -> str:
     spec_dict = {category: SPECIFICATIONS.get(category, [])} if category in SPECIFICATIONS else SPECIFICATIONS
     specs_json = json.dumps(spec_dict, indent=2)
     SYSTEM_PROMPT_QUERY_TOOL = f"""You are a specialized AI assistant that generates executable pandas queries for an e-commerce database. Your task is to convert natural language queries into valid pandas DataFrame operations.
@@ -74,32 +75,14 @@ You will receive:
 
 ```json
 {{
-  "current_query": "<user's latest natural language query>",
-  "conversation_history": [
-    {{
-      "user": {{
-        "user_query": "<previous user query>",
-        "entities": [
-          {{
-            "key": "<column_name or spec_name>",
-            "value": "<value or list of values>",
-            "operator": "<comparison operator: =, !=, >, <, >=, <=, in, contains>",
-            "unit": "<unit if applicable, e.g., GB, kg>"
-          }}
-        ]
-      }},
-      "agent": {{
-        "agent_response": "<previous agent response>",
-        "metadata": {{
-          "csv_files": ["<list of CSV files returned>"],
-          "record_count": "<number of records returned>"
-        }}
-      }}
-    }}
-  ],
-  "subcategory": "<current subcategory context, e.g., laptop, dumbbells>",
-  "specifications": ["<list of valid specifications for this subcategory>"]
-}}
+  "current_user_message": "<user's latest natural language query>",
+  "current_entities_and_operator": "Entities, operators, and values extracted from the current user query",
+  "consolidated_entities_and_operator": "All entities, operators, and values accumulated from the entire conversation history",
+  "conversation_history": [ // contains previous turns, arranged from oldest to most recent
+  {{ {ChatInfo.user_message.value}: "<previous user message>", {ChatInfo.ai_message.value}: "<previous AI response>"}}
+  ...
+  ]
+  
 ```
 
 ## Specifications by Subcategory
@@ -192,21 +175,13 @@ Return a JSON object:
 **Input:**
 ```json
 {{
-  "current_query": "Show me Dell laptops with 16GB RAM or more",
-  "conversation_history": [],
-  "subcategory": "laptop",
-  "specifications": ["processor", "ram", "storage", "display_size", "battery_life", 
-                     "weight", "operating_system", "graphics", "warranty"]
+  "current_user_message": "Show me Dell laptops with 16GB RAM or more",
+  "consolidated_entities_and_operator": [
+          {{"key": "brand", "value": "Dell", "operator": "="}},
+          {{"key": "ram", "value": 16, "unit": "GB", "operator": ">="}}
+        ]
+  "conversation_history": []
 }}
-```
-
-**Entities Extracted:**
-```json
-[
-  {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
-  {{"key": "brand", "value": "Dell", "operator": "="}},
-  {{"key": "ram", "value": 16, "unit": "GB", "operator": ">="}}
-]
 ```
 
 **Output:**
@@ -232,53 +207,17 @@ Return a JSON object:
 **Input:**
 ```json
 {{
-  "current_query": "Show me the second Dell laptop with more details",
-  "conversation_history": [
-    {{
-      "user": {{
-        "user_query": "I need a Dell laptop",
-        "entities": [
-          {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
-          {{"key": "brand", "value": "Dell", "operator": "="}}
-        ]
-      }},
-      "agent": {{
-        "agent_response": "I found 5 Dell laptops. Would you like to add specifications?",
-        "metadata": {{
-          "csv_files": ["dell_laptops.csv"],
-          "record_count": 5
-        }}
-      }}
-    }},
-    {{
-      "user": {{
-        "user_query": "Maybe RAM of 16 GB or more would be good",
-        "entities": [
-          {{"key": "ram", "value": 16, "unit": "GB", "operator": ">="}}
-        ]
-      }},
-      "agent": {{
-        "agent_response": "I found 3 Dell laptops with 16GB+ RAM. Here's a summary...",
-        "metadata": {{
-          "csv_files": ["dell_laptops_16gb.csv"],
-          "record_count": 3
-        }}
-      }}
-    }}
+  "current_user_message": "Show me the second Dell laptop with more details",
+  "consolidated_entities_and_operator":[
+            {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
+            {{"key": "brand", "value": "Dell", "operator": "="}},
+            {{"key": "ram", "value": 16, "unit": "GB", "operator": ">="}}
   ],
-  "subcategory": "laptop",
-  "specifications": ["processor", "ram", "storage", "display_size", "battery_life", 
-                     "weight", "operating_system", "graphics", "warranty"]
+  "conversation_history": [
+    {{{ChatInfo.user_message.value}: "I need a Dell laptop", {ChatInfo.ai_message}: I found 5 Dell laptops. Would you like to add specifications?}},
+    {{{ChatInfo.user_message.value}: "Maybe RAM of 16 GB or more would be good", {ChatInfo.ai_message}: I found 3 Dell laptops with 16GB+ RAM. Here's a summary...}}
+  ]
 }}
-```
-
-**Entities Extracted from Conversation:**
-```json
-[
-  {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
-  {{"key": "brand", "value": "Dell", "operator": "="}},
-  {{"key": "ram", "value": 16, "unit": "GB", "operator": ">="}}
-]
 ```
 
 **Output:**
@@ -305,23 +244,16 @@ Return a JSON object:
 **Input:**
 ```json
 {{
-  "current_query": "Show laptops with i7 processor, 16GB RAM, and 512GB storage",
-  "conversation_history": [],
-  "subcategory": "laptop",
-  "specifications": ["processor", "ram", "storage", "display_size", "battery_life", 
-                     "weight", "operating_system", "graphics", "warranty"]
+  "current_user_message": "Show laptops with i7 processor, 16GB RAM, and 512GB storage",
+  "consolidated_entities_and_operator":[
+        {{"key": "processor", "value": "i7", "operator": "="}},
+        {{"key": "ram", "value": 16, "unit": "GB", "operator": "="}},
+        {{"key": "storage", "value": 512, "unit": "GB", "operator": "="}}
+  ]
+  "conversation_history": []
 }}
 ```
 
-**Entities Extracted:**
-```json
-[
-  {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
-  {{"key": "processor", "value": "i7", "operator": "contains"}},
-  {{"key": "ram", "value": 16, "unit": "GB", "operator": ">="}},
-  {{"key": "storage", "value": 512, "unit": "GB", "operator": ">="}}
-]
-```
 
 **Output:**
 ```json
@@ -351,21 +283,13 @@ Return a JSON object:
 **Input:**
 ```json
 {{
-  "current_query": "Show me highly rated laptops under $1000",
-  "conversation_history": [],
-  "subcategory": "laptop",
-  "specifications": ["processor", "ram", "storage", "display_size", "battery_life", 
-                     "weight", "operating_system", "graphics", "warranty"]
+  "current_user_message": "Show me highly rated laptops under $1000",
+  "consolidated_entities_and_operator":[
+        {{"key": "price", "value": 1000, "operator": "<"}},
+        {{"key": "rating", "value": 4.0, "operator": ">="}}
+  ], 
+  "conversation_history": []
 }}
-```
-
-**Entities Extracted:**
-```json
-[
-  {{"key": "subcategory_name", "value": "laptop", "operator": "="}},
-  {{"key": "price", "value": 1000, "operator": "<"}},
-  {{"key": "rating", "value": 4.0, "operator": ">="}}
-]
 ```
 
 **Output:**
@@ -396,21 +320,14 @@ Return a JSON object:
 **Input:**
 ```json
 {{
-  "current_query": "Find adjustable dumbbells between 3kg and 30kg",
-  "conversation_history": [],
-  "subcategory": "dumbbells",
-  "specifications": ["min_weight", "max_weight", "adjustable", "material", "grip_type"]
+  "current_user_message": "Find adjustable dumbbells between 3kg and 30kg",
+  "consolidated_entities_and_operator":[
+        {{"key": "min_weight", "value": 3, "unit": "kilograms", "operator": ">="}},
+        {{"key": "max_weight", "value": 30, "unit": "kilograms", "operator": "<="}},
+        {{"key": "adjustable", "value": "Yes", "operator": "="}}
+  ],
+  "conversation_history": []
 }}
-```
-
-**Entities Extracted:**
-```json
-[
-  {{"key": "subcategory_name", "value": "dumbbells", "operator": "="}},
-  {{"key": "min_weight", "value": 3, "unit": "kilograms", "operator": ">="}},
-  {{"key": "max_weight", "value": 30, "unit": "kilograms", "operator": "<="}},
-  {{"key": "adjustable", "value": "Yes", "operator": "="}}
-]
 ```
 
 **Output:**

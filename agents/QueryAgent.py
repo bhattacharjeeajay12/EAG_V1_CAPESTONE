@@ -2,57 +2,72 @@ from core.llm_client import LLMClient
 from typing import Any, Dict, List, Optional
 from prompts.QueryTool import get_system_prompt_query_tool
 import json
+from config.enums import ChatInfo
+import re
 
 class QueryAgent:
-    def __init__(self, conversation_history=None):
+    def __init__(self):
         self.llm_client = LLMClient()
         self.system_prompt: Optional[str] = None
-        self.conversation_history = conversation_history
 
-    def format_conversation(self, turns: List[Dict]) -> List[Dict]:
-        # Turn history into the structure expected by the prompt.
-        formatted = []
-        for t in turns:
-            entry = {}
-            if "user_query" in t:
-                entry["user"] = {"user_query": t["user_query"], "entities": t.get("entities", [])}
-            if "agent_response" in t:
-                entry["agent"] = {"agent_response": t["agent_response"]}
-            formatted.append(entry)
-        return formatted
+    async def create_user_prompt(self, current_query: str, consolidated_entities: List[Dict[str, Any]], chats:List[Dict[str, Any]]) -> str:
+        """
+        The user query needs
+            1. current query
+            2. specification NLU result for current query
+            3. chats
+            4. spec_nlu_result for chats (if any)
+        """
+        nlu_result = []
+        if chats:
+            last_chat = chats[-1]
+        else:
+            last_chat = {}
+        if ChatInfo.processed.value in last_chat.keys():
+            processed_list = last_chat[ChatInfo.processed.value]
+            for processed in  processed_list:
+                if processed.get("process_name") == "ENTITY_EXTRACTION":
+                    nlu_result = processed.get("output", [])
+                    break
 
-    async def create_input_structure(self, current_query: str, turns: List[Dict]) -> str:
-        formatted_history = self.format_conversation(turns)
+        keys_to_keep = {
+            ChatInfo.user_message.value,
+            ChatInfo.ai_message.value,
+        }
+        chats = [
+            {k: v for k, v in chat.items() if k in keys_to_keep}
+            for chat in chats
+        ]
+
         input_json = {
-            "current_query": current_query,
-            "conversation_history": formatted_history
+            "current_user_message": current_query,
+            "current_entities_and_operator": nlu_result,
+            "consolidated_entities_and_operator": consolidated_entities,
+            "conversation_history": chats
         }
         # As string, ready for LLM
         return json.dumps(input_json, indent=2)
 
-    async def get_prompt(self, category: Optional[str] = None) -> str:
-        # Category-specific prompt, else general
-        if category:
-            return get_system_prompt_query_tool(category)
-        else:
-            return get_system_prompt_query_tool("default")
-    async def get_turns(self, chats: List[Dict[str, Any]], spec_nlu_result):
-        # Extract turns from chats and spec_nlu_result if needed
-        return chats
-    async def run(self, current_query: str, chats: List[Dict[str, Any]], spec_nlu_result, category: Optional[str] = None) -> Dict[str, Any]:
-        system_prompt = await self.get_prompt(category)
-        user_prompt = await self.create_input_structure(current_query, turns)
-        llm_response = await self.llm_client.generate(system_prompt, user_prompt)
+    async def parse_llm_json(self, text: str):
         try:
-            result = json.loads(llm_response)
-        except Exception:
-            # Try extract JSON object from string if extra text
-            import re
-            m = re.search(r'\{.*\}', llm_response, re.DOTALL)
-            if m:
-                result = json.loads(m.group(0))
-            else:
-                result = {"error": "Could not parse LLM response"}
+            # Remove known code fences
+            cleaned = text.replace("```json", "").replace("```", "").strip()
+
+            # Optional: extract the JSON object if extra text exists
+            match = re.search(r'\{[\s\S]*\}', cleaned)
+            if match:
+                cleaned = match.group(0)
+
+            return json.loads(cleaned)
+
+        except json.JSONDecodeError as e:
+            raise ValueError("LLM returned invalid JSON") from e
+
+    async def run(self, current_query: str, consolidated_entities, chats: List[Dict[str, Any]], subcategory: Optional[str] = None) -> Dict[str, Any]:
+        system_prompt = await get_system_prompt_query_tool(subcategory)
+        user_prompt = await self.create_user_prompt(current_query, consolidated_entities, chats)
+        llm_response = await self.llm_client.generate(system_prompt, user_prompt)
+        result = await self.parse_llm_json(llm_response)
         return result
 
 
@@ -61,30 +76,16 @@ if __name__ == "__main__":
 
     async def main():
         # Example conversation history: Each turn contains user query and entities extracted (if available)
-        conversation_turns = [
-            {
-                "user_query": "I need Apple phones between $800 and $1200",
-                "entities": [
-                    {"key": "subcategory_name", "value": "smartphone", "operator": "="},
-                    {"key": "brand", "value": "Apple", "operator": "="},
-                    {"key": "price", "value": [800, 1200], "operator": "between"}
-                ],
-                "agent_response": "Found 4 matches."
-            },
-            {
-                "user_query": "Add requirement: battery life over 20 hours",
-                "entities": [
-                    {"key": "battery_life", "value": 20, "operator": ">", "unit": "hours"}
-                ],
-                "agent_response": "Here you go."
-            }
-        ]
-
-        current_query = "Show me the third option with full specs"
+        chats = []
+        current_query = "Show laptops with i7 processor, 16GB RAM, and 512GB storage"
         category = "smartphone"
-
+        consolidated_entities = [
+            {"key": "processor", "value": "i7", "operator": "="},
+            {"key": "ram", "value": 16, "unit": "GB", "operator": "="},
+            {"key": "storage", "value": 512, "unit": "GB", "operator": "="}
+        ]
         agent = QueryAgent()
-        result = await agent.run(current_query=current_query, turns=conversation_turns, category=category)
+        result = await agent.run(current_query=current_query, consolidated_entities=consolidated_entities, chats=chats, category=category)
         print("==== LLM RESULT ====")
         print(json.dumps(result, indent=2))
 
