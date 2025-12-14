@@ -10,6 +10,7 @@ from agents.DiscoveryAgent import DiscoveryAgent
 import uuid
 from nlu.discovery_nlu import DiscoveryNLU
 from agents.QueryAgent import QueryAgent # QueryBuilder
+from agents.SummarizerAgent import SummarizerAgent
 from core.QueryExecutor import QueryExecutorSimple
 from pathlib import Path
 
@@ -31,6 +32,7 @@ class Workstream:
         self.discoveryPlanGenerator: PlanGenerator = field(default_factory=lambda: PlanGenerator(type=phase))
         self.discoveryNer: DiscoveryAgent = field(default_factory=lambda: DiscoveryAgent(subcategory=target.get("subcategory") if target else None))
         self.consolidated_entities : List[Dict[str, Any]] = []
+        self.last_query_result: Dict[str, Any] | None = None
 
     def get_workstream_id(self):
         return self.id
@@ -131,14 +133,15 @@ class Workstream:
                 if step["name"] == "QUERY_BUILDER_EXECUTOR":
                     # Query Builder
                     query_agent = QueryAgent()
-                    query_llm_output = query_agent.run(current_query=user_query,
+                    query_llm_output = await query_agent.run(current_query=user_query,
                                                        consolidated_entities=self.consolidated_entities,
                                                        chats=self.chats,
                                                        subcategory=self.target.get("subcategory"))
                     pandas_query = query_llm_output.get("pandas_query")
 
                     # Query Executor
-                    # // TODO: Below should be from env
+                    # TODO: Below should be from env
+                    from pathlib import Path
                     DB_DIR = Path(__file__).resolve().parent.parent / "db"
                     REQUIRED_FILES = ["product.json", "specification.json"]
                     for filename in REQUIRED_FILES:
@@ -152,10 +155,30 @@ class Workstream:
                     if df_result is not None:
                         print("Result shape:", df_result.shape)
                         print(df_result)
+                        preview = df_result.head(5).to_dict(orient="records")
+                        result_payload = {
+                            "process_name": "QUERY_RESULT",
+                            "output_type": "DataFrame",
+                            "row_count": len(df_result),
+                            "columns": list(df_result.columns),
+                            "preview": preview,
+                        }
+                        self.last_query_result = result_payload
+                        self.add_chat_in_ws(ChatInfo.processed.value, result_payload)
+                    else:
+                        self.last_query_result = None
 
                 if step["name"] == "SUMMARIZER":
                     # Summarization and follow up
-                    pass
+                    summarizer = SummarizerAgent()
+                    summary_response = await summarizer.run(
+                        current_query=user_query,
+                        chats=self.chats,
+                        query_result=self.last_query_result,
+                    )
+                    if summary_response:
+                        self.add_chat_in_ws(ChatInfo.ai_message, summary_response)
+                        return summary_response
 
         # if self.current_phase == Agents.DISCOVERY:
         #     self.add_chat_in_ws(ChatInfo.user_message, user_query)
@@ -175,3 +198,4 @@ class Workstream:
         #         # Step 1. Gather specification using Discovery NLU
         #         pass
         return None
+        
