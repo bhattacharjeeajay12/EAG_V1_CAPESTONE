@@ -12,6 +12,7 @@ from nlu.discovery_nlu import DiscoveryNLU
 from agents.QueryAgent import QueryAgent # QueryBuilder
 from agents.SummarizerAgent import SummarizerAgent
 from core.QueryExecutor import QueryExecutorSimple
+from pathlib import Path
 
 # @dataclass
 class Workstream:
