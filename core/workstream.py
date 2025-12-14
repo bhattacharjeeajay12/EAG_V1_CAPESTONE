@@ -11,6 +11,7 @@ import uuid
 from nlu.discovery_nlu import DiscoveryNLU
 from agents.QueryAgent import QueryAgent # QueryBuilder
 from core.QueryExecutor import QueryExecutorSimple
+from pathlib import Path
 
 # @dataclass
 class Workstream:
@@ -137,8 +138,7 @@ class Workstream:
                     pandas_query = query_llm_output.get("pandas_query")
 
                     # Query Executor
-                    // TODO: Below should be from env
-                    from pathlib import Path
+                    # // TODO: Below should be from env
                     DB_DIR = Path(__file__).resolve().parent.parent / "db"
                     REQUIRED_FILES = ["product.json", "specification.json"]
                     for filename in REQUIRED_FILES:
