@@ -20,7 +20,8 @@ async def main():
     # ]
     # for t in turns:
     while True:
-        question = input("USER: ")
+        # question = input("USER: ")
+        question = await asyncio.to_thread(input, "USER: ")
         answer = await planner.handle_user_turn(question)
         logger.info(f"USER: {question}")
         logger.info(f"AI Response: {answer}")

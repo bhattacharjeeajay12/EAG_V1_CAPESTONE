@@ -150,7 +150,7 @@ class QueryExecutorSimple:
                 print(f"      Sample columns: {list(df.columns)[:5]}...")
         print("="*60 + "\n")
 
-    def execute(self) -> Optional[pd.DataFrame]:
+    async def execute(self) -> Optional[pd.DataFrame]:
         """
         Execute the code string and return df_result (or None on error).
         """

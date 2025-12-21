@@ -15,7 +15,6 @@ from core.QueryExecutor import QueryExecutorSimple
 from config.utils import get_specification_list
 from pathlib import Path
 
-# @dataclass
 class Workstream:
     def __init__(self, phase, target: Dict[str, Any], id: str):
         self.id: str = id
@@ -23,17 +22,25 @@ class Workstream:
         self.current_phase: str = phase
         self.first_phase: Union[Agents, str] = phase
         self.target: Dict[str, Any] = target
-        self.chats: List[Dict[str, Any]] = field(default_factory=list)
-        self.processing: Dict[str, Any] = field(default_factory=dict)
-        # Make FSM an instance attribute so it's not shared between objects
-        self.fsm: FSMEngine = field(default_factory=lambda: FSMEngine(WS_TRANSITIONS))
-        self.specification_list: List[Dict[str, Any]] = get_specification_list(subcategory=target.get("subcategory"))
-        self.specification_Ask: bool = field(default=True, init=True, repr=True)
-        self.all_phases: Dict[str, Any] = field(default_factory=dict)
-        self.discoveryPlanGenerator: PlanGenerator = field(default_factory=lambda: PlanGenerator(type=phase))
-        self.discoveryNer: DiscoveryAgent = field(default_factory=lambda: DiscoveryAgent(subcategory=target.get("subcategory") if target else None))
-        self.consolidated_entities : List[Dict[str, Any]] = []
+
+        self.chats: List[Dict[str, Any]] = []
+        self.processing: Dict[str, Any] = {}
+        self.all_phases: Dict[str, Any] = {}
+        self.consolidated_entities: List[Dict[str, Any]] = []
+
+        # Correct instance initialization
+        self.fsm: FSMEngine = FSMEngine(WS_TRANSITIONS)
+        self.discoveryPlanGenerator: PlanGenerator = PlanGenerator(type=phase)
+        self.discoveryNer: DiscoveryAgent = DiscoveryAgent(
+            subcategory=target.get("subcategory") if target else None
+        )
+
+        self.specification_list: List[Dict[str, Any]] = get_specification_list(
+            subcategory=target.get("subcategory")
+        )
+        self.specification_Ask: bool = True
         self.last_query_result: Dict[str, Any] | None = None
+
 
     def get_workstream_id(self):
         return self.id
@@ -58,30 +65,30 @@ class Workstream:
                     ...
         ]
         """
-        if msg_type == ChatInfo.user_message:
+        if msg_type == ChatInfo.user_message.value:
             # chats = self.workstreams[ws_id].chats
             chat_obj = {
-                            ChatInfo.chat_id: uuid.uuid4(),
-                            ChatInfo.user_message: message,
-                            ChatInfo.ai_message: None,
-                            ChatInfo.processed: []}
+                            ChatInfo.chat_id.value: uuid.uuid4(),
+                            ChatInfo.user_message.value: message,
+                            ChatInfo.ai_message.value: None,
+                            ChatInfo.processed.value: []}
             self.chats.append(chat_obj)
             return True
 
-        elif msg_type == ChatInfo.ai_message:
+        elif msg_type == ChatInfo.ai_message.value:
             # chats = self.workstreams[ws_id].chats
             if not self.chats:
                 raise Exception("Cannot add AI message before a user message")
-            if ChatInfo.user_message not in self.chats[-1].keys():
+            if ChatInfo.user_message.value not in self.chats[-1].keys():
                 raise Exception("Cannot add AI message before a user message")
-            if ChatInfo.ai_message in self.chats[-1].keys():
-                if self.chats[-1][ChatInfo.ai_message] is None:
-                    self.chats[-1][ChatInfo.ai_message] = message
+            if ChatInfo.ai_message.value in self.chats[-1].keys():
+                if self.chats[-1][ChatInfo.ai_message.value] is None:
+                    self.chats[-1][ChatInfo.ai_message.value] = message
                 return True
         elif msg_type == ChatInfo.processed.value:
             if not self.chats:
                 raise Exception("Cannot add processed information before a user message")
-            if ChatInfo.processed in self.chats[-1].keys():
+            if ChatInfo.processed.value in self.chats[-1].keys():
                 self.chats[-1][ChatInfo.processed.value].append(message)
                 return True
         return False
@@ -102,14 +109,14 @@ class Workstream:
         d_output = await self.discoveryNer.run(user_query, self.specification_list, self.specification_Ask)
         self.specification_Ask = False  # Only it will ask for specs once.
         if type(d_output) == str:  # AI response
-            self.add_chat_in_ws(ChatInfo.ai_message, d_output)
+            self.add_chat_in_ws(ChatInfo.ai_message.value, d_output)
             return d_output
         return None
 
     async def run(self, user_query: str) -> str|None:
 
         if self.first_phase == Agents.DISCOVERY:
-            self.add_chat_in_ws(ChatInfo.user_message, user_query)
+            self.add_chat_in_ws(ChatInfo.user_message.value, user_query)
 
             #pre plan stuff
             if self.specification_Ask:
@@ -121,7 +128,8 @@ class Workstream:
 
             # generate the plan
             plan = await self.discoveryPlanGenerator.run(user_query, self.chats)
-            steps = plan.get("steps", [])
+            steps = plan.get("plan", [])
+            print(f"steps: {steps}")
             # execute the plan
             for step in steps:
                 if step["name"] == "ENTITY_EXTRACTION":
@@ -136,6 +144,7 @@ class Workstream:
                     query_agent = QueryAgent()
                     query_llm_output = await query_agent.run(current_query=user_query,
                                                        consolidated_entities=self.consolidated_entities,
+                                                       specification_list=self.specification_list,
                                                        chats=self.chats,
                                                        subcategory=self.target.get("subcategory"))
                     pandas_query = query_llm_output.get("pandas_query")
@@ -151,7 +160,7 @@ class Workstream:
                             raise FileNotFoundError(f"Required data file missing: {path}")
                     
                     executor = QueryExecutorSimple(pandas_query, data_dir=str(DB_DIR))
-                    df_result = executor.execute()
+                    df_result = await executor.execute()
 
                     if df_result is not None:
                         print("Result shape:", df_result.shape)
@@ -161,7 +170,7 @@ class Workstream:
                             "output_type": "DataFrame",
                             "row_count": len(df_result),
                             "columns": list(df_result.columns),
-                            "preview": df_result,
+                            "preview": df_result.to_string(index=False),
                         }
                         self.last_query_result = result_payload
                         self.add_chat_in_ws(ChatInfo.processed.value, result_payload)
@@ -175,11 +184,11 @@ class Workstream:
                         query_result=self.last_query_result,
                     )
                     if summary_response:
-                        self.add_chat_in_ws(ChatInfo.ai_message, summary_response)
+                        self.add_chat_in_ws(ChatInfo.ai_message.value, summary_response)
                         return summary_response
 
         # if self.current_phase == Agents.DISCOVERY:
-        #     self.add_chat_in_ws(ChatInfo.user_message, user_query)
+        #     self.add_chat_in_ws(ChatInfo.user_message.value, user_query)
         #     subcategory = self.target.get("subcategory")
         #     if self.current_phase not in self.all_phases:
         #         discovery_phase = DiscoveryAgent(subcategory=subcategory)
@@ -190,7 +199,7 @@ class Workstream:
         #     d_output = await discovery_phase.run(user_query, self.specification_list, self.specification_Ask)
         #     self.specification_Ask = False  # Only it will ask for specs once.
         #     if type(d_output) == str: # AI response
-        #         self.add_chat_in_ws(ChatInfo.ai_message, d_output)
+        #         self.add_chat_in_ws(ChatInfo.ai_message.value, d_output)
         #         return d_output
         #     else:
         #         # Step 1. Gather specification using Discovery NLU

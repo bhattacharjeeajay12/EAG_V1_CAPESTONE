@@ -63,7 +63,9 @@ class QueryAgent:
         except json.JSONDecodeError as e:
             raise ValueError("LLM returned invalid JSON") from e
 
-    async def run(self, current_query: str, consolidated_entities, specification_list: List[Dict[str, Any]], chats: List[Dict[str, Any]], subcategory: Optional[str] = None) -> Dict[str, Any]:
+    async def run(self, current_query: str,
+                  consolidated_entities, specification_list: List[Dict[str, Any]],
+                  chats: List[Dict[str, Any]], subcategory: Optional[str] = None) -> Dict[str, Any]:
         system_prompt = await get_system_prompt_query_tool(subcategory, specification_list)
         user_prompt = await self.create_user_prompt(current_query, consolidated_entities, chats)
         llm_response = await self.llm_client.generate(system_prompt, user_prompt)

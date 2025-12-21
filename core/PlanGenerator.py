@@ -18,7 +18,14 @@ class PlanGenerator:
         return json.loads(raw_response)
 
     async def get_user_msg(self, user_query: str, chats: List[Dict[str, Any]]) -> str:
-        input = {"current_query": user_query, "conversation_history": chats}
+        allowed_keys = {"ai_message", "user_message"}
+
+        filtered_chats = [
+            {k: v for k, v in chat.items() if k in allowed_keys}
+            for chat in chats
+        ]
+
+        input = {"current_query": user_query, "conversation_history": filtered_chats}
         return str(input)
 
     async def run(self, user_query: str, chats: List[Dict[str, Any]]) -> str | Dict[str, Any]:
@@ -39,7 +46,7 @@ if __name__ == "__main__":
 
     async def main():
 
-        chats = List[Dict[str, Any]]
+        # chats = List[Dict[str, Any]]
         current_query = "A 15-inch screen would be ideal, and I prefer Intel processors."
         chats = [
             {
@@ -51,6 +58,21 @@ if __name__ == "__main__":
                 ChatInfo.ai_message.value: "Got it. Do you have any preference for screen size or processor type?",
             }
         ]
+
+        #########
+        current_query = "RAM should be 8 GB."
+        chats = [
+            {
+                ChatInfo.user_message.value: "I need a laptop with price under 5000 USD.",
+                ChatInfo.ai_message.value: "Sure, could you please specify any preferred brand or specifications?",
+            },
+            {
+                ChatInfo.user_message.value: "No brand preference, but I would like at least 16GB RAM and 512GB SSD.",
+                ChatInfo.ai_message.value: "Got it. Do you have any preference for screen size or processor type?",
+            }
+        ]
+
+
 
         pg = PlanGenerator(type="discovery")
         result = await pg.run(current_query, chats)
