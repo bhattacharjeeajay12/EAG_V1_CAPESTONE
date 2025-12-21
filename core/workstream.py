@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Union, List
 from config.enums import WorkstreamState
 from core.fsm_engine import FSMEngine
-from core.fsm_rules import PHASE_TRANSITIONS
+from core.fsm_rules import PHASE_TRANSITIONS, WS_TRANSITIONS
 from config.enums import Agents, ChatInfo
 from core.PlanGenerator import PlanGenerator
 from agents.DiscoveryAgent import DiscoveryAgent
@@ -12,21 +12,22 @@ from nlu.discovery_nlu import DiscoveryNLU
 from agents.QueryAgent import QueryAgent # QueryBuilder
 from agents.SummarizerAgent import SummarizerAgent
 from core.QueryExecutor import QueryExecutorSimple
+from config.utils import get_specification_list
 from pathlib import Path
 
 # @dataclass
 class Workstream:
-    def __init__(self, phase, target: Dict[str, Any] = None):
-        self.id: str
-        self.current_state: Union[WorkstreamState, str]
+    def __init__(self, phase, target: Dict[str, Any], id: str):
+        self.id: str = id
+        self.current_state: Union[WorkstreamState, str] = WorkstreamState.NEW
         self.current_phase: str = phase
         self.first_phase: Union[Agents, str] = phase
         self.target: Dict[str, Any] = target
         self.chats: List[Dict[str, Any]] = field(default_factory=list)
         self.processing: Dict[str, Any] = field(default_factory=dict)
         # Make FSM an instance attribute so it's not shared between objects
-        self.fsm: FSMEngine = field(default_factory=lambda: FSMEngine(PHASE_TRANSITIONS))
-        self.specification_list: List[Dict[str, Any]] = field(default_factory=list)
+        self.fsm: FSMEngine = field(default_factory=lambda: FSMEngine(WS_TRANSITIONS))
+        self.specification_list: List[Dict[str, Any]] = get_specification_list(subcategory=target.get("subcategory"))
         self.specification_Ask: bool = field(default=True, init=True, repr=True)
         self.all_phases: Dict[str, Any] = field(default_factory=dict)
         self.discoveryPlanGenerator: PlanGenerator = field(default_factory=lambda: PlanGenerator(type=phase))
@@ -155,18 +156,15 @@ class Workstream:
                     if df_result is not None:
                         print("Result shape:", df_result.shape)
                         print(df_result)
-                        preview = df_result.head(5).to_dict(orient="records")
                         result_payload = {
                             "process_name": "QUERY_RESULT",
                             "output_type": "DataFrame",
                             "row_count": len(df_result),
                             "columns": list(df_result.columns),
-                            "preview": preview,
+                            "preview": df_result,
                         }
                         self.last_query_result = result_payload
                         self.add_chat_in_ws(ChatInfo.processed.value, result_payload)
-                    else:
-                        self.last_query_result = None
 
                 if step["name"] == "SUMMARIZER":
                     # Summarization and follow up

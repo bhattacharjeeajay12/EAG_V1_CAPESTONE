@@ -63,8 +63,8 @@ class QueryAgent:
         except json.JSONDecodeError as e:
             raise ValueError("LLM returned invalid JSON") from e
 
-    async def run(self, current_query: str, consolidated_entities, chats: List[Dict[str, Any]], subcategory: Optional[str] = None) -> Dict[str, Any]:
-        system_prompt = await get_system_prompt_query_tool(subcategory)
+    async def run(self, current_query: str, consolidated_entities, specification_list: List[Dict[str, Any]], chats: List[Dict[str, Any]], subcategory: Optional[str] = None) -> Dict[str, Any]:
+        system_prompt = await get_system_prompt_query_tool(subcategory, specification_list)
         user_prompt = await self.create_user_prompt(current_query, consolidated_entities, chats)
         llm_response = await self.llm_client.generate(system_prompt, user_prompt)
         result = await self.parse_llm_json(llm_response)
@@ -78,14 +78,39 @@ if __name__ == "__main__":
         # Example conversation history: Each turn contains user query and entities extracted (if available)
         chats = []
         current_query = "Show laptops with i7 processor, 16GB RAM, and 512GB storage"
-        category = "smartphone"
+        subcategory = "smartphone"
         consolidated_entities = [
             {"key": "processor", "value": "i7", "operator": "="},
             {"key": "ram", "value": 16, "unit": "GB", "operator": "="},
             {"key": "storage", "value": 512, "unit": "GB", "operator": "="}
         ]
+
+        specification_list = [
+            {'data_type': 'text', 'spec_name': 'Brand', 'spec_name_label': 'Brand', 'spec_value': 'Apple',
+             'unit': None},
+            {'data_type': 'text', 'spec_name': 'Processor', 'spec_name_label': 'Processor', 'spec_value': 'Apple M3',
+             'unit': None},
+            {'data_type': 'integer', 'spec_name': 'RAM', 'spec_name_label': 'RAM', 'spec_value': '8',
+             'unit': 'gigabytes'},
+            {'data_type': 'integer', 'spec_name': 'Storage', 'spec_name_label': 'Storage', 'spec_value': '256',
+             'unit': 'gigabytes'},
+            {'data_type': 'float', 'spec_name': 'Display_Size', 'spec_name_label': 'Display Size', 'spec_value': '13.6',
+             'unit': 'inches'},
+            {'data_type': 'integer', 'spec_name': 'Battery_Life', 'spec_name_label': 'Battery Life', 'spec_value': '18',
+             'unit': 'hours'},
+            {'data_type': 'float', 'spec_name': 'Weight', 'spec_name_label': 'Weight', 'spec_value': '1.49',
+             'unit': 'kilograms'},
+            {'data_type': 'text', 'spec_name': 'Operating_System', 'spec_name_label': 'Operating System',
+             'spec_value': 'macOS', 'unit': None},
+            {'data_type': 'text', 'spec_name': 'Graphics', 'spec_name_label': 'Graphics', 'spec_value': 'Apple GPU',
+             'unit': None},
+            {'data_type': 'integer', 'spec_name': 'Warranty', 'spec_name_label': 'Warranty', 'spec_value': '1',
+             'unit': 'years'},
+            {'data_type': 'float', 'spec_name': 'Price', 'spec_name_label': 'Price', 'spec_value': '1694',
+             'unit': 'USD'}
+        ]
         agent = QueryAgent()
-        result = await agent.run(current_query=current_query, consolidated_entities=consolidated_entities, chats=chats, category=category)
+        result = await agent.run(current_query=current_query, consolidated_entities=consolidated_entities, specification_list = specification_list, chats=chats, subcategory=subcategory)
         print("==== LLM RESULT ====")
         print(json.dumps(result, indent=2))
 

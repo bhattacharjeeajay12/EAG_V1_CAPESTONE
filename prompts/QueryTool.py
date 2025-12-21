@@ -2,9 +2,21 @@ from config.constants import SPECIFICATIONS
 import json
 from config.enums import ChatInfo
 
-async def get_system_prompt_query_tool(category: str) -> str:
-    spec_dict = {category: SPECIFICATIONS.get(category, [])} if category in SPECIFICATIONS else SPECIFICATIONS
-    specs_json = json.dumps(spec_dict, indent=2)
+async def get_system_prompt_query_tool(category: str, specification_list) -> str:
+    spec_text = ""
+    # spec_list_label = [spec["spec_name_label"].lower() for spec in specification_list]
+    for obj in specification_list:
+        str_ = ""
+        str_ += f"\t- {obj['spec_name_label']}: datatype={obj['data_type']}, "
+        if obj["unit"] is not None:
+            str_ += f"unit - {obj['unit']}. "
+            str_ += f"example - {obj['spec_value']} {obj['unit']}."
+        else:
+            str_ += f"example - {obj['spec_value']}."
+        spec_text += str_ + "\n"
+
+    # spec_dict = {category: SPECIFICATIONS.get(category, [])} if category in SPECIFICATIONS else SPECIFICATIONS
+    # specs_json = json.dumps(spec_dict, indent=2)
     SYSTEM_PROMPT_QUERY_TOOL = f"""You are a specialized AI assistant that generates executable pandas queries for an e-commerce database. Your task is to convert natural language queries into valid pandas DataFrame operations.
 
 ## Database Schema Overview
@@ -12,17 +24,23 @@ async def get_system_prompt_query_tool(category: str) -> str:
 The following tables are available as pandas DataFrames with names matching the table names:
 
 ### 1. user (DataFrame: df_user)
-- user_id (PK, int)
-- full_name (str), gender (str), age (int), email (str), phone_number (str)
-- city (str), state (str), pincode (str), registration_date (datetime)
+- user_id (PK, int), full_name (str), gender (str), age (int), email (str), phone_number (str), city (str), state (str), pincode (str), registration_date (datetime)
 
 ### 2. buy_history (DataFrame: df_buy_history)
-- order_id (PK, str)
-- user_id (FK → user.user_id, int)
-- product_id (FK → product.product_id, str)
-- quantity (int), unit_price_usd (float), shipping_fee_usd (float), total_amount_usd (float)
-- order_date (datetime), expected_delivery_date (datetime), actual_delivery_date (datetime)
-- status (str), payment_method (str), shipping_address (str)
+- order_id (PK, str), 
+- user_id (FK → user.user_id, int), 
+- product_id (FK → product.product_id, str), 
+- sku (str), 
+- quantity (int), 
+- unit_price_usd (float), 
+- shipping_fee_usd (float), 
+- total_amount_usd (float), 
+- order_date (datetime), 
+- expected_delivery_date (datetime), 
+- actual_delivery_date (datetime), 
+- status (str), 
+- payment_method (str), 
+- shipping_address (str)
 
 ### 3. category (DataFrame: df_category)
 - category_id (PK, str)
@@ -34,23 +52,35 @@ The following tables are available as pandas DataFrames with names matching the 
 - category_id (FK → category.category_id, str)
 - subcategory_name (str)
   Examples: laptop, phone, charger, monitor, vacuum_cleaner, dumbbells
+- category_name
+  Examples: Electronics, Sports, Home Appliances, Fashion
 
 ### 5. product (DataFrame: df_product)
 - product_id (PK, str)
 - subcategory_id (FK → subcategory.subcategory_id, str)
-- product_name (str), brand (str), price (float), stock_quantity (int)
+- product_name (str)
+  Examples: ASUS Vivobook 15, Apple 2025 MacBook Air, Dell Inspiron,
+- brand (str), price (float), 
+- stock_quantity (int)
 - created_at (datetime), updated_at (datetime)
-- category_id (str), subcategory_name (str), category_name (str)
-  Examples: ASUS Vivobook 15, Apple 2025 MacBook Air, Dell Inspiron
+- category_id (str), 
+- subcategory_name (str), 
+- category_name (str)
+  
 
 ### 6. specification (DataFrame: df_specification)
 - spec_id (PK, str)
 - product_id (FK → product.product_id, str)
-- spec_name (str), spec_value (str/float), unit (str), data_type (str)
-- subcategory_id (str), subcategory_name (str), category_id (str), category_name (str)
-  spec_name examples: processor, ram, storage, display_size, battery_life, weight, 
-                      operating_system, graphics, warranty, min_weight, max_weight, 
-                      adjustable, material, grip_type
+- spec_name (str)
+  examples: processor, ram, storage, display_size, battery_life, weight, operating_system, graphics, warranty, min_weight, max_weight, adjustable, material, grip_type
+- spec_value (str/float), 
+- unit (str), 
+- data_type (str),
+- product_id (str), 
+- subcategory_name (str), 
+- category_id (str), 
+- category_name (str)
+  
 
 ### 7. return_history (DataFrame: df_return_history)
 - return_id (PK, str)
@@ -91,7 +121,7 @@ Only use specifications that are valid for the current subcategory:
 
 ## SPECIFICATIONS (allowed spec keys per subcategory)
 ```
-{specs_json}
+{spec_text}
 ```
 
 ## Query Generation Rules

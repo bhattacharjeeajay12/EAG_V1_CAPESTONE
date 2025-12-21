@@ -53,8 +53,7 @@ class ConversationHistory:
 
     def create_new_workstream(self, phase, target) -> workstream.Workstream:
         ws_id = self.create_ws_id()
-        current_state = WorkstreamState.NEW
-        ws = Workstream(ws_id, current_state, phase, phase, target)
+        ws = Workstream(phase, target, ws_id)
         if phase == Agents.DISCOVERY and target["subcategory"]:
             ws.specification_list = get_specification_list(target["subcategory"])
         self.workstreams[ws_id] = ws
